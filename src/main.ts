@@ -1,9 +1,11 @@
 import "@fontsource-variable/geist";
 import "@fontsource-variable/geist-mono";
 import "./app.css";
+// @ts-ignore silences ts 2307
 import { pageRouter } from "ilha:pages";
 import { mdxRoutes, renderMdx, setPrerenderedMdxHtml } from "$lib/mdx";
 import type { PrerenderArguments } from "vite-prerender-plugin";
+import type { RouterBuilder } from "@ilha/router";
 
 pageRouter.mount("#app");
 
@@ -13,7 +15,7 @@ export async function prerender(data?: PrerenderArguments) {
   setPrerenderedMdxHtml(mdxPage?.html);
 
   const html = pageRouter.render(url);
-  const links = pageRouter
+  const links = (pageRouter as RouterBuilder)
     .routes()
     .map((r) => r.pattern)
     .filter((l) => !l.includes("*"));
