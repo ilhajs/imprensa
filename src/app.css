@@ -21,6 +21,10 @@ body {
   background: var(--areia-background);
 }
 
+html:not([data-theme-ready]) body {
+  visibility: hidden;
+}
+
 .shiki {
   @apply h-full;
 }

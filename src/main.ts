@@ -13,15 +13,15 @@ function applyInitialTheme() {
   if (typeof window === "undefined" || typeof document === "undefined") return;
 
   try {
-    const storedTheme = localStorage.getItem("luz:theme");
-    const isDark = storedTheme
-      ? storedTheme === "dark"
-      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const isDark = localStorage.getItem("luz:theme") === "dark";
 
     document.documentElement.classList.toggle("dark", isDark);
     document.documentElement.style.colorScheme = isDark ? "dark" : "light";
   } catch {
+    document.documentElement.classList.remove("dark");
     document.documentElement.style.colorScheme = "light";
+  } finally {
+    document.documentElement.dataset.themeReady = "";
   }
 }
 

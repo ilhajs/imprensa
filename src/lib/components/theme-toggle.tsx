@@ -6,10 +6,7 @@ const THEME_STORAGE_KEY = "luz:theme";
 
 function getPreferredTheme() {
   try {
-    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-    if (storedTheme) return storedTheme === "dark";
-
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return localStorage.getItem(THEME_STORAGE_KEY) === "dark";
   } catch {
     return document.documentElement.classList.contains("dark");
   }
