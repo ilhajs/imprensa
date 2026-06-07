@@ -10,7 +10,11 @@ import type { PrerenderArguments } from "vite-prerender-plugin";
 import type { RouterBuilder } from "@ilha/router";
 
 if (typeof document !== "undefined") {
-  pageRouter.hydrate(registry, { target: "#app" });
+  if (import.meta.env.DEV) {
+    pageRouter.mount("#app");
+  } else {
+    pageRouter.hydrate(registry);
+  }
 }
 
 export async function prerender(data?: PrerenderArguments) {

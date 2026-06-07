@@ -21,6 +21,10 @@ body {
   background: var(--areia-background);
 }
 
+.shiki {
+  @apply h-full;
+}
+
 .shiki.twoslash,
 .shiki.twoslash code {
   overflow: visible;

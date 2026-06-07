@@ -7,8 +7,8 @@
       "dependencies": {
         "@fontsource-variable/geist": "^5.2.9",
         "@fontsource-variable/geist-mono": "^5.2.8",
-        "@ilha/router": "^0.4.2",
-        "areia": "^0.1.6",
+        "@ilha/router": "^0.4.3",
+        "areia": "^0.1.7",
         "ilha": "^0.7.0",
         "lucide": "^1.17.0",
         "minisearch": "^7.2.0",
@@ -43,7 +43,7 @@
 
     "@fontsource-variable/geist-mono": ["@fontsource-variable/geist-mono@5.2.8", "", {}, "sha512-KI5bj+hkkRiHttYHmccotUZ80ZuZyai+RwI1d7UId0clkx/jXxlo8qYK8j54WzmpBjtMoEMPyllV7faDcj+6RA=="],
 
-    "@ilha/router": ["@ilha/router@0.4.2", "", { "dependencies": { "ilha": "0.7.0", "rou3": "0.8.1", "unplugin": "3.0.0" } }, "sha512-yyRUmBVtOmm17hwhYhGbw932E4/09K9YAxs7MmWZ7t9PyqiM6xn03VLhKgel1Q/997LrLjT9iDAeQpjxgIjtSg=="],
+    "@ilha/router": ["@ilha/router@0.4.3", "", { "dependencies": { "ilha": "0.7.0", "rou3": "0.8.1", "unplugin": "3.0.0" } }, "sha512-+fjm+pD0ZgjHIG/hadnOm8hJHcQbdFFzUUti6+t/zeoxfA5SZE3KR+MF/zTbkKdCtBbYXok+mjPpqllmm1W3bQ=="],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 
@@ -307,7 +307,7 @@
 
     "alien-signals": ["alien-signals@3.2.1", "", {}, "sha512-I8FjmltrfnDFoZedi5CG8DghVYNhzb/Ijluz7tCSJH0xpd0484Kowhbb1XDYOxfJpU1p5wnM2X54dA+IfGyD1g=="],
 
-    "areia": ["areia@0.1.6", "", { "dependencies": { "@areia/slots": "0.1.3", "clsx": "2.1.1", "date-fns": "4.2.1", "tailwind-merge": "3.6.0" }, "peerDependencies": { "ilha": "^0.7.0", "sonner": "^2.0.7", "tailwindcss": ">=4.0.0" }, "optionalPeers": ["tailwindcss"] }, "sha512-HG4PG6q3Mi/HwaJSDAtSM6Wkdfq/j8zIvQXzu7m/tZ7yEZ/sgI3evOigsWIkuKdMPF6hsrbte0Dx9+HyzJ11/Q=="],
+    "areia": ["areia@0.1.7", "", { "dependencies": { "@areia/slots": "0.1.3", "clsx": "2.1.1", "date-fns": "4.2.1", "tailwind-merge": "3.6.0" }, "peerDependencies": { "ilha": "^0.7.0", "sonner": "^2.0.7", "tailwindcss": ">=4.0.0" }, "optionalPeers": ["tailwindcss"] }, "sha512-IsO4Tq0jWxKm12XfXk/pupdQQkB7/ivKphxaLTZFzme6mvviX0U0bBYpXc7zpPt5/P3UveMKyJ6dn1b89dE8iA=="],
 
     "astring": ["astring@1.9.0", "", { "bin": { "astring": "bin/astring" } }, "sha512-LElXdjswlqjWrPpJFg1Fx4wpkOCxj1TDHlSV4PlaRxHGWko024xICaa97ZkMfs6DRKlCguiAI+rbXv5GWwXIkg=="],
 

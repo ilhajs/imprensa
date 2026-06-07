@@ -8,7 +8,7 @@ import { bindHeroTechCardTracking, HeroTechCards } from "$lib/components/hero-te
 import { Topbar } from "$lib/components/topbar";
 
 const previewCodeClass =
-  "mt-4 max-w-full overflow-x-auto rounded-xl border border-areia-border text-xs [&_pre]:min-w-max [&_pre]:p-4 [&_pre]:text-xs [&_pre]:leading-relaxed";
+  "mt-4 h-full max-w-full overflow-x-auto rounded-xl border border-areia-border text-xs [&_pre]:min-w-max [&_pre]:p-4 [&_pre]:text-xs [&_pre]:leading-relaxed";
 
 const highlighter = createHighlighter({
   themes: ["night-owl-light", "houston"],
