@@ -9,7 +9,25 @@ import { mdxRoutes, renderMdx, setPrerenderedMdxHtml } from "$lib/mdx";
 import type { PrerenderArguments } from "vite-prerender-plugin";
 import type { RouterBuilder } from "@ilha/router";
 
-if (typeof document !== "undefined") {
+function applyInitialTheme() {
+  if (typeof window === "undefined" || typeof document === "undefined") return;
+
+  try {
+    const storedTheme = localStorage.getItem("luz:theme");
+    const isDark = storedTheme
+      ? storedTheme === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    document.documentElement.classList.toggle("dark", isDark);
+    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+  } catch {
+    document.documentElement.style.colorScheme = "light";
+  }
+}
+
+applyInitialTheme();
+
+if (typeof window !== "undefined" && typeof document !== "undefined") {
   if (import.meta.env.DEV) {
     pageRouter.mount("#app");
   } else {

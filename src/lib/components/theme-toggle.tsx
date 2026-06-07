@@ -5,14 +5,19 @@ import { Moon, Sun } from "lucide";
 const THEME_STORAGE_KEY = "luz:theme";
 
 function getPreferredTheme() {
-  const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-  if (storedTheme) return storedTheme === "dark";
+  try {
+    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    if (storedTheme) return storedTheme === "dark";
 
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  } catch {
+    return document.documentElement.classList.contains("dark");
+  }
 }
 
 function applyTheme(isDark: boolean) {
   document.documentElement.classList.toggle("dark", isDark);
+  document.documentElement.style.colorScheme = isDark ? "dark" : "light";
 }
 
 export const ThemeToggle = ilha

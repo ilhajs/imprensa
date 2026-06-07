@@ -4,10 +4,14 @@ import ilha from "ilha";
 const THEME_STORAGE_KEY = "luz:theme";
 
 function getInitialTheme() {
-  const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-  if (storedTheme) return storedTheme === "dark";
+  try {
+    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    if (storedTheme) return storedTheme === "dark";
 
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  } catch {
+    return document.documentElement.classList.contains("dark");
+  }
 }
 
 export default defineLayout((children) =>
