@@ -21,7 +21,6 @@ function getStoredLayout() {
 
 export default defineLayout((children) =>
   ilha
-    .state("ready", false)
     .state("layout", DEFAULT_LAYOUT)
     .onMount(({ host, state }) => {
       let resizable: Element | null = null;
@@ -33,7 +32,6 @@ export default defineLayout((children) =>
       };
 
       state.layout(getStoredLayout());
-      state.ready(true);
 
       const firstFrame = requestAnimationFrame(() => {
         secondFrame = requestAnimationFrame(() => {
@@ -50,10 +48,6 @@ export default defineLayout((children) =>
     })
     .render(({ state }) => {
       const layout = state.layout();
-
-      if (!state.ready()) {
-        return <div class="min-h-screen bg-areia-background" />;
-      }
 
       return (
         <Resizable
