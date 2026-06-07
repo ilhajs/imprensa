@@ -23,7 +23,7 @@ export default defineConfig({
         ],
       ],
     }),
-    pages(),
+    pages({ mode: "mpa" }),
     tailwindcss(),
     vitePrerenderPlugin(),
   ],

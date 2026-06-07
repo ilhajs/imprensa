@@ -7,7 +7,7 @@
       "dependencies": {
         "@fontsource-variable/geist": "^5.2.9",
         "@fontsource-variable/geist-mono": "^5.2.8",
-        "@ilha/router": "^0.4.1",
+        "@ilha/router": "^0.4.2",
         "areia": "^0.1.6",
         "ilha": "^0.7.0",
         "lucide": "^1.17.0",
@@ -43,7 +43,7 @@
 
     "@fontsource-variable/geist-mono": ["@fontsource-variable/geist-mono@5.2.8", "", {}, "sha512-KI5bj+hkkRiHttYHmccotUZ80ZuZyai+RwI1d7UId0clkx/jXxlo8qYK8j54WzmpBjtMoEMPyllV7faDcj+6RA=="],
 
-    "@ilha/router": ["@ilha/router@0.4.1", "", { "dependencies": { "ilha": "0.7.0", "rou3": "0.8.1", "unplugin": "3.0.0" } }, "sha512-VA4JnxT20pYWmdsoBhjHQPCIFYPUIJCSbcxXaqmgX2gBYu8BUYnV1l2VCTrQI5cfw+7G43S2lezQL4UlAlMmMQ=="],
+    "@ilha/router": ["@ilha/router@0.4.2", "", { "dependencies": { "ilha": "0.7.0", "rou3": "0.8.1", "unplugin": "3.0.0" } }, "sha512-yyRUmBVtOmm17hwhYhGbw932E4/09K9YAxs7MmWZ7t9PyqiM6xn03VLhKgel1Q/997LrLjT9iDAeQpjxgIjtSg=="],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 
