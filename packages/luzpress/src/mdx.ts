@@ -351,18 +351,25 @@ export async function getMdxHead(url: string): Promise<Head | undefined> {
   return (await loadMdxModule(url))?.mod.head;
 }
 
+function escapeUnsafeHtmlScriptTags(html: string) {
+  return html.replace(/<script/gi, "&lt;script").replace(/<\/script>/gi, "&lt;/script&gt;");
+}
+
 export async function renderMdx(url: string) {
   const loaded = await loadMdxModule(url);
   if (!loaded) return undefined;
 
-  return { html: toHtml(loaded.mod.default({})), path: loaded.pathname };
+  return {
+    html: escapeUnsafeHtmlScriptTags(toHtml(loaded.mod.default({}))),
+    path: loaded.pathname,
+  };
 }
 
 export async function loadMdxHtml(path: string) {
   const prerenderedMdxHtml = getPrerenderedMdxHtml() ?? getClientPrerenderedMdxHtml(path);
   if (prerenderedMdxHtml) return raw(prerenderedMdxHtml);
   const content = await renderMdxContent(path);
-  return content ? raw(toHtml(content)) : null;
+  return content ? raw(escapeUnsafeHtmlScriptTags(toHtml(content))) : null;
 }
 
 export function getMdxContent(path: string) {

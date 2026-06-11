@@ -112,9 +112,12 @@ export function createPrerender(options: LuzpressPrerenderOptions) {
     const mdxPage = await options.renderMdx?.(url);
     options.setPrerenderedMdxHtml?.(mdxPage?.html);
 
-    const html = await options.pageRouter.renderHydratable(url, options.registry, {
+    const renderedHtml = await options.pageRouter.renderHydratable(url, options.registry, {
       snapshot: true,
     });
+    const html = renderedHtml
+      .replace(/<script/gi, "&lt;script")
+      .replace(/<\/script>/gi, "&lt;/script&gt;");
 
     const mergedHead: Head = {
       ...(options.headDefaults ?? {}),
@@ -151,7 +154,7 @@ export function createPrerender(options: LuzpressPrerenderOptions) {
       html,
       head: Object.keys(head).length > 0 ? head : undefined,
       links: new Set(links),
-      data: mdxPage ? { mdxHtml: mdxPage.html, mdxPath: mdxPage.path } : undefined,
+      data: mdxPage ? { mdxPath: mdxPage.path } : undefined,
     };
   };
 }

@@ -153,6 +153,32 @@ function getShikiHighlighterOptions(options: LuzpressShikiOptions | undefined) {
   return { themes, langs };
 }
 
+function escapeCodeFenceHtmlPlugin() {
+  return (tree: any) => {
+    const visit = (node: any) => {
+      if (node?.type === "code" && typeof node.value === "string") {
+        node.value = node.value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+      for (const child of node?.children ?? []) visit(child);
+    };
+    visit(tree);
+  };
+}
+
+function escapeCodeTextPlugin() {
+  return (tree: any) => {
+    const visit = (node: any, inCode = false) => {
+      const isCode =
+        inCode || (node?.type === "element" && (node.tagName === "pre" || node.tagName === "code"));
+      if (isCode && node?.type === "text" && typeof node.value === "string") {
+        node.value = node.value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+      for (const child of node?.children ?? []) visit(child, isCode);
+    };
+    visit(tree);
+  };
+}
+
 function shikiPlugin(options: LuzpressShikiOptions | undefined) {
   if (options === false) return [];
 
@@ -362,6 +388,7 @@ export function luzpress(options: LuzpressOptions = {}): PluginOption[] {
         properties: { className: ["heading-anchor"] },
       },
     ],
+    escapeCodeTextPlugin,
     ...(detectDeadLink ? [rehypeDeadLinks] : []),
   ];
 
@@ -372,7 +399,7 @@ export function luzpress(options: LuzpressOptions = {}): PluginOption[] {
     mdx({
       jsxImportSource: "ilha",
       ...restMdxOptions,
-      remarkPlugins: [remarkPreview, ...(remarkPlugins as any[])],
+      remarkPlugins: [remarkPreview, escapeCodeFenceHtmlPlugin, ...(remarkPlugins as any[])],
       rehypePlugins: [...shikiPlugin(shiki), ...coreRehypePlugins, ...rehypePlugins],
     }),
     pages({ mode: "mpa", ...pagesOptions }),
