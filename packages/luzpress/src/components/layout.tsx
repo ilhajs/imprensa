@@ -36,14 +36,15 @@ function renderMobileTree(nodes: ContentTreeNode[], currentPath: string, depth =
     if (node.path) {
       items.push(
         <Popover.Close>
-          <LinkButton
-            href={node.path}
-            variant={active ? "outline" : "ghost"}
-            class={`w-full justify-start ${active ? "border-areia-primary text-areia-primary ring-1 ring-areia-primary/30" : ""}`}
-            style={{ marginLeft: `${depth * 0.5}rem` }}
-          >
-            {node.title}
-          </LinkButton>
+          <div style={{ marginLeft: `${depth * 0.5}rem` }}>
+            <LinkButton
+              href={node.path}
+              variant={active ? "outline" : "ghost"}
+              class={`w-full justify-start ${active ? "border-areia-primary text-areia-primary ring-1 ring-areia-primary/30" : ""}`}
+            >
+              {node.title}
+            </LinkButton>
+          </div>
         </Popover.Close>,
       );
     } else {

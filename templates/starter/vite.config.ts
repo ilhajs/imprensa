@@ -15,7 +15,6 @@ export default defineConfig({
       head: {
         title: "Luz — Documentation starter for Ilha",
       },
-      navItems: [{ label: "Documentation", url: "/getting-started" }],
       socials: [
         { service: "x", url: "https://x.com/ilha_js" },
         { service: "discord", url: "https://discord.gg/WnVTMCTz74" },
