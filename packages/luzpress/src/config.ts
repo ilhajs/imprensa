@@ -1,0 +1,2 @@
+// Virtual module — replaced at build time by luzpress vite plugin
+export const socials = [];

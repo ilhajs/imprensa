@@ -1,0 +1,71 @@
+# Getting Started
+
+Luz is a documentation site builder powered by [Ilha](https://ilha.build), MDX, Shiki, and [Areia](https://areia.dev). The `luzpress` Vite plugin wires everything together — MDX routes, command search, syntax highlighting, static prerendering, and an AI-friendly `llms.txt` output.
+
+## Create a project
+
+Scaffold the starter template:
+
+```bash
+npx giget@latest gh:ilhajs/luz/templates/starter my-docs
+cd my-docs
+bun install
+bun dev
+```
+
+Open [http://localhost:5173](http://localhost:5173). Edit pages under `src/pages/(content)/`.
+
+## Project layout
+
+```
+my-docs/
+├── public/
+│   └── logo.svg          # site logo
+├── src/
+│   ├── pages/
+│   │   ├── index.tsx     # landing page
+│   │   ├── +layout.tsx   # root layout (Toaster)
+│   │   └── (content)/    # MDX documentation routes
+│   │       ├── +layout.tsx   # sidebar + resizable layout
+│   │       └── getting-started.mdx
+│   ├── app.css           # global styles and theme tokens
+│   └── main.ts           # app entry point
+└── vite.config.ts        # luzpress plugin config
+```
+
+The `(content)` folder is a route group — it organizes files without adding a URL segment. A file at `(content)/guide/writing.mdx` maps to `/guide/writing`.
+
+## Add a page
+
+Create any `.mdx` file under `src/pages/(content)/`:
+
+```mdx
+# My Page
+
+Content here.
+```
+
+It appears in the sidebar automatically. The sidebar title is derived from the first `h1`.
+
+## Configure the plugin
+
+```ts
+// vite.config.ts
+import { defineConfig } from "vite";
+import { luzpress } from "luzpress";
+
+export default defineConfig({
+  plugins: [
+    luzpress({
+      hostname: "https://my-docs.example.com",
+      shiki: {
+        themes: { light: "night-owl-light", dark: "houston" },
+        langs: ["ts", "tsx", "mdx", "shell"],
+      },
+      socials: [{ service: "github", url: "https://github.com/you/repo" }],
+    }),
+  ],
+});
+```
+
+See [Configuration](/guide/configuration) for all available options.

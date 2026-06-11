@@ -1,0 +1,31 @@
+# Navigation
+
+The sidebar and search index are built automatically from MDX files under `contentDir`.
+
+## Sidebar
+
+Every `.mdx` file under `src/pages/(content)/` appears in the sidebar. The title comes from the first `h1` in the file. Nested directories become collapsible groups labeled by their directory name.
+
+```
+(content)/
+├── getting-started.mdx   → /getting-started  "Getting Started"
+├── guide/
+│   ├── writing.mdx       → /guide/writing    "Writing"
+│   └── configuration.mdx → /guide/configuration "Configuration"
+```
+
+There is no manual nav config — add a file and it appears.
+
+## Search
+
+Command search is available via the search bar or `⌘K` / `Ctrl+K`. It indexes every page's title and body text using [MiniSearch](https://lucaong.github.io/minisearch/) with fuzzy matching and title boosting.
+
+Search results show the page title and a matched excerpt. Clicking a result navigates to that page.
+
+## Mobile navigation
+
+On small screens the sidebar is hidden. A hamburger button in the top-right opens a popover with the full navigation tree.
+
+## Resizable sidebar
+
+On desktop the sidebar is resizable — drag the handle between the sidebar and content. The split position is saved to `localStorage` and restored on next visit.

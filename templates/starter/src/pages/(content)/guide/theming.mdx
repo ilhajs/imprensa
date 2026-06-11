@@ -1,0 +1,55 @@
+# Theming
+
+Luz uses [Areia](https://areia.dev) for UI components and Tailwind CSS v4 for styling. The theme is driven by CSS custom properties on `:root`.
+
+## Primary color
+
+Set `--areia-primary` in `src/app.css`:
+
+```css
+:root {
+  --areia-primary: #7c3aed;
+}
+```
+
+All interactive elements — buttons, links, focus rings — pick up the new color automatically.
+
+## Dark mode
+
+Dark mode is toggled via the theme button in the top bar. Three modes are available:
+
+- **Light** — forces light theme
+- **Dark** — forces dark theme
+- **System** — follows the OS preference (`prefers-color-scheme`)
+
+The selected mode is persisted in `localStorage` under `luz:theme`. On first visit the site defaults to system mode.
+
+## Logo
+
+Replace `public/logo.svg` with your own SVG. The `LogoButton` component in `luzpress/components` renders it at `size-6` next to the site name.
+
+To change the site name, edit `LogoButton` in `src/lib/components/` or override it in your layout.
+
+## Fonts
+
+The starter ships with [Geist](https://vercel.com/font) via `@fontsource-variable/geist`. To use a different font, swap the import in `src/main.ts` and update `--areia-font-sans` in `src/app.css`:
+
+```css
+:root {
+  --areia-font-sans: "Inter", system-ui, sans-serif;
+}
+```
+
+## Code themes
+
+Shiki themes are configured in `vite.config.ts`:
+
+```ts
+luzpress({
+  shiki: {
+    themes: { light: "night-owl-light", dark: "houston" },
+  },
+});
+```
+
+Any [Shiki-bundled theme](https://shiki.style/themes) works.

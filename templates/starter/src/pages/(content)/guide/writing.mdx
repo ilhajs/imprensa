@@ -1,0 +1,95 @@
+---
+priority: 10
+---
+
+# Writing
+
+MDX lets you mix Markdown with JSX components. Luzpress adds Shiki syntax highlighting and twoslash type annotations on top.
+
+## Page titles
+
+Every MDX file must start with a single `h1`. Its text becomes the sidebar title and the search index entry. The heading must match the titleized filename — `guide/writing.mdx` expects `# Writing`.
+
+## Heading levels
+
+Don't skip levels. After the page `h1`, use `h2`, then `h3`, and so on.
+
+## Internal links
+
+Use root-relative paths. The build fails on dead links and missing anchor targets.
+
+```mdx
+See [Getting Started](/getting-started) for setup instructions.
+```
+
+## Code blocks
+
+Fenced code blocks are highlighted with Shiki:
+
+````mdx
+```ts
+const greet = (name: string) => `Hello, ${name}!`;
+```
+````
+
+### Twoslash
+
+Add `twoslash` to enable type-aware hover popups in TypeScript samples:
+
+```ts twoslash
+const a = 5;
+//    ^?
+```
+
+### Supported languages
+
+Configure which languages Shiki loads in `vite.config.ts`:
+
+```ts
+luzpress({
+  shiki: {
+    langs: ["ts", "tsx", "mdx", "shell", "json"],
+  },
+});
+```
+
+## Live preview
+
+Add `preview` to a code fence to render it interactively below the code:
+
+```tsx preview
+import ilha from "ilha";
+
+export default ilha
+  .state("count", 0)
+  .on("[data-action=inc]@click", ({ state }) => state.count(state.count() + 1))
+  .render(({ state }) => (
+    <div class="flex flex-col gap-4">
+      <p>Count: {state.count()}</p>
+      <button data-action="inc" class="px-4 py-2 bg-blue-500 text-white rounded">
+        Increment
+      </button>
+    </div>
+  ));
+```
+
+## Embedded components
+
+Import Areia or Ilha components at the top of an MDX file:
+
+```mdx
+import { Button, Badge } from "areia";
+
+<Button>Click me</Button>
+<Badge>New</Badge>
+```
+
+No extra configuration needed — the JSX runtime is already wired up.
+
+## Disable strict checks
+
+To skip dead-link validation while migrating content:
+
+```ts
+luzpress({ detectDeadLink: false });
+```

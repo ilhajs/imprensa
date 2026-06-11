@@ -1,0 +1,107 @@
+# Configuration
+
+All options are passed to the `luzpress()` plugin in `vite.config.ts`.
+
+## Options
+
+### `hostname`
+
+The full origin URL of your site. Required for sitemap generation.
+
+```ts
+luzpress({ hostname: "https://docs.example.com" });
+```
+
+### `shiki`
+
+Syntax highlighting options. Pass `false` to disable Shiki entirely.
+
+```ts
+luzpress({
+  shiki: {
+    themes: { light: "night-owl-light", dark: "houston" },
+    langs: ["ts", "tsx", "mdx", "shell"],
+    twoslash: true, // default: true
+  },
+});
+```
+
+### `contentDir`
+
+Path to the MDX content directory relative to `src/`. Defaults to `src/pages/(content)`.
+
+```ts
+luzpress({ contentDir: "src/pages/docs" });
+```
+
+### `detectDeadLink`
+
+Fail the build on dead internal links and missing anchor targets. Defaults to `true`.
+
+```ts
+luzpress({ detectDeadLink: false });
+```
+
+### `socials`
+
+Social links rendered in the top navigation bar.
+
+```ts
+luzpress({
+  socials: [
+    { service: "github", url: "https://github.com/you/repo" },
+    { service: "x", url: "https://x.com/you" },
+    { service: "discord", url: "https://discord.gg/invite" },
+  ],
+});
+```
+
+### `repo` / `repoBranch` / `repoPath`
+
+GitHub repository for "Open in GitHub" and "View as Markdown" doc toolbar links.
+
+```ts
+luzpress({
+  repo: "https://github.com/you/repo",
+  repoBranch: "main",
+  repoPath: "packages/docs", // path prefix inside the repo
+});
+```
+
+### `llms`
+
+Export `llms.txt` and `llms-full.txt` for AI agents. Defaults to `true`.
+
+```ts
+luzpress({ llms: false });
+```
+
+### `head`
+
+Default `<head>` metadata applied to all pages.
+
+```ts
+luzpress({
+  head: {
+    title: "My Docs",
+    description: "Documentation for my project.",
+  },
+});
+```
+
+### `preview`
+
+Configuration for the live code preview sandbox.
+
+```ts
+luzpress({
+  preview: {
+    // additional import map entries merged with defaults
+    importmap: JSON.stringify({
+      imports: { "my-lib": "https://esm.sh/my-lib" },
+    }),
+    // HTML injected into the preview iframe <head> after esm.sh/tsx
+    head: `<script src="https://cdn.tailwindcss.com"></script>`,
+  },
+});
+```

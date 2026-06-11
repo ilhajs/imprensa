@@ -1,0 +1,73 @@
+# Deployment
+
+Luz prerenders all routes to static HTML at build time. The output is a plain static site that can be hosted anywhere.
+
+## Build
+
+```bash
+bun run build
+```
+
+Output goes to `dist/`. Every MDX route is prerendered to an `index.html` file.
+
+## Vercel
+
+Create a `vercel.json` at the project root:
+
+```json
+{
+  "buildCommand": "bun run build",
+  "outputDirectory": "dist"
+}
+```
+
+Push to a Git repository and import it in the [Vercel dashboard](https://vercel.com/new).
+
+## Netlify
+
+Create a `netlify.toml` at the project root:
+
+```toml
+[build]
+  command = "bun run build"
+  publish = "dist"
+```
+
+## GitHub Pages
+
+Add a workflow at `.github/workflows/deploy.yml`:
+
+```yaml
+name: Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install
+      - run: bun run build
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+```
+
+## Sitemap
+
+Set `hostname` in `vite.config.ts` to generate `dist/sitemap.xml` automatically:
+
+```ts
+luzpress({ hostname: "https://docs.example.com" });
+```
+
+## AI agent support
+
+At build time, Luzpress generates `dist/llms.txt` (page index) and `dist/llms-full.txt` (full content) for AI agents and LLM tooling. Disable with:
+
+```ts
+luzpress({ llms: false });
+```
