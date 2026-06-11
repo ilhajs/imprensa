@@ -1,5 +1,8 @@
 ---
-priority: 10
+title: Writing
+description: Write high-quality MDX pages with strict headings, links, code blocks, previews, and components.
+order: 6
+tags: [mdx, writing]
 ---
 
 # Writing
@@ -8,7 +11,7 @@ MDX lets you mix Markdown with JSX components. Luzpress adds Shiki syntax highli
 
 ## Page titles
 
-Every MDX file must start with a single `h1`. Its text becomes the sidebar title and the search index entry. The heading must match the titleized filename — `guide/writing.mdx` expects `# Writing`.
+Every MDX file must include a single `h1`. Frontmatter `title` becomes the sidebar title, search title, and AI export title; otherwise Luz falls back to the first `h1`. The heading should still match the visible page title for readers.
 
 ## Heading levels
 

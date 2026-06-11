@@ -12,10 +12,25 @@ type MdxModule = {
   head?: Head;
 };
 
+export type ContentMeta = {
+  title: string;
+  description?: string;
+  order?: number;
+  priority: number;
+  section?: string;
+  badge?: string;
+  draft?: boolean;
+  hidden?: boolean;
+  tags: string[];
+};
+
 export type ContentTreeNode = {
   title: string;
   path?: string;
   priority: number;
+  order?: number;
+  description?: string;
+  badge?: string;
   children: ContentTreeNode[];
 };
 
@@ -24,6 +39,8 @@ export type SearchDocument = {
   title: string;
   path: string;
   text: string;
+  description?: string;
+  tags: string[];
 };
 
 export const articleClass = [
@@ -46,7 +63,6 @@ export const articleClass = [
   "[--tw-prose-th-borders:var(--areia-border)]",
   "[--tw-prose-td-borders:var(--areia-divider)]",
   "prose-a:underline-offset-4",
-  "prose-code:rounded prose-code:bg-areia-surface-muted prose-code:px-1 prose-code:py-0.5",
   "prose-code:before:content-none prose-code:after:content-none",
   "prose-pre:overflow-visible prose-pre:border prose-pre:border-areia-border prose-pre:bg-areia-surface-muted",
 ].join(" ");
@@ -65,9 +81,9 @@ const luzpressRepoPath = __LUZPRESS_REPO_PATH__;
 const mdxRawSources: Record<string, string> = __LUZPRESS_RAW_SOURCES__;
 export const headDefaults: import("unhead").Head | null = __LUZPRESS_HEAD_DEFAULTS__;
 const allMdxModules = {
-  ...import.meta.glob("/src/pages/**/*.md", { eager: true }),
-  ...import.meta.glob("/src/pages/**/*.mdx", { eager: true }),
-} as Record<string, MdxModule>;
+  ...import.meta.glob("/src/pages/**/*.md"),
+  ...import.meta.glob("/src/pages/**/*.mdx"),
+} as Record<string, () => Promise<MdxModule>>;
 
 const mdxModules = Object.fromEntries(
   Object.entries(allMdxModules).filter(([filePath]) => filePath.startsWith(contentDir)),
@@ -93,24 +109,16 @@ function toHtml(content: MdxContent) {
   return typeof content === "string" ? content : content.value;
 }
 
-function renderedDocumentSource(source: unknown) {
-  if (typeof source === "string") return source;
-  if (typeof source !== "object" || source === null || !("default" in source)) return undefined;
-
-  const render = source.default;
-  if (typeof render !== "function") return undefined;
-
-  try {
-    return toHtml(render({}) as MdxContent);
-  } catch {
-    return undefined;
-  }
+function stripFrontmatter(source: string) {
+  if (!source.startsWith("---")) return source;
+  const end = source.indexOf("\n---", 3);
+  return end === -1 ? source : source.slice(end + 4).replace(/^\s+/, "");
 }
 
-function titleFromDocument(filePath: string, source: unknown) {
-  const documentSource = renderedDocumentSource(source);
-  const heading = documentSource?.match(/<(?:h1)[^>]*>(.*?)<\/h1>|^#\s+(.+)$/m);
-  const title = (heading?.[1]?.replace(/<[^>]+>/g, "") ?? heading?.[2])?.trim();
+function titleFromDocument(filePath: string, rawSource: string) {
+  const documentSource = stripFrontmatter(rawSource);
+  const heading = documentSource.match(/^#\s+(.+)$/m);
+  const title = heading?.[1]?.trim();
   if (title) return title;
 
   const name = filePath
@@ -122,13 +130,32 @@ function titleFromDocument(filePath: string, source: unknown) {
   return titleize(name === "index" ? "overview" : (name ?? "Untitled"));
 }
 
-function textFromDocument(source: unknown) {
-  return (renderedDocumentSource(source) ?? "")
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+function textFromRawDocument(source: string) {
+  return stripFrontmatter(source)
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`([^`]+)`/g, "$1")
     .replace(/<[^>]+>/g, " ")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/[>*_~#-]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function parseScalar(value: string): unknown {
+  const trimmed = value.trim();
+  if (trimmed === "true") return true;
+  if (trimmed === "false") return false;
+  if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
+  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+    return trimmed
+      .slice(1, -1)
+      .split(",")
+      .map((item) => item.trim().replace(/^['\"]|['\"]$/g, ""))
+      .filter(Boolean);
+  }
+  return trimmed.replace(/^['\"]|['\"]$/g, "");
 }
 
 function parseFrontmatter(source: string): Record<string, unknown> {
@@ -136,15 +163,62 @@ function parseFrontmatter(source: string): Record<string, unknown> {
   const end = source.indexOf("\n---", 3);
   if (end === -1) return {};
   const yaml = source.slice(4, end);
-  return Object.fromEntries(
-    yaml.split("\n").flatMap((line) => {
-      const m = line.match(/^([\w-]+):\s*(.+)$/);
-      return m ? [[m[1], isNaN(Number(m[2])) ? m[2].trim() : Number(m[2])]] : [];
-    }),
-  );
+  const entries: Record<string, unknown> = {};
+  let listKey: string | undefined;
+
+  for (const line of yaml.split("\n")) {
+    const listItem = line.match(/^\s*-\s*(.+)$/);
+    if (listItem && listKey) {
+      const list = Array.isArray(entries[listKey]) ? entries[listKey] : [];
+      list.push(parseScalar(listItem[1]));
+      entries[listKey] = list;
+      continue;
+    }
+
+    const m = line.match(/^([\w-]+):\s*(.*)$/);
+    if (!m) continue;
+    listKey = undefined;
+    if (!m[2].trim()) {
+      entries[m[1]] = [];
+      listKey = m[1];
+    } else {
+      entries[m[1]] = parseScalar(m[2]);
+    }
+  }
+
+  return entries;
 }
 
-function insertTreeNode(tree: ContentTreeNode[], routePath: string, title: string, priority = 0) {
+function toStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string");
+  if (typeof value === "string")
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  return [];
+}
+
+function metaFromDocument(filePath: string, rawSource: string): ContentMeta {
+  const fm = parseFrontmatter(rawSource);
+  const title = typeof fm.title === "string" ? fm.title : titleFromDocument(filePath, rawSource);
+  const order = typeof fm.order === "number" ? fm.order : undefined;
+  const priority = typeof fm.priority === "number" ? fm.priority : order !== undefined ? -order : 0;
+
+  return {
+    title,
+    description: typeof fm.description === "string" ? fm.description : undefined,
+    order,
+    priority,
+    section: typeof fm.section === "string" ? fm.section : undefined,
+    badge: typeof fm.badge === "string" ? fm.badge : undefined,
+    draft: fm.draft === true,
+    hidden: fm.hidden === true || fm.sidebar === false,
+    tags: toStringArray(fm.tags),
+  };
+}
+
+function insertTreeNode(tree: ContentTreeNode[], routePath: string, meta: ContentMeta) {
   const segments = routePath.split("/").filter(Boolean);
   let level = tree;
 
@@ -155,60 +229,82 @@ function insertTreeNode(tree: ContentTreeNode[], routePath: string, title: strin
 
     if (!node) {
       node = {
-        title: isLeaf ? title : titleize(segment),
+        title: isLeaf ? meta.title : titleize(segment),
         path: isLeaf ? path : undefined,
-        priority: isLeaf ? priority : 0,
+        priority: isLeaf ? meta.priority : 0,
+        order: isLeaf ? meta.order : undefined,
+        description: isLeaf ? meta.description : undefined,
+        badge: isLeaf ? meta.badge : undefined,
         children: [],
       };
       level.push(node);
     }
 
     if (isLeaf) {
-      node.title = title;
+      node.title = meta.title;
       node.path = path;
-      node.priority = priority;
+      node.priority = meta.priority;
+      node.order = meta.order;
+      node.description = meta.description;
+      node.badge = meta.badge;
     }
 
     level = node.children;
   });
 
   const sort = (nodes: ContentTreeNode[]) => {
-    nodes.sort((a, b) => b.priority - a.priority || a.title.localeCompare(b.title));
+    nodes.sort((a, b) => {
+      if (a.order !== undefined || b.order !== undefined)
+        return (a.order ?? 9999) - (b.order ?? 9999);
+      return b.priority - a.priority || a.title.localeCompare(b.title);
+    });
     nodes.forEach((n) => sort(n.children));
   };
   sort(tree);
 }
 
 const mdxPages = new Map(
-  Object.entries(mdxModules).map(([filePath, mod]) => {
-    return [filePathToRoutePath(filePath), mod.default] as const;
+  Object.entries(mdxModules).map(([filePath, loader]) => {
+    return [filePathToRoutePath(filePath), loader] as const;
   }),
 );
 
+export const contentMeta = Object.fromEntries(
+  Object.entries(mdxModules).map(([filePath]) => {
+    const path = filePathToRoutePath(filePath);
+    return [path, metaFromDocument(filePath, mdxRawSources[path] ?? "")];
+  }),
+) as Record<string, ContentMeta>;
+
 export const contentTree = Object.entries(mdxModules).reduce<ContentTreeNode[]>(
-  (tree, [filePath, source]) => {
+  (tree, [filePath]) => {
     const routePath = filePathToRoutePath(filePath);
-    const rawSource = mdxRawSources[routePath] ?? "";
-    const fm = parseFrontmatter(rawSource);
-    const priority = typeof fm.priority === "number" ? fm.priority : 0;
-    insertTreeNode(tree, routePath, titleFromDocument(filePath, source), priority);
+    const meta = contentMeta[routePath];
+    if (meta.draft || meta.hidden) return tree;
+    insertTreeNode(tree, routePath, meta);
     return tree;
   },
   [],
 );
 
-export const searchDocuments = Object.entries(mdxModules).map<SearchDocument>(
-  ([filePath, source]) => {
+export const searchDocuments = Object.entries(mdxModules)
+  .map<SearchDocument | undefined>(([filePath]) => {
     const path = filePathToRoutePath(filePath);
+    const meta = contentMeta[path];
+    if (meta.draft) return undefined;
 
     return {
       id: path,
-      title: titleFromDocument(filePath, source),
+      title: meta.title,
       path,
-      text: textFromDocument(source),
+      description: meta.description,
+      tags: meta.tags,
+      text: [meta.description, meta.tags.join(" "), textFromRawDocument(mdxRawSources[path] ?? "")]
+        .filter(Boolean)
+        .join(" "),
     };
-  },
-);
+  })
+  .filter((doc): doc is SearchDocument => Boolean(doc));
 
 export const mdxRoutes = [...mdxPages.keys()];
 
@@ -241,31 +337,37 @@ function normalizePath(url: string) {
   return new URL(url, "http://localhost").pathname.replace(/\/$/, "") || "/";
 }
 
-export function renderMdxContent(url: string) {
-  return mdxPages.get(normalizePath(url))?.({});
-}
-
-const mdxHeads = new Map(
-  Object.entries(mdxModules).map(([filePath, mod]) => {
-    return [filePathToRoutePath(filePath), (mod as MdxModule).head] as const;
-  }),
-);
-
-export function getMdxHead(url: string): Head | undefined {
-  return mdxHeads.get(normalizePath(url));
-}
-
-export function renderMdx(url: string) {
+async function loadMdxModule(url: string) {
   const pathname = normalizePath(url);
-  const content = renderMdxContent(pathname);
-  if (!content) return undefined;
+  const loader = mdxPages.get(pathname);
+  return loader ? { pathname, mod: await loader() } : undefined;
+}
 
-  return { html: toHtml(content), path: pathname };
+export async function renderMdxContent(url: string) {
+  return (await loadMdxModule(url))?.mod.default({});
+}
+
+export async function getMdxHead(url: string): Promise<Head | undefined> {
+  return (await loadMdxModule(url))?.mod.head;
+}
+
+export async function renderMdx(url: string) {
+  const loaded = await loadMdxModule(url);
+  if (!loaded) return undefined;
+
+  return { html: toHtml(loaded.mod.default({})), path: loaded.pathname };
+}
+
+export async function loadMdxHtml(path: string) {
+  const prerenderedMdxHtml = getPrerenderedMdxHtml() ?? getClientPrerenderedMdxHtml(path);
+  if (prerenderedMdxHtml) return raw(prerenderedMdxHtml);
+  const content = await renderMdxContent(path);
+  return content ? raw(toHtml(content)) : null;
 }
 
 export function getMdxContent(path: string) {
   const prerenderedMdxHtml = getPrerenderedMdxHtml() ?? getClientPrerenderedMdxHtml(path);
-  return prerenderedMdxHtml ? raw(prerenderedMdxHtml) : renderMdxContent(path);
+  return prerenderedMdxHtml ? raw(prerenderedMdxHtml) : undefined;
 }
 
 function routeToDistMarkdown(routePath: string) {

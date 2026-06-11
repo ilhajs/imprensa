@@ -1,3 +1,10 @@
+---
+title: Configuration
+description: Configure Luzpress plugins, syntax highlighting, metadata, AI exports, and deployment settings.
+order: 2
+tags: [config, plugin]
+---
+
 # Configuration
 
 All options are passed to the `luzpress()` plugin in `vite.config.ts`.
@@ -70,7 +77,7 @@ luzpress({
 
 ### `llms`
 
-Export `llms.txt` and `llms-full.txt` for AI agents. Defaults to `true`.
+Export `llms.txt`, `llms-full.txt`, and `llms.json` for AI agents. Defaults to `true`.
 
 ```ts
 luzpress({ llms: false });

@@ -64,10 +64,21 @@ Customize or merge these in `src/lib/components/`.
 
 Add MDX files under `src/pages/(content)/`. The `(content)` segment is a route group — it does not appear in URLs.
 
+Add optional frontmatter to control navigation, search, SEO, and AI exports:
+
+```mdx
+---
+title: Getting Started
+description: Create a Luz documentation site.
+order: 1
+tags: [setup, starter]
+---
+```
+
 Build-time checks (enabled by default):
 
 - Exactly one `h1` per page
-- `h1` text must match the filename-derived sidebar title
+- `h1` text should match the visible page title
 - No skipped heading levels
 - No dead internal links or anchor references
 
@@ -108,8 +119,9 @@ The starter only declares packages you import directly (`areia`, `ilha`, `lucide
 Each production build writes:
 
 - `dist/<route>/index.md` — raw source alongside `index.html`
-- `dist/llms.txt` — site outline with links to each doc
+- `dist/llms.txt` — site outline with links and descriptions for each doc
 - `dist/llms-full.txt` — full concatenated doc content
+- `dist/llms.json` — structured page metadata for agents and tooling
 
 Disable with `llms: false` in `vite.config.ts`, or customize the outline:
 

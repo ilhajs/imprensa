@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { pages, type IlhaPagesOptions } from "@ilha/router/vite";
 import mdx, { type Options as MdxRollupOptions } from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
@@ -122,6 +122,7 @@ function normalizeContentDir(dir: string) {
   return `/src/${trimmed}/`;
 }
 
+const require = createRequire(import.meta.url);
 const MDX_SOURCE = fileURLToPath(new URL("../src/mdx.ts", import.meta.url));
 const MDX_CONFIG_MARKER = `declare const __LUZPRESS_CONTENT_DIR__: string;
 declare const __LUZPRESS_REPO__: string;
@@ -155,14 +156,14 @@ function getShikiHighlighterOptions(options: LuzpressShikiOptions | undefined) {
 function shikiPlugin(options: LuzpressShikiOptions | undefined) {
   if (options === false) return [];
 
-  const { twoslash = true, transformers = [], ...shiki } = options ?? {};
+  const { twoslash = true, transformers = [], themes, langs, ...shiki } = options ?? {};
 
   return [
     [
       rehypeShiki,
       {
-        themes: { light: "night-owl-light", dark: "houston" },
-        langs: ["ts"],
+        themes: themes ?? { light: "night-owl-light", dark: "houston" },
+        langs: langs ?? ["ts"],
         ...shiki,
         transformers: twoslash
           ? [transformerTwoslash({ explicitTrigger: true }), ...transformers]
@@ -170,6 +171,74 @@ function shikiPlugin(options: LuzpressShikiOptions | undefined) {
       },
     ],
   ];
+}
+
+const FINE_GRAINED_LANGS: Record<string, string> = {
+  bash: "bash",
+  shell: "shellscript",
+  sh: "shellscript",
+  shellscript: "shellscript",
+  js: "javascript",
+  javascript: "javascript",
+  jsx: "jsx",
+  ts: "typescript",
+  typescript: "typescript",
+  tsx: "tsx",
+  md: "markdown",
+  markdown: "markdown",
+  mdx: "mdx",
+  css: "css",
+  html: "html",
+  json: "json",
+  diff: "diff",
+};
+
+const FINE_GRAINED_THEMES: Record<string, string> = {
+  houston: "houston",
+  "night-owl-light": "night-owl-light",
+  "night-owl": "night-owl",
+  "github-light": "github-light",
+  "github-dark": "github-dark",
+  "dark-plus": "dark-plus",
+  "light-plus": "light-plus",
+  "vitesse-light": "vitesse-light",
+  "vitesse-dark": "vitesse-dark",
+};
+
+function resolveImportSpecifier(id: string) {
+  return pathToFileURL(require.resolve(id)).href;
+}
+
+function shikiFineGrainedRuntime(options: { themes: string[]; langs: string[] }) {
+  const themes = [...new Set(options.themes)];
+  const langs = [...new Set(options.langs)];
+  const themeImports = themes.map((theme, index) => {
+    const pkg = FINE_GRAINED_THEMES[theme];
+    if (!pkg)
+      throw new Error(
+        `luzpress: unsupported browser Shiki theme "${theme}". Add it to FINE_GRAINED_THEMES in luzpress or use a supported theme.`,
+      );
+    return `import theme${index} from ${JSON.stringify(resolveImportSpecifier(`@shikijs/themes/${pkg}`))};`;
+  });
+  const langImports = langs.map((lang, index) => {
+    const pkg = FINE_GRAINED_LANGS[lang];
+    if (!pkg)
+      throw new Error(
+        `luzpress: unsupported browser Shiki language "${lang}". Add it to FINE_GRAINED_LANGS in luzpress or use a supported language.`,
+      );
+    return `import lang${index} from ${JSON.stringify(resolveImportSpecifier(`@shikijs/langs/${pkg}`))};`;
+  });
+
+  return `
+        import { createHighlighterCore } from "shiki/core";
+        import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+        ${themeImports.join("\n        ")}
+        ${langImports.join("\n        ")}
+        export const shiki = createHighlighterCore({
+          themes: [${themes.map((_, index) => `theme${index}`).join(", ")}],
+          langs: [${langs.map((_, index) => `lang${index}`).join(", ")}],
+          engine: createJavaScriptRegexEngine(),
+        });`;
 }
 
 function remarkStripFrontmatter() {
@@ -317,6 +386,7 @@ export function luzpress(options: LuzpressOptions = {}): PluginOption[] {
     enforce: "pre",
     resolveId(id) {
       if (id === "luzpress") return "\0luzpress:runtime";
+      if (id === "luzpress/shiki") return "\0luzpress:shiki";
       if (id === "luzpress/config") return "\0luzpress:config";
       const configStub = fileURLToPath(new URL("../src/config.ts", import.meta.url));
       if (id === configStub || id.endsWith("/luzpress/src/config.ts")) return "\0luzpress:config";
@@ -333,6 +403,7 @@ export function luzpress(options: LuzpressOptions = {}): PluginOption[] {
         return `export const socials = ${JSON.stringify(socials)};
 export const preview = ${JSON.stringify(preview)};`;
       }
+      if (id === "\0luzpress:shiki") return shikiFineGrainedRuntime(highlighterOptions);
       if (id !== "\0luzpress:runtime") return;
 
       return `
@@ -351,6 +422,7 @@ export const preview = ${JSON.stringify(preview)};`;
           SearchOverlay,
           ThemeToggle,
         } from "luzpress/components";
+        export const shiki = import("luzpress/shiki").then((m) => m.shiki);
         export {
           DocArticle,
           DocPager,
@@ -373,8 +445,6 @@ export const preview = ${JSON.stringify(preview)};`;
           searchDocuments,
           setPrerenderedMdxHtml,
         } from "luzpress/mdx";
-        import { createHighlighter } from "shiki";
-        export const shiki = createHighlighter(${JSON.stringify(highlighterOptions)});
       `;
     },
     transform(code, id) {
@@ -404,6 +474,15 @@ export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("u
       }
 
       return {
+        build: {
+          rolldownOptions: {
+            output: {
+              codeSplitting: {
+                includeDependenciesRecursively: false,
+              },
+            },
+          },
+        },
         resolve: {
           alias: {
             $lib: path.resolve(root, "src", "lib"),

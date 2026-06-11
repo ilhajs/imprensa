@@ -10,13 +10,26 @@ export type LuzpressLlmsOptions = {
   section?: string;
 };
 
+type ContentMeta = {
+  title?: string;
+  description?: string;
+  order?: number;
+  priority?: number;
+  draft?: boolean;
+  hidden?: boolean;
+  tags?: string[];
+};
+
 type ContentFile = {
   sourcePath: string;
   routePath: string;
   distRelative: string;
   title: string;
+  description?: string;
+  order?: number;
   content: string;
   ext: string;
+  tags: string[];
 };
 
 function normalizeContentDirPhysical(root: string, contentDir: string) {
@@ -39,8 +52,68 @@ function titleize(value: string) {
   return value.replace(/[-_]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function titleFromSource(content: string, filePath: string) {
-  const heading = content.match(/^#\s+(.+)$/m);
+function parseScalar(value: string): unknown {
+  const trimmed = value.trim();
+  if (trimmed === "true") return true;
+  if (trimmed === "false") return false;
+  if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
+  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+    return trimmed
+      .slice(1, -1)
+      .split(",")
+      .map((item) => item.trim().replace(/^['\"]|['\"]$/g, ""))
+      .filter(Boolean);
+  }
+  return trimmed.replace(/^['\"]|['\"]$/g, "");
+}
+
+function parseFrontmatter(content: string): ContentMeta {
+  if (!content.startsWith("---")) return {};
+  const end = content.indexOf("\n---", 3);
+  if (end === -1) return {};
+  const yaml = content.slice(4, end);
+  const meta: Record<string, unknown> = {};
+  let listKey: string | undefined;
+  for (const line of yaml.split("\n")) {
+    const listItem = line.match(/^\s*-\s*(.+)$/);
+    if (listItem && listKey) {
+      const list = Array.isArray(meta[listKey]) ? meta[listKey] : [];
+      list.push(parseScalar(listItem[1]));
+      meta[listKey] = list;
+      continue;
+    }
+    const m = line.match(/^([\w-]+):\s*(.*)$/);
+    if (!m) continue;
+    listKey = undefined;
+    if (!m[2].trim()) {
+      meta[m[1]] = [];
+      listKey = m[1];
+    } else {
+      meta[m[1]] = parseScalar(m[2]);
+    }
+  }
+  return {
+    title: typeof meta.title === "string" ? meta.title : undefined,
+    description: typeof meta.description === "string" ? meta.description : undefined,
+    order: typeof meta.order === "number" ? meta.order : undefined,
+    priority: typeof meta.priority === "number" ? meta.priority : undefined,
+    draft: meta.draft === true,
+    hidden: meta.hidden === true || meta.sidebar === false,
+    tags: Array.isArray(meta.tags)
+      ? meta.tags.filter((tag): tag is string => typeof tag === "string")
+      : [],
+  };
+}
+
+function stripFrontmatter(content: string) {
+  if (!content.startsWith("---")) return content;
+  const end = content.indexOf("\n---", 3);
+  return end === -1 ? content : content.slice(end + 4).replace(/^\s+/, "");
+}
+
+function titleFromSource(content: string, filePath: string, meta: ContentMeta) {
+  if (meta.title) return meta.title;
+  const heading = stripFrontmatter(content).match(/^#\s+(.+)$/m);
   if (heading) return heading[1].trim();
 
   const name = path.basename(filePath).replace(/\.mdx?$/, "");
@@ -68,22 +141,31 @@ function collectContentFiles(contentDirPhysical: string): ContentFile[] {
       if (!/\.mdx?$/.test(entry.name)) continue;
 
       const content = fs.readFileSync(entryPath, "utf8");
+      const meta = parseFrontmatter(content);
+      if (meta.draft || meta.hidden) continue;
       const routePath = filePathToRoutePath(entryPath, contentDirPhysical);
 
       files.push({
         sourcePath: entryPath,
         routePath,
         distRelative: routeToDistRelative(routePath),
-        title: titleFromSource(content, entryPath),
-        content,
+        title: titleFromSource(content, entryPath, meta),
+        description: meta.description,
+        order: meta.order,
+        content: stripFrontmatter(content),
         ext: ".md",
+        tags: meta.tags ?? [],
       });
     }
   }
 
   walk(contentDirPhysical);
 
-  return files.sort((a, b) => a.routePath.localeCompare(b.routePath));
+  return files.sort((a, b) => {
+    if (a.order !== undefined || b.order !== undefined)
+      return (a.order ?? 9999) - (b.order ?? 9999);
+    return a.routePath.localeCompare(b.routePath);
+  });
 }
 
 function renderLlmsOutline(files: ContentFile[], options: Required<LuzpressLlmsOptions>) {
@@ -97,7 +179,8 @@ function renderLlmsOutline(files: ContentFile[], options: Required<LuzpressLlmsO
   ];
 
   for (const file of files) {
-    lines.push(`- [${file.title}](/${file.distRelative})`);
+    const description = file.description ? `: ${file.description}` : "";
+    lines.push(`- [${file.title}](/${file.distRelative})${description}`);
   }
 
   lines.push(
@@ -169,4 +252,17 @@ export function generateLlmsArtifacts(options: {
 
   fs.writeFileSync(path.join(options.outDir, "llms.txt"), renderLlmsOutline(files, resolved));
   fs.writeFileSync(path.join(options.outDir, "llms-full.txt"), renderLlmsFull(files));
+  fs.writeFileSync(
+    path.join(options.outDir, "llms.json"),
+    `${JSON.stringify(
+      {
+        siteName: resolved.siteName,
+        summary: resolved.summary,
+        section: resolved.section,
+        pages: files.map(({ content: _content, sourcePath: _sourcePath, ...file }) => file),
+      },
+      null,
+      2,
+    )}\n`,
+  );
 }

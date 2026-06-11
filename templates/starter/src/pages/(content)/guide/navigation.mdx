@@ -1,10 +1,17 @@
+---
+title: Navigation
+description: Build sidebar navigation, mobile navigation, and command search from your MDX files.
+order: 3
+tags: [sidebar, search]
+---
+
 # Navigation
 
 The sidebar and search index are built automatically from MDX files under `contentDir`.
 
 ## Sidebar
 
-Every `.mdx` file under `src/pages/(content)/` appears in the sidebar. The title comes from the first `h1` in the file. Nested directories become collapsible groups labeled by their directory name.
+Every `.mdx` file under `src/pages/(content)/` appears in the sidebar. The title comes from frontmatter or the first `h1` in the file. Nested directories become collapsible groups labeled by their directory name.
 
 ```
 (content)/
@@ -14,7 +21,19 @@ Every `.mdx` file under `src/pages/(content)/` appears in the sidebar. The title
 │   └── configuration.mdx → /guide/configuration "Configuration"
 ```
 
-There is no manual nav config — add a file and it appears.
+There is no manual nav config — add a file and it appears. Use frontmatter to tune ordering or hide a page:
+
+```mdx
+---
+title: API Reference
+description: Generated API docs for every public export.
+order: 4
+hidden: false
+tags: [api, reference]
+---
+```
+
+Lower `order` values appear first. Set `draft: true` to remove a page from search, navigation, and AI exports while you are writing it.
 
 ## Search
 

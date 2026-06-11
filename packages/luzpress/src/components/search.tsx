@@ -1,5 +1,4 @@
 /** @jsxImportSource ilha */
-import { navigate } from "@ilha/router";
 import { Command as CommandPrimitive } from "@areia/slots";
 import { Button, Dialog, Icon, LinkButton } from "areia";
 import ilha from "ilha";
@@ -142,7 +141,7 @@ const SearchDialogContent = ilha
       onSearchChange: (value: string) => state.query(value),
       onSelect: (value: string) => {
         closeDialogFromContent(root);
-        navigate(value);
+        window.location.assign(value);
       },
     });
     return () => controller.destroy();

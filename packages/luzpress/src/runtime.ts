@@ -1,4 +1,3 @@
-import { createHighlighter } from "shiki";
 import type { Head } from "unhead";
 import type { PrerenderArguments } from "vite-prerender-plugin";
 
@@ -19,16 +18,13 @@ export type LuzpressPrerenderOptions = {
   pageRouter: RouterLike;
   registry: any;
   mdxRoutes?: Iterable<string>;
-  renderMdx?: (url: string) => RenderedMdx;
+  renderMdx?: (url: string) => RenderedMdx | Promise<RenderedMdx>;
   setPrerenderedMdxHtml?: (html: string | undefined) => void;
-  getMdxHead?: (url: string) => Head | undefined;
+  getMdxHead?: (url: string) => Head | undefined | Promise<Head | undefined>;
   headDefaults?: Head | null;
 };
 
-export const shiki = createHighlighter({
-  themes: ["night-owl-light", "houston"],
-  langs: ["ts"],
-});
+export const shiki = new Promise<any>(() => {});
 
 export const THEME_STORAGE_KEY = "luz:theme";
 
@@ -85,7 +81,7 @@ export function mountOrHydrate(options: {
 }
 
 async function applyClientHead(
-  getMdxHead: ((url: string) => Head | undefined) | undefined,
+  getMdxHead: ((url: string) => Head | undefined | Promise<Head | undefined>) | undefined,
   headDefaults: Head | null | undefined,
 ) {
   if (typeof window === "undefined") return;
@@ -93,10 +89,10 @@ async function applyClientHead(
   const head = (window as any).__UNHEAD__ ?? ((window as any).__UNHEAD__ = createHead());
   let dispose: (() => void) | undefined;
 
-  function apply() {
+  async function apply() {
     dispose?.();
     const url = location.pathname.replace(/\/$/, "") || "/";
-    const merged: Head = { ...(headDefaults ?? {}), ...(getMdxHead?.(url) ?? {}) };
+    const merged: Head = { ...(headDefaults ?? {}), ...((await getMdxHead?.(url)) ?? {}) };
     if (Object.keys(merged).length > 0) dispose = head.push(merged).dispose;
   }
 
@@ -113,7 +109,7 @@ async function applyClientHead(
 export function createPrerender(options: LuzpressPrerenderOptions) {
   return async function prerender(data?: PrerenderArguments) {
     const url = data?.url ?? "/";
-    const mdxPage = options.renderMdx?.(url);
+    const mdxPage = await options.renderMdx?.(url);
     options.setPrerenderedMdxHtml?.(mdxPage?.html);
 
     const html = await options.pageRouter.renderHydratable(url, options.registry, {
@@ -122,7 +118,7 @@ export function createPrerender(options: LuzpressPrerenderOptions) {
 
     const mergedHead: Head = {
       ...(options.headDefaults ?? {}),
-      ...(options.getMdxHead?.(url) ?? {}),
+      ...((await options.getMdxHead?.(url)) ?? {}),
     };
     const head: {
       title?: string;
@@ -174,9 +170,9 @@ async function loadIlhaCodegen() {
 async function loadMdxHelpers() {
   return import("luzpress/mdx") as Promise<{
     mdxRoutes: string[];
-    renderMdx: (url: string) => RenderedMdx;
+    renderMdx: (url: string) => RenderedMdx | Promise<RenderedMdx>;
     setPrerenderedMdxHtml: (html: string | undefined) => void;
-    getMdxHead: (url: string) => Head | undefined;
+    getMdxHead: (url: string) => Head | undefined | Promise<Head | undefined>;
     headDefaults: Head | null;
   }>;
 }
@@ -191,7 +187,8 @@ export function createLuzpress(options: { dev?: boolean; target?: string } = {})
         loadMdxHelpers(),
       ]);
 
-      await applyClientHead(mdx.getMdxHead, mdx.headDefaults);
+      if (options.dev ?? import.meta.env.DEV)
+        await applyClientHead(mdx.getMdxHead, mdx.headDefaults);
 
       return mountOrHydrate({
         pageRouter,

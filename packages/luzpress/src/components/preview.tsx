@@ -1,6 +1,6 @@
 /** @jsxImportSource ilha */
 import ilha from "ilha";
-import { shiki } from "luzpress/runtime";
+import { shiki } from "luzpress";
 import { preview as previewConfig } from "luzpress/config";
 
 const DEFAULT_IMPORTMAP = { imports: {} as Record<string, string> };
@@ -67,7 +67,8 @@ export const Preview = ilha
       });
     });
 
-    shiki.then(async (h) => {
+    shiki.then(async (highlighter) => {
+      const h = highlighter as any;
       await h.loadLanguage("tsx");
       const div = document.createElement("div");
       div.className =
