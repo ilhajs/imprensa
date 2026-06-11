@@ -67,13 +67,14 @@ export const ContentLayout = defineLayout((children) => {
   const { path } = useRoute();
 
   return ilha
-    .state("layout", () => getInitialSidebarLayout())
+    .state("layout", DEFAULT_SIDEBAR_LAYOUT)
     .effect(() => {
       const hash = routeHash();
       if (hash)
         requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView());
     })
-    .onMount(({ host }) => {
+    .onMount(({ host, state }) => {
+      state.layout(getInitialSidebarLayout());
       let resizable: Element | null = null;
       let secondFrame = 0;
       const handleLayoutChange = (event: Event) => {

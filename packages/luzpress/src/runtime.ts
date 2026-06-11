@@ -14,6 +14,12 @@ type RouterLike = {
 
 type RenderedMdx = { html: string; path: string } | undefined;
 
+function encodeBase64(value: string) {
+  const bufferCtor = (globalThis as any).Buffer;
+  if (bufferCtor) return bufferCtor.from(value, "utf8").toString("base64");
+  return btoa(unescape(encodeURIComponent(value)));
+}
+
 export type LuzpressPrerenderOptions = {
   pageRouter: RouterLike;
   registry: any;
@@ -154,7 +160,9 @@ export function createPrerender(options: LuzpressPrerenderOptions) {
       html,
       head: Object.keys(head).length > 0 ? head : undefined,
       links: new Set(links),
-      data: mdxPage ? { mdxPath: mdxPage.path } : undefined,
+      data: mdxPage
+        ? { mdxHtmlBase64: encodeBase64(mdxPage.html), mdxPath: mdxPage.path }
+        : undefined,
     };
   };
 }

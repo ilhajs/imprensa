@@ -316,6 +316,12 @@ export function getPrerenderedMdxHtml() {
   return prerenderedMdxHtml;
 }
 
+function decodeBase64(value: string) {
+  const binary = atob(value);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
 export function getClientPrerenderedMdxHtml(path: string) {
   if (typeof document === "undefined") return undefined;
 
@@ -323,11 +329,15 @@ export function getClientPrerenderedMdxHtml(path: string) {
   if (!data) return undefined;
 
   try {
-    const parsed = JSON.parse(data) as { mdxHtml?: unknown; mdxPath?: unknown };
+    const parsed = JSON.parse(data) as {
+      mdxHtml?: unknown;
+      mdxHtmlBase64?: unknown;
+      mdxPath?: unknown;
+    };
     const normalizedPath = path.replace(/\/$/, "") || "/";
-    return parsed.mdxPath === normalizedPath && typeof parsed.mdxHtml === "string"
-      ? parsed.mdxHtml
-      : undefined;
+    if (parsed.mdxPath !== normalizedPath) return undefined;
+    if (typeof parsed.mdxHtmlBase64 === "string") return decodeBase64(parsed.mdxHtmlBase64);
+    return typeof parsed.mdxHtml === "string" ? parsed.mdxHtml : undefined;
   } catch {
     return undefined;
   }
