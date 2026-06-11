@@ -28,6 +28,7 @@ export type LuzpressPrerenderOptions = {
   setPrerenderedMdxHtml?: (html: string | undefined) => void;
   getMdxHead?: (url: string) => Head | undefined | Promise<Head | undefined>;
   headDefaults?: Head | null;
+  hostname?: string;
 };
 
 export const shiki = new Promise<any>(() => {});
@@ -125,10 +126,27 @@ export function createPrerender(options: LuzpressPrerenderOptions) {
       .replace(/<script/gi, "&lt;script")
       .replace(/<\/script>/gi, "&lt;/script&gt;");
 
+    const canonicalUrl = options.hostname ? new URL(url, options.hostname).href : undefined;
     const mergedHead: Head = {
       ...(options.headDefaults ?? {}),
       ...((await options.getMdxHead?.(url)) ?? {}),
     };
+
+    if (canonicalUrl) {
+      mergedHead.link = [
+        ...((mergedHead.link as Record<string, string>[] | undefined)?.filter(
+          (link) => link.rel !== "canonical",
+        ) ?? []),
+        { rel: "canonical", href: canonicalUrl },
+      ];
+      mergedHead.meta = [
+        ...((mergedHead.meta as Record<string, string>[] | undefined)?.filter(
+          (meta) => meta.property !== "og:url" && meta.name !== "twitter:url",
+        ) ?? []),
+        { property: "og:url", content: canonicalUrl },
+        { name: "twitter:url", content: canonicalUrl },
+      ];
+    }
     const head: {
       title?: string;
       elements?: Set<{ type: string; props: Record<string, string> }>;
@@ -188,7 +206,9 @@ async function loadMdxHelpers() {
   }>;
 }
 
-export function createLuzpress(options: { dev?: boolean; target?: string } = {}) {
+export function createLuzpress(
+  options: { dev?: boolean; target?: string; hostname?: string } = {},
+) {
   return {
     async init() {
       applyInitialTheme();
@@ -222,6 +242,7 @@ export function createLuzpress(options: { dev?: boolean; target?: string } = {})
         setPrerenderedMdxHtml: mdx.setPrerenderedMdxHtml,
         getMdxHead: mdx.getMdxHead,
         headDefaults: mdx.headDefaults,
+        hostname: options.hostname,
       })(data);
     },
   };

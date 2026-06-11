@@ -501,15 +501,6 @@ export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("u
       }
 
       return {
-        build: {
-          rolldownOptions: {
-            output: {
-              codeSplitting: {
-                includeDependenciesRecursively: false,
-              },
-            },
-          },
-        },
         resolve: {
           alias: {
             $lib: path.resolve(root, "src", "lib"),

@@ -1,7 +1,7 @@
 import { Badge, ClipboardText, Icon, LinkButton, LayerCard } from "areia";
 import ilha, { raw } from "ilha";
-import { Book, Code2, FileText, Globe, Search } from "lucide";
 import { shiki as highlighter } from "luzpress";
+import { Book, Code2, FileText, Globe, Search } from "lucide";
 import { Footer } from "$lib/components/footer";
 import { GitHubIcon } from "$lib/components/github-icon";
 import { bindHeroTechCardTracking, HeroTechCards } from "$lib/components/hero-tech-card";
@@ -10,18 +10,14 @@ import { Topbar } from "$lib/components/topbar";
 const previewCodeClass =
   "mt-4 max-w-full overflow-x-auto rounded-xl border border-areia-border text-xs [&_pre]:min-w-max [&_pre]:p-4 [&_pre]:text-xs [&_pre]:leading-relaxed";
 
-async function highlightPreview(code: string, lang: "mdx" | "shell") {
-  const shiki = await highlighter;
+const shiki = await highlighter;
 
-  return raw(
-    `<div class="${previewCodeClass}">${shiki.codeToHtml(code, {
-      lang,
-      themes: {
-        light: "night-owl-light",
-        dark: "houston",
-      },
-    })}</div>`,
-  );
+function highlightPreview(code: string, lang: "mdx" | "shell") {
+  if (!shiki) return null;
+  return `<div class="${previewCodeClass}">${shiki.codeToHtml(code, {
+    lang,
+    themes: { light: "night-owl-light", dark: "houston" },
+  })}</div>`;
 }
 
 function escapeHtml(value: string) {
@@ -70,15 +66,24 @@ const buildOutputCode = `$ bun run build
 
 Deploy the dist/ folder anywhere.`;
 
+const previewHtml = {
+  fileTree: highlightPreview(fileTreeCode, "shell"),
+  mdxSyntax: highlightPreview(mdxSyntaxCode, "mdx"),
+  buildOutput: highlightPreview(buildOutputCode, "shell"),
+};
+
 export default ilha
   .onMount(({ host }) => bindHeroTechCardTracking(host))
-  .derived("previews", async () => ({
-    fileTree: await highlightPreview(fileTreeCode, "shell"),
-    mdxSyntax: await highlightPreview(mdxSyntaxCode, "mdx"),
-    buildOutput: await highlightPreview(buildOutputCode, "shell"),
-  }))
-  .render(({ derived }) => {
-    const previews = derived.previews();
+  .render(() => {
+    const previews = {
+      fileTree: previewHtml.fileTree ? raw(previewHtml.fileTree) : previewFallback(fileTreeCode),
+      mdxSyntax: previewHtml.mdxSyntax
+        ? raw(previewHtml.mdxSyntax)
+        : previewFallback(mdxSyntaxCode),
+      buildOutput: previewHtml.buildOutput
+        ? raw(previewHtml.buildOutput)
+        : previewFallback(buildOutputCode),
+    };
 
     return (
       <div class="min-h-screen flex flex-col bg-areia-surface-elevated/50 text-areia-foreground">
@@ -138,7 +143,7 @@ export default ilha
                 <LayerCard.Content class="flex-1">
                   Create pages from <code>src/pages</code> with nested guide routes, shared layouts,
                   and content-first URLs.
-                  {previews?.fileTree ?? previewFallback(fileTreeCode)}
+                  {previews.fileTree}
                 </LayerCard.Content>
               </LayerCard>
 
@@ -154,7 +159,7 @@ export default ilha
                 <LayerCard.Content class="flex-1">
                   Write docs in MDX with Markdown, syntax-highlighted code, and embedded Ilha
                   islands or Areia components right where readers need them.
-                  {previews?.mdxSyntax ?? previewFallback(mdxSyntaxCode)}
+                  {previews.mdxSyntax}
                 </LayerCard.Content>
               </LayerCard>
 
@@ -200,7 +205,7 @@ export default ilha
                 <LayerCard.Content class="flex-1">
                   Build prerendered pages that can be hosted almost anywhere: Vercel, Netlify,
                   GitHub Pages, Cloudflare, or any static file server.
-                  {previews?.buildOutput ?? previewFallback(buildOutputCode)}
+                  {previews.buildOutput}
                 </LayerCard.Content>
               </LayerCard>
             </div>
