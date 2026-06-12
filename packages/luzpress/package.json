@@ -66,7 +66,7 @@
   },
   "dependencies": {
     "@areia/slots": "^0.1.3",
-    "@ilha/router": "^0.5.0",
+    "@ilha/router": "^0.6.1",
     "@mdx-js/rollup": "^3.1.1",
     "@shikijs/engine-javascript": "^4.2.0",
     "@shikijs/langs": "^4.2.0",
@@ -92,8 +92,8 @@
     "typescript": "^6.0.3"
   },
   "peerDependencies": {
-    "areia": "^0.1.15",
-    "ilha": "^0.7.0",
+    "areia": "^0.1.18",
+    "ilha": "^0.7.1",
     "lucide": "^1.17.0",
     "vite": "^8"
   }

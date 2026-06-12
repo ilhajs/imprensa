@@ -189,15 +189,14 @@ export function createPrerender(options: LuzpressPrerenderOptions) {
   };
 }
 
-async function loadIlhaCodegen() {
-  const [{ pageRouter }, { registry }] = await Promise.all([
-    // @ts-ignore provided by @ilha/router codegen at Vite build/dev time
-    import("ilha:pages"),
-    // @ts-ignore provided by @ilha/router codegen at Vite build/dev time
-    import("ilha:registry"),
-  ]);
+async function loadClientIlhaCodegen() {
+  // @ts-ignore provided by @ilha/router codegen at Vite build/dev time
+  return import("ilha:pages/client") as Promise<{ pageRouter: RouterLike; registry: any }>;
+}
 
-  return { pageRouter, registry };
+async function loadServerIlhaCodegen() {
+  // @ts-ignore provided by @ilha/router codegen at Vite build/dev time
+  return import("ilha:pages/server") as Promise<{ pageRouter: RouterLike; registry: any }>;
 }
 
 async function loadMdxHelpers() {
@@ -219,15 +218,7 @@ export function createLuzpress(
 
       const dev = options.dev ?? import.meta.env.DEV;
       const staticHydration = options.static ?? !dev;
-      const [codegen, mdx] = await Promise.all([
-        staticHydration
-          ? import("ilha:registry").then((registryModule) => ({
-              pageRouter: undefined,
-              registry: registryModule.registry,
-            }))
-          : loadIlhaCodegen(),
-        loadMdxHelpers(),
-      ]);
+      const [codegen, mdx] = await Promise.all([loadClientIlhaCodegen(), loadMdxHelpers()]);
 
       if (dev) await applyClientHead(mdx.getMdxHead, mdx.headDefaults);
 
@@ -241,7 +232,7 @@ export function createLuzpress(
     },
     async prerender(data?: PrerenderArguments) {
       const [{ pageRouter, registry }, mdx] = await Promise.all([
-        loadIlhaCodegen(),
+        loadServerIlhaCodegen(),
         loadMdxHelpers(),
       ]);
 

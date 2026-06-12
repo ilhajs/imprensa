@@ -402,7 +402,7 @@ export function luzpress(options: LuzpressOptions = {}): PluginOption[] {
       remarkPlugins: [remarkPreview, escapeCodeFenceHtmlPlugin, ...(remarkPlugins as any[])],
       rehypePlugins: [...shikiPlugin(shiki), ...coreRehypePlugins, ...rehypePlugins],
     }),
-    pages({ mode: "spa", interceptLinks: false, ...pagesOptions }),
+    pages({ mode: "static", ...pagesOptions }),
   ];
 
   plugins.push(tailwindcss());

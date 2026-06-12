@@ -9,14 +9,20 @@ declare module "luzpress/config" {
   export const preview: { importmap?: string; head?: string };
 }
 
-import type { RouterBuilder } from "@ilha/router";
-export const pageRouter: RouterBuilder;
-
-declare module "ilha:registry" {
+declare module "ilha:pages/server" {
   import type { Island } from "ilha";
+  import type { RouterBuilder } from "@ilha/router";
+  export const pageRouter: RouterBuilder;
+  export const registry: Record<string, Island<any, any>>;
+}
+
+declare module "ilha:pages/client" {
+  import type { Island } from "ilha";
+  import type { RouterBuilder } from "@ilha/router";
+  export const pageRouter: RouterBuilder;
   export const registry: Record<string, Island<any, any>>;
 }
 
 declare module "ilha:loaders" {
-  // Side-effect-only module. Importing it attaches loaders to pageRouter.
+  // Side-effect-only module. Importing it attaches loaders to the server pageRouter.
 }
