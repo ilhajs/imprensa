@@ -1,7 +1,7 @@
 import { Badge, ClipboardText, Icon, LinkButton, LayerCard } from "areia";
 import ilha, { raw } from "ilha";
-import { shiki as highlighter } from "luzpress";
 import { Book, Code2, FileText, Globe, Search } from "lucide";
+import { shiki as highlighter } from "luzpress";
 import { Footer } from "$lib/components/footer";
 import { GitHubIcon } from "$lib/components/github-icon";
 import { bindHeroTechCardTracking, HeroTechCards } from "$lib/components/hero-tech-card";

@@ -1,3 +1,4 @@
+import { router } from "@ilha/router";
 import type { Head } from "unhead";
 import type { PrerenderArguments } from "vite-prerender-plugin";
 
@@ -72,10 +73,11 @@ export function applyInitialTheme() {
 }
 
 export function mountOrHydrate(options: {
-  pageRouter: RouterLike;
+  pageRouter?: RouterLike;
   registry: any;
   dev?: boolean;
   target?: string;
+  static?: boolean;
 }) {
   applyInitialTheme();
 
@@ -83,6 +85,8 @@ export function mountOrHydrate(options: {
 
   const { pageRouter, registry, dev = false, target = "#app" } = options;
 
+  if (options.static) return router({ mode: "static" }).hydrateStatic(registry);
+  if (!pageRouter) return () => {};
   if (dev) return pageRouter.mount(target);
   return pageRouter.hydrate(registry);
 }
@@ -207,25 +211,32 @@ async function loadMdxHelpers() {
 }
 
 export function createLuzpress(
-  options: { dev?: boolean; target?: string; hostname?: string } = {},
+  options: { dev?: boolean; target?: string; hostname?: string; static?: boolean } = {},
 ) {
   return {
     async init() {
       applyInitialTheme();
 
-      const [{ pageRouter, registry }, mdx] = await Promise.all([
-        loadIlhaCodegen(),
+      const dev = options.dev ?? import.meta.env.DEV;
+      const staticHydration = options.static ?? !dev;
+      const [codegen, mdx] = await Promise.all([
+        staticHydration
+          ? import("ilha:registry").then((registryModule) => ({
+              pageRouter: undefined,
+              registry: registryModule.registry,
+            }))
+          : loadIlhaCodegen(),
         loadMdxHelpers(),
       ]);
 
-      if (options.dev ?? import.meta.env.DEV)
-        await applyClientHead(mdx.getMdxHead, mdx.headDefaults);
+      if (dev) await applyClientHead(mdx.getMdxHead, mdx.headDefaults);
 
       return mountOrHydrate({
-        pageRouter,
-        registry,
-        dev: options.dev ?? import.meta.env.DEV,
+        pageRouter: codegen.pageRouter,
+        registry: codegen.registry,
+        dev,
         target: options.target,
+        static: staticHydration,
       });
     },
     async prerender(data?: PrerenderArguments) {

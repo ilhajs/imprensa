@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "luz",
+      "dependencies": {
+        "@ilha/router": "^0.5.0",
+      },
       "devDependencies": {
         "@types/bun": "^1.3.14",
         "oxfmt": "^0.53.0",
@@ -16,7 +19,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@areia/slots": "^0.1.3",
-        "@ilha/router": "^0.4.3",
+        "@ilha/router": "^0.5.0",
         "@mdx-js/rollup": "^3.1.1",
         "@shikijs/engine-javascript": "^4.2.0",
         "@shikijs/langs": "^4.2.0",
@@ -54,7 +57,7 @@
       "dependencies": {
         "@fontsource-variable/geist": "^5.2.9",
         "@fontsource-variable/geist-mono": "^5.2.8",
-        "@ilha/router": "^0.4.3",
+        "@ilha/router": "^0.5.0",
         "areia": "^0.1.15",
         "ilha": "^0.7.0",
         "lucide": "^1.17.0",
@@ -93,7 +96,7 @@
 
     "@fontsource-variable/geist-mono": ["@fontsource-variable/geist-mono@5.2.8", "", {}, "sha512-KI5bj+hkkRiHttYHmccotUZ80ZuZyai+RwI1d7UId0clkx/jXxlo8qYK8j54WzmpBjtMoEMPyllV7faDcj+6RA=="],
 
-    "@ilha/router": ["@ilha/router@0.4.3", "", { "dependencies": { "ilha": "0.7.0", "rou3": "0.8.1", "unplugin": "3.0.0" } }, "sha512-+fjm+pD0ZgjHIG/hadnOm8hJHcQbdFFzUUti6+t/zeoxfA5SZE3KR+MF/zTbkKdCtBbYXok+mjPpqllmm1W3bQ=="],
+    "@ilha/router": ["@ilha/router@0.5.0", "", { "dependencies": { "ilha": "0.7.0", "rou3": "0.8.1", "unplugin": "3.0.0" } }, "sha512-988ct3A/uaR9SJuZSK/wcQpLFuyp+jWmaeC7d/lnM9SIu2SBy4L36ajSW5BbrSkigGDwNNN/jCkRPo3ZdG5n7A=="],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 
