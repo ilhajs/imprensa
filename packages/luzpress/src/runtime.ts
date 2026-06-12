@@ -169,6 +169,31 @@ export function createPrerender(options: LuzpressPrerenderOptions) {
         elements.add({ type: "link", props: l });
       }
     }
+
+    if (mdxPage && options.hostname) {
+      const pageUrl = new URL(url, options.hostname).href;
+      const metaList = mergedHead.meta as Record<string, string>[] | undefined;
+      const title =
+        (typeof mergedHead.title === "string" && mergedHead.title) ||
+        metaList?.find((m) => m.property === "og:title")?.content ||
+        "Documentation";
+      const description = metaList?.find((m) => m.name === "description")?.content;
+      const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        headline: title,
+        url: pageUrl,
+        mainEntityOfPage: pageUrl,
+        ...(description ? { description } : {}),
+        publisher: { "@type": "Organization", name: "Luz", url: options.hostname },
+      };
+      elements.add({
+        type: "script",
+        props: { type: "application/ld+json" },
+        children: JSON.stringify(jsonLd),
+      });
+    }
+
     if (elements.size > 0) head.elements = elements;
 
     const links = options.pageRouter

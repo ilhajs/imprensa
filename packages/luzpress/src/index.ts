@@ -382,6 +382,19 @@ export function luzpress(options: LuzpressOptions = {}): PluginOption[] {
   plugins.push(vitePrerenderPlugin());
   plugins.push(sitemap({ hostname, dynamicRoutes: collectMdxRoutes(contentDir) }));
   plugins.push({
+    name: "luzpress:html",
+    apply: "build",
+    transformIndexHtml: {
+      order: "post",
+      handler(html) {
+        return html.replace(
+          /<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/g,
+          '<link rel="preload" as="style" href="$1" crossorigin />\n    $&',
+        );
+      },
+    },
+  });
+  plugins.push({
     name: "luzpress:config",
     enforce: "pre",
     resolveId(id) {

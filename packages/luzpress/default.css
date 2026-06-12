@@ -108,3 +108,9 @@ html.dark .shiki span {
 html.dark .shiki {
   background-color: var(--shiki-dark-bg) !important;
 }
+
+/* night-owl-light blue (#4876d6) on #fbfbfb fails ~4.19:1 — darken for WCAG AA */
+html:not(.dark) .shiki.shiki-themes span[style*="4876D6"],
+html:not(.dark) .shiki.shiki-themes span[style*="4876d6"] {
+  color: #3558a8 !important;
+}

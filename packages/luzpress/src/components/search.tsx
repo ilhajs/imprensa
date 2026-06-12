@@ -94,6 +94,7 @@ export const SearchOverlay = ilha
       trigger={
         <Button
           data-search-trigger
+          aria-label="Search documentation"
           icon={<Icon icon={Search} />}
           class="w-10 justify-center sm:w-full sm:justify-start"
         >
