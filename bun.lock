@@ -5,7 +5,7 @@
     "": {
       "name": "luz",
       "dependencies": {
-        "@ilha/router": "^0.6.1",
+        "@ilha/router": "^0.6.2",
         "areia": "^0.1.18",
       },
       "devDependencies": {
@@ -20,7 +20,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@areia/slots": "^0.1.3",
-        "@ilha/router": "^0.6.1",
+        "@ilha/router": "^0.6.2",
         "@mdx-js/rollup": "^3.1.1",
         "@shikijs/engine-javascript": "^4.2.0",
         "@shikijs/langs": "^4.2.0",
@@ -58,7 +58,7 @@
       "dependencies": {
         "@fontsource-variable/geist": "^5.2.9",
         "@fontsource-variable/geist-mono": "^5.2.8",
-        "@ilha/router": "^0.6.1",
+        "@ilha/router": "^0.6.2",
         "areia": "^0.1.18",
         "ilha": "^0.7.1",
         "lucide": "^1.17.0",
@@ -97,7 +97,7 @@
 
     "@fontsource-variable/geist-mono": ["@fontsource-variable/geist-mono@5.2.8", "", {}, "sha512-KI5bj+hkkRiHttYHmccotUZ80ZuZyai+RwI1d7UId0clkx/jXxlo8qYK8j54WzmpBjtMoEMPyllV7faDcj+6RA=="],
 
-    "@ilha/router": ["@ilha/router@0.6.1", "", { "dependencies": { "ilha": "0.7.1", "rou3": "0.8.1", "unplugin": "3.0.0" } }, "sha512-dmbNt/DxsIYeVw4OpHXsySj+aMrZN8mVqVeJfJlnHD5xOLuk8jHIW/+pl+6Qpnhwfq/vMp8Dfis3MIJUZqMBNw=="],
+    "@ilha/router": ["@ilha/router@0.6.2", "", { "dependencies": { "ilha": "0.7.1", "rou3": "0.8.1", "unplugin": "3.0.0" } }, "sha512-3cw/zmz4rwCGofJRhNSSaLxEovzlTqBQ8T2ZFNlYS15zMGQKdURJIJ+Cz1Z63dYNhxd5vqmcDA86/kNucUVRcw=="],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 

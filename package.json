@@ -12,7 +12,7 @@
     "fmt": "oxfmt"
   },
   "dependencies": {
-    "@ilha/router": "^0.6.1",
+    "@ilha/router": "^0.6.2",
     "areia": "^0.1.18"
   },
   "devDependencies": {
