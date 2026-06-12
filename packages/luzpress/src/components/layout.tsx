@@ -1,11 +1,19 @@
 /** @jsxImportSource ilha */
-import { defineLayout, useRoute, routeHash } from "@ilha/router";
-import { Button, LinkButton, Popover, Resizable, Toaster } from "areia";
+import { defineLayout, routeHash } from "@ilha/router";
+import { LinkButton, Resizable, Toaster } from "areia";
 import { GithubIcon, XIcon, DiscordIcon } from "../icons";
 import { socials } from "luzpress/config";
 import ilha from "ilha";
-import { contentTree, type ContentTreeNode } from "luzpress/mdx";
-import { LogoButton, SearchOverlay, ThemeToggle } from "./search";
+import { when } from "quando";
+import {
+  LogoButton,
+  SearchDialogPanel,
+  SearchNavbarTrigger,
+  ThemeToggle,
+  closeSearchDialog,
+  getSearchResults,
+  mountSearchCommand,
+} from "./search";
 import { Sidebar } from "./sidebar";
 
 const SIDEBAR_STORAGE_KEY = "luzpress:sidebar-layout";
@@ -25,49 +33,65 @@ function getInitialSidebarLayout() {
   }
 }
 
-function normalizePath(path: string) {
-  return path.replace(/\/$/, "") || "/";
-}
-
-function renderMobileTree(nodes: ContentTreeNode[], currentPath: string, depth = 0): unknown[] {
-  return nodes.flatMap((node) => {
-    const active = node.path ? normalizePath(node.path) === currentPath : false;
-    const items: unknown[] = [];
-    if (node.path) {
-      items.push(
-        <Popover.Close>
-          <div style={{ marginLeft: `${depth * 0.5}rem` }}>
-            <LinkButton
-              href={node.path}
-              variant={active ? "outline" : "ghost"}
-              class={`w-full justify-start ${active ? "border-areia-primary text-areia-primary ring-1 ring-areia-primary/30" : ""}`}
-            >
-              {node.title}
-            </LinkButton>
-          </div>
-        </Popover.Close>,
-      );
-    } else {
-      items.push(
-        <span
-          class="mt-2 block text-sm font-medium text-areia-subtle"
-          style={{ marginLeft: `${depth * 0.5}rem` }}
-        >
-          {node.title}
-        </span>,
-      );
-    }
-    if (node.children.length > 0)
-      items.push(...renderMobileTree(node.children, currentPath, depth + 1));
-    return items;
-  });
-}
-
 export const ContentLayout = defineLayout((children) => {
-  const { path } = useRoute();
-
   return ilha
     .state("layout", DEFAULT_SIDEBAR_LAYOUT)
+    .state("searchOpen", false)
+    .state("searchQuery", "")
+    .derived("searchResults", ({ state }) => getSearchResults(state.searchQuery()))
+    .onMount(({ state }) => {
+      const handleKeydown = (event: KeyboardEvent) => {
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+          event.preventDefault();
+          if (state.searchOpen())
+            closeSearchDialog({ dialogOpen: state.searchOpen, query: state.searchQuery });
+          else state.searchOpen(true);
+          return;
+        }
+        if (event.key === "Escape" && state.searchOpen()) {
+          event.preventDefault();
+          closeSearchDialog({ dialogOpen: state.searchOpen, query: state.searchQuery });
+        }
+      };
+      window.addEventListener("keydown", handleKeydown);
+      return () => window.removeEventListener("keydown", handleKeydown);
+    })
+    .on("[data-search-trigger]@click", ({ state }) => state.searchOpen(true))
+    .on("[data-search-close]@click", ({ state }) =>
+      closeSearchDialog({ dialogOpen: state.searchOpen, query: state.searchQuery }),
+    )
+    .on("[data-search-backdrop]@click", ({ state }) =>
+      closeSearchDialog({ dialogOpen: state.searchOpen, query: state.searchQuery }),
+    )
+    .on("[data-search-input]@input", ({ state, event }) => {
+      state.searchQuery((event.target as HTMLInputElement).value);
+    })
+    .effect(({ host, state }) => {
+      if (!state.searchOpen()) return;
+      let destroy = () => {};
+      const frame = requestAnimationFrame(() => {
+        destroy = mountSearchCommand(
+          host,
+          { dialogOpen: state.searchOpen, query: state.searchQuery },
+          () => closeSearchDialog({ dialogOpen: state.searchOpen, query: state.searchQuery }),
+        );
+      });
+      return () => {
+        cancelAnimationFrame(frame);
+        destroy();
+      };
+    })
+    .effect(({ derived, host, state }) => {
+      if (!state.searchOpen() || !state.searchQuery().trim()) return;
+      const frame = requestAnimationFrame(() => {
+        const root = host.querySelector<HTMLElement>('[data-slot="command"]');
+        if (!root) return;
+        const results = derived.searchResults() ?? [];
+        const firstResult = results[0]?.path ?? null;
+        root.dispatchEvent(new CustomEvent("command:set", { detail: { value: firstResult } }));
+      });
+      return () => cancelAnimationFrame(frame);
+    })
     .effect(() => {
       const hash = routeHash();
       if (hash)
@@ -93,57 +117,34 @@ export const ContentLayout = defineLayout((children) => {
         resizable?.removeEventListener("resizable:change", handleLayoutChange);
       };
     })
-    .render(({ state }) => {
-      const currentPath = normalizePath(path());
+    .render(({ derived, state }) => {
       const layout = state.layout();
       return (
-        <div class="flex flex-1 min-h-0 bg-areia-background text-areia-default">
-          <Resizable direction="horizontal" class="h-full w-full">
-            <Resizable.Panel
-              defaultSize={layout[0]}
-              minSize={15}
-              maxSize={35}
-              collapsible
-              class="bg-areia-surface-elevated overflow-y-auto max-md:!hidden"
-            >
-              <Sidebar />
-            </Resizable.Panel>
-            <Resizable.Handle class="max-md:!hidden" />
-            <Resizable.Panel defaultSize={layout[1]} minSize={50} class="!overflow-y-auto">
-              <div class="flex min-h-full w-full flex-col p-4">{children}</div>
-            </Resizable.Panel>
-          </Resizable>
-          <div class="fixed top-4 right-4 z-50 md:hidden">
-            <Popover
-              side="bottom"
-              align="end"
-              contentClass="z-50"
-              trigger={
-                <Button shape="square" aria-label="Open navigation">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="size-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <line x1="3" y1="6" x2="21" y2="6" />
-                    <line x1="3" y1="12" x2="21" y2="12" />
-                    <line x1="3" y1="18" x2="21" y2="18" />
-                  </svg>
-                </Button>
-              }
-              content={
-                <nav class="flex w-64 flex-col gap-1 p-1 max-h-[70dvh] overflow-y-auto">
-                  {renderMobileTree(contentTree, currentPath)}
-                </nav>
-              }
-            />
+        <>
+          <div class="flex flex-1 min-h-0 bg-areia-background text-areia-default">
+            <Resizable direction="horizontal" class="h-full w-full">
+              <Resizable.Panel
+                defaultSize={layout[0]}
+                minSize={15}
+                maxSize={35}
+                collapsible
+                class="bg-areia-surface-elevated overflow-y-auto max-md:!hidden"
+              >
+                <Sidebar />
+              </Resizable.Panel>
+              <Resizable.Handle class="max-md:!hidden" />
+              <Resizable.Panel defaultSize={layout[1]} minSize={50} class="!overflow-y-auto">
+                <div class="flex min-h-full w-full flex-col p-4">{children}</div>
+              </Resizable.Panel>
+            </Resizable>
           </div>
-        </div>
+          {when(state.searchOpen(), () => (
+            <SearchDialogPanel
+              state={{ dialogOpen: state.searchOpen, query: state.searchQuery }}
+              results={derived.searchResults() ?? []}
+            />
+          ))}
+        </>
       );
     });
 });
@@ -154,29 +155,98 @@ const socialIcons: Record<string, () => unknown> = {
   discord: () => <DiscordIcon class="size-4" />,
 };
 
-export const Topbar = ilha.render(() => (
-  <>
-    <header class="fixed inset-x-0 top-0 z-50 border-b border-areia-border bg-areia-background/80 backdrop-blur-lg">
-      <div class="container max-w-6xl mx-auto h-14 px-4 flex min-w-0 justify-between items-center gap-3">
-        <LogoButton />
-        <div class="flex shrink-0 gap-2 items-center">
-          <SearchOverlay />
-          <ThemeToggle />
-          {socials.map((s) => (
-            <LinkButton
-              href={s.url}
-              shape="square"
-              icon={socialIcons[s.service]?.()}
-              external
-              aria-label={s.service}
-            />
-          ))}
+export const Topbar = ilha
+  .state("searchOpen", false)
+  .state("searchQuery", "")
+  .derived("searchResults", ({ state }) => getSearchResults(state.searchQuery()))
+  .onMount(({ state }) => {
+    const handleKeydown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        if (state.searchOpen())
+          closeSearchDialog({ dialogOpen: state.searchOpen, query: state.searchQuery });
+        else state.searchOpen(true);
+        return;
+      }
+      if (event.key === "Escape" && state.searchOpen()) {
+        event.preventDefault();
+        closeSearchDialog({ dialogOpen: state.searchOpen, query: state.searchQuery });
+      }
+    };
+    window.addEventListener("keydown", handleKeydown);
+    return () => window.removeEventListener("keydown", handleKeydown);
+  })
+  .on("[data-search-trigger]@click", ({ state }) => state.searchOpen(true))
+  .on("[data-search-close]@click", ({ state }) =>
+    closeSearchDialog({ dialogOpen: state.searchOpen, query: state.searchQuery }),
+  )
+  .on("[data-search-backdrop]@click", ({ state }) =>
+    closeSearchDialog({ dialogOpen: state.searchOpen, query: state.searchQuery }),
+  )
+  .on("[data-search-input]@input", ({ state, event }) => {
+    state.searchQuery((event.target as HTMLInputElement).value);
+  })
+  .effect(({ host, state }) => {
+    if (!state.searchOpen()) return;
+    let destroy = () => {};
+    const frame = requestAnimationFrame(() => {
+      destroy = mountSearchCommand(
+        host,
+        { dialogOpen: state.searchOpen, query: state.searchQuery },
+        () => closeSearchDialog({ dialogOpen: state.searchOpen, query: state.searchQuery }),
+      );
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      destroy();
+    };
+  })
+  .effect(({ derived, host, state }) => {
+    if (!state.searchOpen() || !state.searchQuery().trim()) return;
+    const frame = requestAnimationFrame(() => {
+      const root = host.querySelector<HTMLElement>('[data-slot="command"]');
+      if (!root) return;
+      const results = derived.searchResults() ?? [];
+      const firstResult = results[0]?.path ?? null;
+      root.dispatchEvent(new CustomEvent("command:set", { detail: { value: firstResult } }));
+    });
+    return () => cancelAnimationFrame(frame);
+  })
+  .render(({ derived, state }) => (
+    <>
+      <div
+        class="pointer-events-none fixed inset-x-0 top-0 z-40 h-14 border-b border-areia-border bg-areia-background/80 backdrop-blur-lg"
+        aria-hidden="true"
+      />
+      <header class="fixed inset-x-0 top-0 z-50">
+        <div class="container max-w-6xl mx-auto h-14 px-4 flex min-w-0 justify-between items-center gap-3">
+          <LogoButton />
+          <div class="flex shrink-0 gap-2 items-center">
+            <SearchNavbarTrigger />
+            <ThemeToggle />
+            <div class="flex items-center">
+              {socials.map((s) => (
+                <LinkButton
+                  href={s.url}
+                  shape="square"
+                  icon={socialIcons[s.service]?.()}
+                  external
+                  aria-label={s.service}
+                />
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
-    </header>
-    <div class="h-14" aria-hidden="true" />
-  </>
-));
+      </header>
+      <div class="h-14" aria-hidden="true" />
+      {when(state.searchOpen(), () => (
+        <SearchDialogPanel
+          state={{ dialogOpen: state.searchOpen, query: state.searchQuery }}
+          results={derived.searchResults() ?? []}
+        />
+      ))}
+    </>
+  ));
 
 export const RootLayout = defineLayout((children) =>
   ilha.render(() => (

@@ -110,7 +110,7 @@ luzpress({
 });
 ```
 
-Content pages use `DocArticle` from `luzpress/doc` (already wired in `[...slug].tsx`) to show **Copy Markdown** and an **Open** menu above the page title.
+Content pages use `DocArticle` from `luzpress/doc` (already wired in `[...slug].tsx`) to show an **Open** menu above the page title (copy markdown, GitHub, view as markdown, ChatGPT, Claude).
 
 ## Dependencies
 

@@ -10,15 +10,16 @@ type HeroTechCardInput = {
 const heroCardClass =
   "rounded-xl bg-[radial-gradient(180px_circle_at_var(--hero-card-x,50%)_var(--hero-card-y,50%),color-mix(in_oklch,var(--areia-primary)_calc(var(--hero-card-opacity,0)*100%),transparent),transparent_70%),linear-gradient(var(--areia-border),var(--areia-border))] p-px transition-[background]";
 
-const heroCardInnerClass = "h-full rounded-[calc(0.75rem-1px)] bg-areia-background p-4 sm:p-4";
+const heroCardInnerClass =
+  "flex h-full flex-col gap-1.5 rounded-[calc(0.75rem-1px)] bg-areia-background p-4 sm:p-4";
 
 function HeroTechCard({ icon, title, description }: HeroTechCardInput) {
   return (
     <div data-hero-card class={heroCardClass}>
       <div class={heroCardInnerClass}>
         {icon}
-        <div class="font-semibold text-areia-foreground">{title}</div>
-        <div class="text-sm text-areia-foreground/60">{description}</div>
+        <div class="font-semibold leading-snug text-areia-foreground">{title}</div>
+        <div class="text-sm leading-relaxed text-areia-subtle">{description}</div>
       </div>
     </div>
   );
@@ -67,25 +68,25 @@ export function HeroTechCards() {
   return (
     <div
       data-hero-cards
-      class="grid w-full grid-cols-1 gap-3 pt-8 text-left sm:grid-cols-2 lg:grid-cols-4"
+      class="grid w-full grid-cols-1 gap-3 pt-6 sm:gap-3.5 sm:pt-8 text-left sm:grid-cols-2 lg:grid-cols-4"
     >
       <HeroTechCard
-        icon={<img src="/icons/vite.svg" alt="" class="mb-3 size-6" />}
+        icon={<img src="/icons/vite.svg" alt="" class="mb-1 size-6 sm:mb-2" />}
         title="Vite"
         description="Fast local development"
       />
       <HeroTechCard
-        icon={<img src="/icons/ts.svg" alt="" class="mb-3 size-6" />}
+        icon={<img src="/icons/ts.svg" alt="" class="mb-1 size-6 sm:mb-2" />}
         title="TypeScript"
         description="Typed app structure"
       />
       <HeroTechCard
-        icon={<img src="/icons/tailwind.svg" alt="" class="mb-3 size-6" />}
+        icon={<img src="/icons/tailwind.svg" alt="" class="mb-1 size-6 sm:mb-2" />}
         title="Tailwind v4"
         description="Utility-first styling"
       />
       <HeroTechCard
-        icon={<Icon icon={Globe} class="mb-3 size-6 text-areia-foreground" />}
+        icon={<Icon icon={Globe} class="mb-1 size-6 sm:mb-2 text-areia-foreground" />}
         title="Prerendering"
         description="Static output ready"
       />

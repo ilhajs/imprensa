@@ -9,7 +9,7 @@ import { createHighlighter } from "shiki";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const previewCodeClass =
-  "mt-4 max-w-full overflow-x-auto rounded-xl border border-areia-border text-xs [&_pre]:min-w-max [&_pre]:p-4 [&_pre]:text-xs [&_pre]:leading-relaxed";
+  "max-w-full overflow-x-auto rounded-xl border border-areia-border text-xs leading-relaxed [&_pre]:min-w-max [&_pre]:p-4 [&_pre]:text-xs [&_pre]:leading-relaxed";
 
 const fileTreeCode = `src
 ├─ lib/components

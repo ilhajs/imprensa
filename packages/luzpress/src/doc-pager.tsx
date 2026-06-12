@@ -1,7 +1,7 @@
 /** @jsxImportSource ilha */
 import { Icon, LayerCard } from "areia";
 import { ChevronLeft, ChevronRight } from "lucide";
-import { contentTree, type ContentTreeNode } from "luzpress/mdx";
+import { contentMeta, contentTree, searchDocuments, type ContentTreeNode } from "luzpress/mdx";
 
 export type DocNavItem = {
   title: string;
@@ -9,13 +9,22 @@ export type DocNavItem = {
   excerpt: string;
 };
 
-// Mock excerpts until frontmatter or search text is wired up.
-const MOCK_EXCERPTS: Record<string, string> = {
-  "/getting-started":
-    "Create a project, learn the layout, and publish a documentation site with the luzpress Vite plugin.",
-  "/guide/writing":
-    "Authoring conventions enforced by luzpress at build time, including page titles, heading levels, and internal links.",
-};
+const EXCERPT_MAX = 160;
+
+function excerptForPath(path: string): string {
+  const normalized = normalizePath(path);
+  const meta = contentMeta[normalized];
+  if (meta?.description?.trim()) return meta.description.trim();
+
+  const doc = searchDocuments.find((d) => normalizePath(d.path) === normalized);
+  const text = doc?.text?.trim();
+  if (!text) return "";
+
+  if (text.length <= EXCERPT_MAX) return text;
+  const slice = text.slice(0, EXCERPT_MAX);
+  const lastSpace = slice.lastIndexOf(" ");
+  return `${(lastSpace > 80 ? slice.slice(0, lastSpace) : slice).trim()}…`;
+}
 
 function normalizePath(path: string) {
   return path.replace(/\/$/, "") || "/";
@@ -39,9 +48,7 @@ export function getAdjacentDocs(path: string): { prev?: DocNavItem; next?: DocNa
 
   const toNavItem = (page: { title: string; path: string }): DocNavItem => ({
     ...page,
-    excerpt:
-      MOCK_EXCERPTS[normalizePath(page.path)] ??
-      "A short summary of this page will appear here once excerpts are generated from page content.",
+    excerpt: excerptForPath(page.path),
   });
 
   return {

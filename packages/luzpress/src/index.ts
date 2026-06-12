@@ -498,7 +498,7 @@ export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("u
                   },
                   {
                     name: "luzpress-search",
-                    test: /minisearch|search-dialog/,
+                    test: /minisearch/,
                   },
                 ],
               },

@@ -1,8 +1,13 @@
 /** @jsxImportSource ilha */
-import { Button, Dialog, Icon, LinkButton } from "areia";
+import { Button, Icon, LinkButton } from "areia";
 import ilha from "ilha";
 import { Command, Monitor, Moon, Search, Sun } from "lucide";
 import { applyThemeToHtml, getStoredTheme, setStoredTheme } from "luzpress/runtime";
+
+export { getSearchResults } from "./search-core";
+export type { SearchResult } from "./search-core";
+export { SearchDialogPanel, closeSearchDialog, mountSearchCommand } from "./search-dialog";
+export type { SearchDialogState } from "./search-dialog";
 
 export function LogoButton() {
   return (
@@ -55,56 +60,68 @@ export const ThemeToggle = ilha
     />
   ));
 
-async function loadSearchDialog(state: { dialogContent: (value?: unknown) => unknown }) {
-  if (state.dialogContent()) return;
-  const mod = await import("./search-dialog");
-  state.dialogContent(mod.SearchDialogContent);
+/** @deprecated Use search on ContentLayout / Topbar; kept for runtime export compatibility. */
+export const SearchOverlay = ilha.render(() => <></>);
+
+export function SearchTriggerButton(props: { class?: string }) {
+  const extra = props.class ?? "";
+  return (
+    <Button
+      data-search-trigger
+      aria-label="Search documentation"
+      icon={<Icon icon={Search} />}
+      class={extra}
+    />
+  );
 }
 
-export const SearchOverlay = ilha
-  .state("open", false)
-  .state("dialogContent", null as unknown)
-  .onMount(({ host, state }) => {
-    const handleKeydown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        if (state.open()) {
-          document.querySelector<HTMLButtonElement>("[data-search-close]")?.click();
-          return;
-        }
-        void loadSearchDialog(state).then(() => {
-          host.querySelector<HTMLButtonElement>("[data-search-trigger]")?.click();
-        });
-      }
-    };
-    window.addEventListener("keydown", handleKeydown);
-    return () => window.removeEventListener("keydown", handleKeydown);
-  })
-  .on("[data-search-trigger]@pointerdown", ({ state }) => {
-    void loadSearchDialog(state);
-  })
-  .render(({ state }) => (
-    <Dialog
-      onOpenChange={(open) => state.open(open)}
-      size="lg"
-      class="w-full"
-      triggerClass="w-full"
-      contentClass="p-0 overflow-hidden"
-      overlayClass="bg-areia-background/10 backdrop-blur-sm"
-      trigger={
-        <Button
-          data-search-trigger
-          aria-label="Search documentation"
-          icon={<Icon icon={Search} />}
-          class="w-10 justify-center sm:w-full sm:justify-start"
-        >
-          <span class="hidden sm:inline">Search</span>
-          <kbd class="ml-auto hidden items-center border border-areia-border py-px px-1 rounded-full md:flex">
-            <Icon icon={Command} class="size-3" />
-            <span>K</span>
-          </kbd>
-        </Button>
-      }
-      content={state.dialogContent() ?? (() => null)}
+export function SearchSidebarTrigger() {
+  return (
+    <div class="relative inline-flex w-full min-w-0">
+      <Button
+        data-search-trigger
+        aria-label="Search documentation"
+        icon={<Icon icon={Search} />}
+        class="w-10 justify-center sm:w-full sm:justify-start"
+      >
+        <span class="hidden sm:inline">Search</span>
+        <kbd class="ml-auto hidden items-center border border-areia-border py-px px-1 rounded-full md:flex">
+          <Icon icon={Command} class="size-3" />
+          <span>K</span>
+        </kbd>
+      </Button>
+    </div>
+  );
+}
+
+export function SearchMobileTriggerButton() {
+  return (
+    <Button
+      shape="square"
+      data-search-trigger
+      aria-label="Search documentation"
+      icon={<Icon icon={Search} />}
+      class="shrink-0"
     />
-  ));
+  );
+}
+
+/** Landing / marketing topbar: icon on xs, “Search” + ⌘K from sm up. */
+export function SearchNavbarTrigger() {
+  return (
+    <div class="relative inline-flex min-w-0">
+      <Button
+        data-search-trigger
+        aria-label="Search documentation"
+        icon={<Icon icon={Search} />}
+        class="w-10 shrink-0 justify-center sm:w-auto sm:min-w-[7.5rem] sm:justify-start sm:gap-2 sm:px-3"
+      >
+        <span class="hidden sm:inline">Search</span>
+        <kbd class="ml-auto hidden items-center border border-areia-border py-px px-1 rounded-full md:inline-flex">
+          <Icon icon={Command} class="size-3" />
+          <span>K</span>
+        </kbd>
+      </Button>
+    </div>
+  );
+}
