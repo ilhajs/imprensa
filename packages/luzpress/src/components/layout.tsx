@@ -223,7 +223,9 @@ export const Topbar = ilha
           <LogoButton />
           <div class="flex shrink-0 gap-2 items-center">
             <SearchNavbarTrigger />
-            <ThemeToggle />
+            <div class="hidden md:flex">
+              <ThemeToggle />
+            </div>
             <div class="flex items-center">
               {socials.map((s) => (
                 <LinkButton

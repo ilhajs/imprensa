@@ -64,7 +64,6 @@ export const articleClass = [
   "[--tw-prose-td-borders:var(--areia-divider)]",
   "prose-a:underline-offset-4",
   "prose-code:before:content-none prose-code:after:content-none",
-  "prose-pre:overflow-visible prose-pre:border prose-pre:border-areia-border prose-pre:bg-areia-surface-muted",
 ].join(" ");
 
 declare const __LUZPRESS_CONTENT_DIR__: string;
