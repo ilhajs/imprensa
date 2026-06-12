@@ -28,7 +28,8 @@ npm run dev
 
 ```bash
 npm run dev      # start dev server
-npm run build    # prerender + typecheck
+npm run gen:hero # regenerate landing-page Shiki HTML (runs before build)
+npm run build    # gen:hero + prerender + typecheck
 npm run preview  # preview production build
 npm run lint     # oxlint
 ```
@@ -40,7 +41,8 @@ src/
   main.ts                 # client entry + prerender export
   app.css                 # branding tokens + luzpress styles
   pages/
-    index.tsx             # landing page (top bar layout)
+    index.tsx             # landing page (static Shiki previews, no client Shiki)
+    lib/hero-preview-html.generated.ts  # built by scripts/gen-hero-previews.ts
     +layout.tsx           # root shell
     (content)/            # MDX docs (sidebar layout)
       +layout.tsx
@@ -112,7 +114,7 @@ Content pages use `DocArticle` from `luzpress/doc` (already wired in `[...slug].
 
 ## Dependencies
 
-The starter only declares packages you import directly (`areia`, `ilha`, `lucide`, `shiki`). Everything else — MDX pipeline, Tailwind, prerender, search internals — comes through `luzpress`.
+The starter only declares packages you import directly (`areia`, `ilha`, `lucide`). `shiki` is a devDependency for `gen:hero` only (landing previews are baked at build time). Everything else — MDX pipeline, Tailwind, prerender, search internals — comes through `luzpress`.
 
 ## LLM exports
 

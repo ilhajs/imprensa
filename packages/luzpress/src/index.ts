@@ -153,32 +153,6 @@ function getShikiHighlighterOptions(options: LuzpressShikiOptions | undefined) {
   return { themes, langs };
 }
 
-function escapeCodeFenceHtmlPlugin() {
-  return (tree: any) => {
-    const visit = (node: any) => {
-      if (node?.type === "code" && typeof node.value === "string") {
-        node.value = node.value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      }
-      for (const child of node?.children ?? []) visit(child);
-    };
-    visit(tree);
-  };
-}
-
-function escapeCodeTextPlugin() {
-  return (tree: any) => {
-    const visit = (node: any, inCode = false) => {
-      const isCode =
-        inCode || (node?.type === "element" && (node.tagName === "pre" || node.tagName === "code"));
-      if (isCode && node?.type === "text" && typeof node.value === "string") {
-        node.value = node.value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      }
-      for (const child of node?.children ?? []) visit(child, isCode);
-    };
-    visit(tree);
-  };
-}
-
 function shikiPlugin(options: LuzpressShikiOptions | undefined) {
   if (options === false) return [];
 
@@ -388,7 +362,6 @@ export function luzpress(options: LuzpressOptions = {}): PluginOption[] {
         properties: { className: ["heading-anchor"] },
       },
     ],
-    escapeCodeTextPlugin,
     ...(detectDeadLink ? [rehypeDeadLinks] : []),
   ];
 
@@ -399,7 +372,7 @@ export function luzpress(options: LuzpressOptions = {}): PluginOption[] {
     mdx({
       jsxImportSource: "ilha",
       ...restMdxOptions,
-      remarkPlugins: [remarkPreview, escapeCodeFenceHtmlPlugin, ...(remarkPlugins as any[])],
+      remarkPlugins: [remarkPreview, ...(remarkPlugins as any[])],
       rehypePlugins: [...shikiPlugin(shiki), ...coreRehypePlugins, ...rehypePlugins],
     }),
     pages({ mode: "static", ...pagesOptions }),
@@ -501,6 +474,24 @@ export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("u
       }
 
       return {
+        build: {
+          rolldownOptions: {
+            output: {
+              codeSplitting: {
+                groups: [
+                  {
+                    name: "luzpress-shiki",
+                    test: /luzpress[\/]shiki|@shikijs[\/]|(?:^|[\/])shiki[\/]/,
+                  },
+                  {
+                    name: "luzpress-search",
+                    test: /minisearch|search-dialog/,
+                  },
+                ],
+              },
+            },
+          },
+        },
         resolve: {
           alias: {
             $lib: path.resolve(root, "src", "lib"),

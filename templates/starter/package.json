@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && tsc",
+    "gen:hero": "bun run scripts/gen-hero-previews.ts",
+    "build": "bun run gen:hero && vite build && tsc",
     "preview": "vite preview",
     "lint": "oxlint",
     "fmt": "oxfmt"
@@ -18,12 +19,12 @@
     "ilha": "^0.7.1",
     "lucide": "^1.17.0",
     "luzpress": "^0.1.0",
-    "shiki": "^4.2.0",
     "sonner": "^2.0.7"
   },
   "devDependencies": {
     "oxfmt": "^0.53.0",
     "oxlint": "^1.68.0",
+    "shiki": "^4.2.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.12"
   }
