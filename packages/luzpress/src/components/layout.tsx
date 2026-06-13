@@ -1,7 +1,7 @@
 /** @jsxImportSource ilha */
 import { defineLayout, routeHash } from "@ilha/router";
 import { LinkButton, Resizable, Toaster } from "areia";
-import { GithubIcon, XIcon, DiscordIcon } from "../icons";
+import { GithubIcon, XIcon, DiscordIcon } from "./icons";
 import { socials } from "luzpress/config";
 import ilha from "ilha";
 import { when } from "quando";

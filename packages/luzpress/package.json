@@ -13,50 +13,47 @@
     "default.css",
     "index.d.ts",
     "src/components/",
-    "src/doc-toolbar.tsx",
-    "src/doc-pager.tsx",
-    "src/mdx.ts",
-    "src/icons.tsx",
-    "src/config.ts",
+    "src/core/",
+    "src/docs/",
     "tsconfig.json"
   ],
   "type": "module",
   "exports": {
     ".": {
       "browser": {
-        "types": "./dist/runtime.d.mts",
-        "import": "./dist/runtime.mjs"
+        "types": "./dist/core/runtime.d.mts",
+        "import": "./dist/core/runtime.mjs"
       },
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs"
     },
     "./runtime": {
-      "types": "./dist/runtime.d.mts",
-      "import": "./dist/runtime.mjs"
+      "types": "./dist/core/runtime.d.mts",
+      "import": "./dist/core/runtime.mjs"
     },
     "./rehype": {
-      "types": "./dist/rehype.d.mts",
-      "import": "./dist/rehype.mjs"
+      "types": "./dist/docs/rehype.d.mts",
+      "import": "./dist/docs/rehype.mjs"
     },
     "./mdx": {
-      "types": "./dist/mdx.d.mts",
-      "import": "./dist/mdx.mjs"
+      "types": "./dist/docs/mdx.d.mts",
+      "import": "./dist/docs/mdx.mjs"
     },
     "./config": {
       "types": "./index.d.ts",
-      "import": "./src/config.ts"
+      "import": "./src/docs/config.ts"
     },
     "./icons": {
-      "types": "./src/icons.tsx",
-      "import": "./src/icons.tsx"
+      "types": "./src/components/icons.tsx",
+      "import": "./src/components/icons.tsx"
     },
     "./components": {
       "types": "./src/components/index.tsx",
       "import": "./src/components/index.tsx"
     },
     "./doc": {
-      "types": "./src/doc-toolbar.tsx",
-      "import": "./src/doc-toolbar.tsx"
+      "types": "./src/components/doc-toolbar.tsx",
+      "import": "./src/components/doc-toolbar.tsx"
     },
     "./tsconfig.json": "./tsconfig.json",
     "./default.css": "./default.css"

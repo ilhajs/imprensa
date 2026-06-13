@@ -2,8 +2,8 @@
 import { useRoute } from "@ilha/router";
 import { Button, Dropdown, Icon } from "areia";
 import ilha from "ilha";
-import { MobileNavigationPopover } from "./components/mobile-nav";
-import { SearchMobileTriggerButton } from "./components/search";
+import { MobileNavigationPopover } from "./mobile-nav";
+import { SearchMobileTriggerButton } from "./search";
 import { ChevronDown, Copy, ExternalLink, FileText, GitBranch, MessageSquare } from "lucide";
 import { toast } from "sonner";
 import { articleClass, getDocLinks } from "luzpress/mdx";

@@ -1,7 +1,7 @@
 /** @jsxImportSource ilha */
 import { LinkButton } from "areia";
 import { socials } from "luzpress/config";
-import { DiscordIcon, GithubIcon, XIcon } from "../icons";
+import { DiscordIcon, GithubIcon, XIcon } from "./icons";
 import { ThemeToggle } from "./search";
 
 const socialIcons: Record<string, () => unknown> = {
