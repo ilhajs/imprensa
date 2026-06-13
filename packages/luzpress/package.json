@@ -31,6 +31,10 @@
       "types": "./dist/core/runtime.d.mts",
       "import": "./dist/core/runtime.mjs"
     },
+    "./prerender": {
+      "types": "./dist/core/prerender-core.d.mts",
+      "import": "./dist/core/prerender-core.mjs"
+    },
     "./rehype": {
       "types": "./dist/docs/rehype.d.mts",
       "import": "./dist/docs/rehype.mjs"

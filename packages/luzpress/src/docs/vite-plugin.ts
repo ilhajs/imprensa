@@ -24,6 +24,10 @@ const MDX_SOURCE = fileURLToPath(new URL("../src/docs/mdx.ts", import.meta.url))
 const COMPONENTS_INDEX = fileURLToPath(new URL("../src/components/index.tsx", import.meta.url));
 const DOC_TOOLBAR = fileURLToPath(new URL("../src/components/doc-toolbar.tsx", import.meta.url));
 const CONFIG_STUB = fileURLToPath(new URL("../src/docs/config.ts", import.meta.url));
+const LUZPRESS_RUNTIME_SOURCE = fileURLToPath(new URL("../src/core/runtime.ts", import.meta.url));
+const LUZPRESS_PRERENDER_SOURCE = fileURLToPath(
+  new URL("../src/core/prerender-core.ts", import.meta.url),
+);
 
 export function createLuzpressVitePlugins(options: LuzpressOptions = {}): PluginOption[] {
   const {
@@ -58,6 +62,12 @@ export function createLuzpressVitePlugins(options: LuzpressOptions = {}): Plugin
   const highlighterOptions = getShikiHighlighterOptions(shiki);
   let isBuild = false;
 
+  const ilhaPagesOptions = {
+    interceptLinks: false as const,
+    ...pagesOptions,
+    mode: (pagesOptions.mode ?? "static") as "spa" | "static",
+  };
+
   const plugins: PluginOption[] = [
     mdx({
       jsxImportSource: "ilha",
@@ -65,11 +75,23 @@ export function createLuzpressVitePlugins(options: LuzpressOptions = {}): Plugin
       remarkPlugins: [remarkPreview, ...(remarkPlugins as any[])],
       rehypePlugins: [...shikiPlugin(shiki), ...coreRehypePlugins, ...rehypePlugins],
     }),
-    pages({ mode: "static", ...pagesOptions }),
+    {
+      name: "luzpress:ilha-pages",
+      enforce: "pre",
+      config(_config, { command }) {
+        ilhaPagesOptions.mode = pagesOptions.mode ?? (command === "serve" ? "spa" : "static");
+      },
+    },
+    pages(ilhaPagesOptions),
   ];
 
   plugins.push(tailwindcss());
-  plugins.push(vitePrerenderPlugin());
+  plugins.push(
+    vitePrerenderPlugin({
+      renderTarget: "#app",
+      prerenderScript: path.join(process.cwd(), "src/prerender.ts"),
+    }),
+  );
   plugins.push(sitemap({ hostname, dynamicRoutes: collectMdxRoutes(contentDir) }));
   plugins.push({
     name: "luzpress:html",
@@ -207,6 +229,7 @@ export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("u
           alias: {
             $lib: path.resolve(root, "src", "lib"),
             sonner,
+            "luzpress/prerender": LUZPRESS_PRERENDER_SOURCE,
           },
           dedupe: [
             "@areia/slots",

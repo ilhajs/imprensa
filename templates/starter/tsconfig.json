@@ -1,4 +1,8 @@
 {
   "extends": "luzpress/tsconfig.json",
-  "include": ["src", "vite.config.ts"]
+  "compilerOptions": {
+    "noUnusedLocals": false
+  },
+  "include": ["src", "vite.config.ts"],
+  "exclude": [".ilha", "dist", "node_modules"]
 }

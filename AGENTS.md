@@ -45,7 +45,9 @@ Built artifacts live under **`dist/`** with subpaths (`dist/core/runtime.mjs`, `
 
 ## Vite plugin behavior (mental model)
 
-- Wires: `@mdx-js/rollup`, `@ilha/router/vite` **`pages({ mode: "static" })`**, Tailwind, `vite-prerender-plugin`, sitemap, optional dead-link rehype.
+- Wires: `@mdx-js/rollup`, `@ilha/router/vite` **`pages()`** — **`mode: "spa"` in `vite dev`**, **`mode: "static"` on build** (override via `pages.mode` in `luzpress()`), `interceptLinks: false`, Tailwind, `vite-prerender-plugin`, sitemap, optional dead-link rehype.
+- **Dev client entry:** `createLuzpress().init()` must use **`pageRouter.mount("#app")`** (SPA), not `hydrateStatic` — static-mode router warns and no-ops on `.mount()`.
+- **Prerender entry:** `src/prerender.ts` uses `createPrerender` from **`luzpress/prerender`**, static imports from **`../.ilha/pages.server`** (not `ilha:` — Node cannot load that protocol). Plugin sets `prerenderScript` + `renderTarget: "#app"`. **`main.ts`** only calls `void init()` — no `prerender` export.
 - **Virtual / resolved IDs:** `luzpress`, `luzpress/mdx`, `luzpress/config`, `luzpress/shiki`, `luzpress/components`, `luzpress/doc` — paths in `docs/vite-plugin.ts` use **`../src/...` from bundled `dist/index.mjs`**, not relative to `src/docs/` alone.
 - **`luzpress/mdx.ts`** contains a literal `MDX_CONFIG_MARKER` block replaced at build time (`contentDir`, repo, raw sources, `headDefaults`). Keep marker and `docs/mdx-config.ts` in sync if you change inject shape.
 - Injects **sidebar layout boot** script/style into HTML (`SIDEBAR_LAYOUT_BOOT_SCRIPT` in `components/sidebar-layout.ts`) so saved split applies before paint.

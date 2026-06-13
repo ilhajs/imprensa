@@ -29,6 +29,7 @@
           (stored !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
         if (dark) document.documentElement.classList.add("dark");
         document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        document.documentElement.dataset.themeReady = "";
       })();
     </script>
     <script>

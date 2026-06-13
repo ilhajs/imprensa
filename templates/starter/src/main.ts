@@ -5,6 +5,4 @@ import { createLuzpress } from "luzpress/runtime";
 
 const luzpress = createLuzpress({ hostname: "https://luz.ilha.build" });
 
-luzpress.init();
-
-export const prerender = luzpress.prerender;
+void luzpress.init();
