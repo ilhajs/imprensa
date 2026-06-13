@@ -31,6 +31,35 @@
         document.documentElement.style.colorScheme = dark ? "dark" : "light";
       })();
     </script>
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem("luzpress:sidebar-layout");
+          if (!raw) return;
+          var layout = JSON.parse(raw);
+          if (!Array.isArray(layout) || layout.length !== 2) return;
+          var a = layout[0],
+            b = layout[1];
+          if (typeof a !== "number" || typeof b !== "number") return;
+          var root = document.documentElement;
+          root.dataset.luzSidebarLayout = "1";
+          root.style.setProperty("--luz-sidebar-pct", String(a));
+          root.style.setProperty("--luz-content-pct", String(b));
+        } catch (e) {}
+      })();
+    </script>
+    <style id="luz-sidebar-layout-boot">
+      html[data-luz-sidebar-layout]
+        [data-slot="resizable"]
+        > [data-slot="resizable-panel"]:first-child {
+        flex-grow: var(--luz-sidebar-pct) !important;
+      }
+      html[data-luz-sidebar-layout]
+        [data-slot="resizable"]
+        > [data-slot="resizable-panel"]:last-child {
+        flex-grow: var(--luz-content-pct) !important;
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>

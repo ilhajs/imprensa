@@ -13,7 +13,7 @@ function renderTree(nodes: ContentTreeNode[], currentPath: string, depth = 0): u
       <LinkButton
         href={node.path}
         variant={active ? "outline" : "ghost"}
-        class={`w-full justify-start ${active ? "border-areia-primary text-areia-primary ring-1 ring-areia-primary/30" : ""}`}
+        class={`w-full justify-start ${active ? "border-areia-primary text-areia-primary ring-1 ring-inset ring-areia-primary/30" : ""}`}
       >
         {node.title}
       </LinkButton>
@@ -48,7 +48,7 @@ export const Sidebar = ilha.render(() => {
         <LogoButton />
       </div>
       <SearchSidebarTrigger />
-      <nav class="min-h-0 flex-1 overflow-y-auto flex flex-col gap-1">
+      <nav class="min-h-0 flex-1 overflow-y-auto flex flex-col gap-1 px-0.5">
         {renderTree(contentTree, currentPath)}
       </nav>
       <NavFooterBar class="mt-auto" />

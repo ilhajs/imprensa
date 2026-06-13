@@ -15,6 +15,7 @@ import { generateLlmsArtifacts } from "./llms";
 import { MDX_CONFIG_MARKER } from "./mdx-config";
 import type { LuzpressOptions } from "./options";
 import { remarkPreview } from "./remark";
+import { SIDEBAR_LAYOUT_BOOT_SCRIPT } from "../components/sidebar-layout";
 import { rehypeDeadLinks } from "./rehype";
 
 const require = createRequire(import.meta.url);
@@ -72,6 +73,18 @@ export function createLuzpressVitePlugins(options: LuzpressOptions = {}): Plugin
   plugins.push(sitemap({ hostname, dynamicRoutes: collectMdxRoutes(contentDir) }));
   plugins.push({
     name: "luzpress:html",
+    transformIndexHtml: {
+      order: "pre",
+      handler(html) {
+        if (!html.includes("luz-sidebar-layout-boot")) {
+          html = html.replace("</head>", `    ${SIDEBAR_LAYOUT_BOOT_SCRIPT}\n  </head>`);
+        }
+        return html;
+      },
+    },
+  });
+  plugins.push({
+    name: "luzpress:html-post",
     apply: "build",
     transformIndexHtml: {
       order: "post",

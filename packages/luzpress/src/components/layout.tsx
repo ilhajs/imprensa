@@ -15,27 +15,56 @@ import {
   mountSearchCommand,
 } from "./search";
 import { Sidebar } from "./sidebar";
+import { DEFAULT_SIDEBAR_LAYOUT, readSidebarLayout, writeSidebarLayout } from "./sidebar-layout";
 
-const SIDEBAR_STORAGE_KEY = "luzpress:sidebar-layout";
-const DEFAULT_SIDEBAR_LAYOUT = [20, 80];
+const initialSidebarLayout =
+  typeof window !== "undefined" ? readSidebarLayout() : DEFAULT_SIDEBAR_LAYOUT;
 
-function getInitialSidebarLayout() {
-  if (typeof localStorage === "undefined") return DEFAULT_SIDEBAR_LAYOUT;
-  try {
-    const layout = JSON.parse(localStorage.getItem(SIDEBAR_STORAGE_KEY) ?? "null");
-    return Array.isArray(layout) &&
-      layout.length === 2 &&
-      layout.every((s) => typeof s === "number")
-      ? layout
-      : DEFAULT_SIDEBAR_LAYOUT;
-  } catch {
-    return DEFAULT_SIDEBAR_LAYOUT;
-  }
+function layoutsNearlyEqual(a: number[], b: [number, number]) {
+  return a.length === 2 && Math.abs(a[0] - b[0]) < 0.05 && Math.abs(a[1] - b[1]) < 0.05;
+}
+
+function mountSidebarLayoutPersistence(host: Element) {
+  let resizable: HTMLElement | null = null;
+  let persist = false;
+  const stored = readSidebarLayout();
+
+  const onLayoutChange = (event: Event) => {
+    if (!persist) return;
+    const { layout } = (event as CustomEvent<{ layout: number[] }>).detail;
+    if (!Array.isArray(layout) || layout.length !== 2) return;
+    writeSidebarLayout(layout);
+    document.documentElement.dataset.luzSidebarLayout = "1";
+    document.documentElement.style.setProperty("--luz-sidebar-pct", String(layout[0]));
+    document.documentElement.style.setProperty("--luz-content-pct", String(layout[1]));
+  };
+
+  const connect = () => {
+    resizable = host.querySelector<HTMLElement>('[data-slot="resizable"]');
+    if (!resizable) return;
+
+    resizable.addEventListener("resizable:change", onLayoutChange);
+
+    if (
+      document.documentElement.dataset.luzSidebarLayout !== "1" &&
+      !layoutsNearlyEqual(stored, DEFAULT_SIDEBAR_LAYOUT)
+    ) {
+      resizable.dispatchEvent(
+        new CustomEvent("resizable:set", { detail: { layout: [...stored] }, bubbles: true }),
+      );
+    }
+    persist = true;
+  };
+
+  queueMicrotask(connect);
+
+  return () => {
+    resizable?.removeEventListener("resizable:change", onLayoutChange);
+  };
 }
 
 export const ContentLayout = defineLayout((children) => {
   return ilha
-    .state("layout", DEFAULT_SIDEBAR_LAYOUT)
     .state("searchOpen", false)
     .state("searchQuery", "")
     .derived("searchResults", ({ state }) => getSearchResults(state.searchQuery()))
@@ -97,43 +126,26 @@ export const ContentLayout = defineLayout((children) => {
       if (hash)
         requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView());
     })
-    .onMount(({ host, state }) => {
-      state.layout(getInitialSidebarLayout());
-      let resizable: Element | null = null;
-      let secondFrame = 0;
-      const handleLayoutChange = (event: Event) => {
-        const { layout } = (event as CustomEvent<{ layout: number[] }>).detail;
-        localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(layout));
-      };
-      const firstFrame = requestAnimationFrame(() => {
-        secondFrame = requestAnimationFrame(() => {
-          resizable = host.querySelector('[data-slot="resizable"]');
-          resizable?.addEventListener("resizable:change", handleLayoutChange);
-        });
-      });
-      return () => {
-        cancelAnimationFrame(firstFrame);
-        cancelAnimationFrame(secondFrame);
-        resizable?.removeEventListener("resizable:change", handleLayoutChange);
-      };
-    })
+    .onMount(({ host }) => mountSidebarLayoutPersistence(host))
     .render(({ derived, state }) => {
-      const layout = state.layout();
       return (
         <>
           <div class="flex flex-1 min-h-0 bg-areia-background text-areia-default">
             <Resizable direction="horizontal" class="h-full w-full">
               <Resizable.Panel
-                defaultSize={layout[0]}
+                defaultSize={initialSidebarLayout[0]}
                 minSize={15}
                 maxSize={35}
-                collapsible
                 class="bg-areia-surface-elevated overflow-y-auto max-md:!hidden"
               >
                 <Sidebar />
               </Resizable.Panel>
               <Resizable.Handle class="max-md:!hidden" />
-              <Resizable.Panel defaultSize={layout[1]} minSize={50} class="!overflow-y-auto">
+              <Resizable.Panel
+                defaultSize={initialSidebarLayout[1]}
+                minSize={50}
+                class="!overflow-y-auto"
+              >
                 <div class="flex min-h-full w-full flex-col p-4">{children}</div>
               </Resizable.Panel>
             </Resizable>
