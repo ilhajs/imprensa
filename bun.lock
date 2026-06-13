@@ -42,8 +42,10 @@
         "vite-prerender-plugin": "^0.5.13",
       },
       "devDependencies": {
+        "@types/mdast": "^4.0.4",
         "tsdown": "^0.22.2",
         "typescript": "^6.0.3",
+        "unified": "^11.0.5",
       },
       "peerDependencies": {
         "areia": "^0.1.18",
@@ -63,12 +65,12 @@
         "ilha": "^0.7.1",
         "lucide": "^1.17.0",
         "luzpress": "^0.1.0",
-        "shiki": "^4.2.0",
         "sonner": "^2.0.7",
       },
       "devDependencies": {
         "oxfmt": "^0.53.0",
         "oxlint": "^1.68.0",
+        "shiki": "^4.2.0",
         "typescript": "^6.0.3",
         "vite": "^8.0.12",
       },

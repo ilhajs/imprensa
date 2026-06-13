@@ -13,14 +13,14 @@ declare module "ilha:pages/server" {
   import type { Island } from "ilha";
   import type { RouterBuilder } from "@ilha/router";
   export const pageRouter: RouterBuilder;
-  export const registry: Record<string, Island<any, any>>;
+  export const registry: Record<string, Island<Record<string, unknown>, Record<string, unknown>>>;
 }
 
 declare module "ilha:pages/client" {
   import type { Island } from "ilha";
   import type { RouterBuilder } from "@ilha/router";
   export const pageRouter: RouterBuilder;
-  export const registry: Record<string, Island<any, any>>;
+  export const registry: Record<string, Island<Record<string, unknown>, Record<string, unknown>>>;
 }
 
 declare module "ilha:loaders" {

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { parseScalar, toStringArray, type FrontmatterScalar } from "./frontmatter";
 
 export type LuzpressLlmsOptions = {
   /** H1 title in llms.txt. Defaults to package.json name or "Documentation". */
@@ -52,32 +53,18 @@ function titleize(value: string) {
   return value.replace(/[-_]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function parseScalar(value: string): unknown {
-  const trimmed = value.trim();
-  if (trimmed === "true") return true;
-  if (trimmed === "false") return false;
-  if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
-  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-    return trimmed
-      .slice(1, -1)
-      .split(",")
-      .map((item) => item.trim().replace(/^['\"]|['\"]$/g, ""))
-      .filter(Boolean);
-  }
-  return trimmed.replace(/^['\"]|['\"]$/g, "");
-}
-
 function parseFrontmatter(content: string): ContentMeta {
   if (!content.startsWith("---")) return {};
   const end = content.indexOf("\n---", 3);
   if (end === -1) return {};
   const yaml = content.slice(4, end);
-  const meta: Record<string, unknown> = {};
+  const meta: Record<string, FrontmatterScalar | FrontmatterScalar[]> = {};
   let listKey: string | undefined;
   for (const line of yaml.split("\n")) {
     const listItem = line.match(/^\s*-\s*(.+)$/);
     if (listItem && listKey) {
-      const list = Array.isArray(meta[listKey]) ? meta[listKey] : [];
+      const existing = meta[listKey];
+      const list: FrontmatterScalar[] = Array.isArray(existing) ? [...existing] : [];
       list.push(parseScalar(listItem[1]));
       meta[listKey] = list;
       continue;
@@ -99,9 +86,7 @@ function parseFrontmatter(content: string): ContentMeta {
     priority: typeof meta.priority === "number" ? meta.priority : undefined,
     draft: meta.draft === true,
     hidden: meta.hidden === true || meta.sidebar === false,
-    tags: Array.isArray(meta.tags)
-      ? meta.tags.filter((tag): tag is string => typeof tag === "string")
-      : [],
+    tags: toStringArray(meta.tags),
   };
 }
 

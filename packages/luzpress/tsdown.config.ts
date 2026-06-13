@@ -9,6 +9,8 @@ export default defineConfig({
     "src/docs/mdx.ts",
   ],
   platform: "node",
-  external: ["ilha:pages", "ilha:registry", "$lib/mdx"],
+  deps: {
+    neverBundle: ["ilha:pages/client", "ilha:pages/server", "luzpress/mdx", "$lib/mdx"],
+  },
   dts: true,
 });

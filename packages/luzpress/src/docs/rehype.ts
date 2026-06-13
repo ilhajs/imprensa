@@ -4,11 +4,16 @@ import path from "node:path";
 type ElementNode = {
   type: string;
   tagName?: string;
-  properties?: Record<string, unknown>;
+  value?: string;
+  properties?: Record<string, string | number | boolean | string[] | undefined>;
   children?: ElementNode[];
   position?: {
     start?: { line?: number; column?: number };
   };
+};
+
+type VfileLike = {
+  path?: string;
 };
 
 const routesFile = path.join(process.cwd(), ".ilha", "routes.ts");
@@ -25,7 +30,7 @@ function normalizeRoute(value: string) {
   }
 }
 
-function isLocalLink(value: unknown): value is string {
+function isLocalLink(value: string | number | boolean | string[] | undefined): value is string {
   return (
     typeof value === "string" &&
     value.startsWith("/") &&
@@ -123,7 +128,7 @@ function expectedTitleFromFile(filePath: string) {
 
 function textContent(node: ElementNode | undefined): string {
   if (!node) return "";
-  if (typeof (node as any).value === "string") return (node as any).value;
+  if (typeof node.value === "string") return node.value;
   return (node.children ?? []).map(textContent).join("");
 }
 
@@ -176,7 +181,7 @@ function getAnchorMap() {
   return anchorCache;
 }
 
-function fail(file: any, node: ElementNode | undefined, rule: string, reason: string) {
+function fail(file: VfileLike, node: ElementNode | undefined, rule: string, reason: string) {
   const place = node?.position?.start
     ? { line: node.position.start.line, column: node.position.start.column }
     : undefined;
@@ -232,7 +237,7 @@ export function rehypePreview() {
 }
 
 export function rehypeDeadLinks() {
-  return (tree: ElementNode, file: any) => {
+  return (tree: ElementNode, file: VfileLike) => {
     const headings = collectHeadings(tree);
     const h1s = headings.filter((heading) => heading.tagName === "h1");
 

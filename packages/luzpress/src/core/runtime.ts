@@ -1,11 +1,13 @@
 import { router } from "@ilha/router";
-import type { Head } from "unhead";
+import type { ResolvableHead as Head } from "unhead/types";
 import type { PrerenderArguments } from "vite-prerender-plugin";
-import { createPrerender, type LuzpressPrerenderOptions, type RouterLike } from "./prerender-core";
+import { createPrerender, type RouterLike } from "./prerender-core";
+import type { LuzpressIslandRegistry } from "./ilha-types";
+import type { LuzpressShikiHighlighter } from "./shiki-types";
 
 export { createPrerender, type LuzpressPrerenderOptions } from "./prerender-core";
 
-export const shiki = new Promise<any>(() => {});
+export const shiki = new Promise<LuzpressShikiHighlighter>(() => {});
 
 export const THEME_STORAGE_KEY = "luz:theme";
 
@@ -47,7 +49,7 @@ export function applyInitialTheme() {
 
 export function mountOrHydrate(options: {
   pageRouter?: RouterLike;
-  registry: any;
+  registry: LuzpressIslandRegistry;
   dev?: boolean;
   target?: string;
   static?: boolean;
@@ -70,13 +72,14 @@ async function applyClientHead(
 ) {
   if (typeof window === "undefined") return;
   const { createHead } = await import("unhead/client");
-  const head = (window as any).__UNHEAD__ ?? ((window as any).__UNHEAD__ = createHead());
+  const globalWindow = window as Window & { __UNHEAD__?: ReturnType<typeof createHead> };
+  const head = globalWindow.__UNHEAD__ ?? (globalWindow.__UNHEAD__ = createHead());
   let dispose: (() => void) | undefined;
 
   async function apply() {
     dispose?.();
     const url = location.pathname.replace(/\/$/, "") || "/";
-    const merged: Head = { ...(headDefaults ?? {}), ...((await getMdxHead?.(url)) ?? {}) };
+    const merged: Head = { ...headDefaults, ...(await getMdxHead?.(url)) };
     if (Object.keys(merged).length > 0) dispose = head.push(merged).dispose;
   }
 
@@ -91,14 +94,20 @@ async function applyClientHead(
 }
 
 async function loadClientIlhaCodegen() {
-  // @ts-ignore provided by @ilha/router codegen at Vite build/dev time
-  return import("ilha:pages/client") as Promise<{ pageRouter: RouterLike; registry: any }>;
+  return import("ilha:pages/client") as Promise<{
+    pageRouter: RouterLike;
+    registry: LuzpressIslandRegistry;
+  }>;
 }
 
 async function loadServerIlhaCodegen() {
-  // @ts-ignore provided by @ilha/router codegen at Vite build/dev time
-  return import("ilha:pages/server") as Promise<{ pageRouter: RouterLike; registry: any }>;
+  return import("ilha:pages/server") as Promise<{
+    pageRouter: RouterLike;
+    registry: LuzpressIslandRegistry;
+  }>;
 }
+
+type RenderedMdx = { html: string; path: string } | undefined;
 
 async function loadMdxHelpers() {
   return import("luzpress/mdx") as Promise<{

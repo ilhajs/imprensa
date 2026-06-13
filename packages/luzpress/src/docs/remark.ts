@@ -1,10 +1,39 @@
+import type { Code, Root } from "mdast";
+
+type MdxJsxFlowElement = {
+  type: "mdxJsxFlowElement";
+  name: string;
+  attributes: Array<{
+    type: "mdxJsxAttribute";
+    name: string;
+    value: {
+      type: "mdxJsxAttributeValueExpression";
+      value: string;
+      data: { estree: { type: "Program"; body: object[]; sourceType: "module" } };
+    };
+  }>;
+  children: [];
+};
+
+type MdxEsmNode = {
+  type: "mdxjsEsm";
+  value: string;
+  data: { estree: { type: "Program"; body: object[]; sourceType: "module" } };
+};
+
+type RootChild = Root["children"][number] | MdxJsxFlowElement | MdxEsmNode;
+
+function isCode(node: RootChild): node is Code {
+  return node.type === "code";
+}
+
 export function remarkPreview() {
-  return (tree: any) => {
+  return (tree: Root) => {
     let hasPreview = false;
-    tree.children = tree.children.map((node: any) => {
-      if (node.type !== "code" || !(node.meta ?? "").includes("preview")) return node;
+    tree.children = tree.children.map((node) => {
+      if (!isCode(node) || !(node.meta ?? "").includes("preview")) return node;
       hasPreview = true;
-      return {
+      const previewNode: MdxJsxFlowElement = {
         type: "mdxJsxFlowElement",
         name: "Preview",
         attributes: [
@@ -34,9 +63,10 @@ export function remarkPreview() {
         ],
         children: [],
       };
+      return previewNode as Root["children"][number];
     });
     if (!hasPreview) return;
-    tree.children.unshift({
+    const importNode: MdxEsmNode = {
       type: "mdxjsEsm",
       value: "import { Preview } from 'luzpress/components';",
       data: {
@@ -58,6 +88,7 @@ export function remarkPreview() {
           sourceType: "module",
         },
       },
-    });
+    };
+    tree.children.unshift(importNode as Root["children"][number]);
   };
 }

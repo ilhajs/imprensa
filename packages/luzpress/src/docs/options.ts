@@ -1,6 +1,6 @@
 import type { IlhaPagesOptions } from "@ilha/router/vite";
 import type { Options as MdxRollupOptions } from "@mdx-js/rollup";
-import type { Head } from "unhead";
+import type { ResolvableHead as Head } from "unhead/types";
 import type { LuzpressLlmsOptions } from "./llms";
 import type { LuzpressShikiOptions } from "../core/shiki";
 

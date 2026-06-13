@@ -1,4 +1,5 @@
 /** @jsxImportSource ilha */
+import type { RawHtml } from "ilha";
 import { defineLayout, routeHash } from "@ilha/router";
 import { LinkButton, Resizable, Toaster } from "areia";
 import { GithubIcon, XIcon, DiscordIcon } from "./icons";
@@ -161,7 +162,7 @@ export const ContentLayout = defineLayout((children) => {
     });
 });
 
-const socialIcons: Record<string, () => unknown> = {
+const socialIcons: Record<string, () => RawHtml> = {
   github: () => <GithubIcon class="size-4" />,
   x: () => <XIcon class="size-4" />,
   discord: () => <DiscordIcon class="size-4" />,

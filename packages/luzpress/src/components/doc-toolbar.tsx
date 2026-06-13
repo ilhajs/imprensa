@@ -1,4 +1,5 @@
 /** @jsxImportSource ilha */
+import type { RawHtml } from "ilha";
 import { useRoute } from "@ilha/router";
 import { Button, Dropdown, Icon } from "areia";
 import ilha from "ilha";
@@ -121,7 +122,7 @@ export const DocToolbar = ilha.input<{ path: string }>().render(({ input }) => {
   );
 });
 
-export function DocArticle(props: { path: string; children: unknown; class?: string }) {
+export function DocArticle(props: { path: string; children: RawHtml | string; class?: string }) {
   const articleClasses = props.class ?? articleClass;
 
   return (

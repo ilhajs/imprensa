@@ -2,7 +2,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { pages } from "@ilha/router/vite";
-import mdx from "@mdx-js/rollup";
+import mdx, { type Options as MdxRollupOptions } from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
@@ -18,15 +18,14 @@ import { remarkPreview } from "./remark";
 import { SIDEBAR_LAYOUT_BOOT_SCRIPT } from "../components/sidebar-layout";
 import { rehypeDeadLinks } from "./rehype";
 
-const require = createRequire(import.meta.url);
 /** Resolved from published `dist/index.mjs` → `src/docs/mdx.ts`. */
 const MDX_SOURCE = fileURLToPath(new URL("../src/docs/mdx.ts", import.meta.url));
 const COMPONENTS_INDEX = fileURLToPath(new URL("../src/components/index.tsx", import.meta.url));
 const DOC_TOOLBAR = fileURLToPath(new URL("../src/components/doc-toolbar.tsx", import.meta.url));
 const CONFIG_STUB = fileURLToPath(new URL("../src/docs/config.ts", import.meta.url));
-const LUZPRESS_RUNTIME_SOURCE = fileURLToPath(new URL("../src/core/runtime.ts", import.meta.url));
-const LUZPRESS_PRERENDER_SOURCE = fileURLToPath(
-  new URL("../src/core/prerender-core.ts", import.meta.url),
+/** Published plugin runs from dist/index.mjs — prerender must resolve to built JS (not src) for vite-prerender-plugin source maps. */
+const LUZPRESS_PRERENDER_ENTRY = path.resolve(
+  fileURLToPath(new URL("./core/prerender-core.mjs", import.meta.url)),
 );
 
 export function createLuzpressVitePlugins(options: LuzpressOptions = {}): PluginOption[] {
@@ -46,7 +45,9 @@ export function createLuzpressVitePlugins(options: LuzpressOptions = {}): Plugin
     preview = {},
   } = options;
 
-  const { rehypePlugins = [], remarkPlugins = [], ...restMdxOptions } = mdxOptions;
+  const { rehypePlugins, remarkPlugins, ...restMdxOptions } = mdxOptions;
+  const resolvedRemarkPlugins = remarkPlugins ?? [];
+  const resolvedRehypePlugins = rehypePlugins ?? [];
   const coreRehypePlugins = [
     rehypeSlug,
     [
@@ -72,8 +73,12 @@ export function createLuzpressVitePlugins(options: LuzpressOptions = {}): Plugin
     mdx({
       jsxImportSource: "ilha",
       ...restMdxOptions,
-      remarkPlugins: [remarkPreview, ...(remarkPlugins as any[])],
-      rehypePlugins: [...shikiPlugin(shiki), ...coreRehypePlugins, ...rehypePlugins],
+      remarkPlugins: [remarkPreview, ...resolvedRemarkPlugins],
+      rehypePlugins: [
+        ...shikiPlugin(shiki),
+        ...coreRehypePlugins,
+        ...resolvedRehypePlugins,
+      ] as MdxRollupOptions["rehypePlugins"],
     }),
     {
       name: "luzpress:ilha-pages",
@@ -193,7 +198,7 @@ const luzpressRepo = ${JSON.stringify(repo)};
 const luzpressRepoBranch = ${JSON.stringify(repoBranch)};
 const luzpressRepoPath = ${JSON.stringify(repoPath)};
 const mdxRawSources = ${JSON.stringify(collectRawMdxSources(process.cwd(), contentDir))} as Record<string, string>;
-export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("unhead").Head | null;`,
+export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("unhead/types").ResolvableHead | null;`,
       );
     },
     config() {
@@ -214,7 +219,7 @@ export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("u
                 groups: [
                   {
                     name: "luzpress-shiki",
-                    test: /luzpress[\/]shiki|@shikijs[\/]|(?:^|[\/])shiki[\/]/,
+                    test: /luzpress[/]shiki|@shikijs[/]|(?:^|[/])shiki[/]/,
                   },
                   {
                     name: "luzpress-search",
@@ -229,7 +234,7 @@ export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("u
           alias: {
             $lib: path.resolve(root, "src", "lib"),
             sonner,
-            "luzpress/prerender": LUZPRESS_PRERENDER_SOURCE,
+            "luzpress/prerender": LUZPRESS_PRERENDER_ENTRY,
           },
           dedupe: [
             "@areia/slots",

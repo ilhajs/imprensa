@@ -2,9 +2,10 @@
 import { LinkButton } from "areia";
 import { socials } from "luzpress/config";
 import { DiscordIcon, GithubIcon, XIcon } from "./icons";
+import type { RawHtml } from "ilha";
 import { ThemeToggle } from "./search";
 
-const socialIcons: Record<string, () => unknown> = {
+const socialIcons: Record<string, () => RawHtml> = {
   github: () => <GithubIcon class="size-4" />,
   x: () => <XIcon class="size-4" />,
   discord: () => <DiscordIcon class="size-4" />,

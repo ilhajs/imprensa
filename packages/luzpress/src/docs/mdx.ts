@@ -1,15 +1,21 @@
 import type { RawHtml } from "ilha";
 import { raw } from "ilha";
+import type { ResolvableHead as Head } from "unhead/types";
+import { parseScalar, toStringArray, type FrontmatterScalar } from "./frontmatter";
 
 let prerenderedMdxHtml: string | undefined;
 
 type MdxContent = string | RawHtml;
 
-import type { Head } from "unhead";
-
 type MdxModule = {
-  default: (props: Record<string, unknown>) => MdxContent;
+  default: (props: Record<string, string | number | boolean | undefined>) => MdxContent;
   head?: Head;
+};
+
+type PrerenderDataPayload = {
+  mdxHtml?: string;
+  mdxHtmlBase64?: string;
+  mdxPath?: string;
 };
 
 export type ContentMeta = {
@@ -71,14 +77,14 @@ declare const __LUZPRESS_REPO__: string;
 declare const __LUZPRESS_REPO_BRANCH__: string;
 declare const __LUZPRESS_REPO_PATH__: string;
 declare const __LUZPRESS_RAW_SOURCES__: Record<string, string>;
-declare const __LUZPRESS_HEAD_DEFAULTS__: import("unhead").Head | null;
+declare const __LUZPRESS_HEAD_DEFAULTS__: Head | null;
 
 const contentDir = __LUZPRESS_CONTENT_DIR__;
 const luzpressRepo = __LUZPRESS_REPO__;
 const luzpressRepoBranch = __LUZPRESS_REPO_BRANCH__;
 const luzpressRepoPath = __LUZPRESS_REPO_PATH__;
 const mdxRawSources: Record<string, string> = __LUZPRESS_RAW_SOURCES__;
-export const headDefaults: import("unhead").Head | null = __LUZPRESS_HEAD_DEFAULTS__;
+export const headDefaults: Head | null = __LUZPRESS_HEAD_DEFAULTS__;
 const allMdxModules = {
   ...import.meta.glob("/src/pages/**/*.md"),
   ...import.meta.glob("/src/pages/**/*.mdx"),
@@ -142,33 +148,19 @@ function textFromRawDocument(source: string) {
     .trim();
 }
 
-function parseScalar(value: string): unknown {
-  const trimmed = value.trim();
-  if (trimmed === "true") return true;
-  if (trimmed === "false") return false;
-  if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
-  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-    return trimmed
-      .slice(1, -1)
-      .split(",")
-      .map((item) => item.trim().replace(/^['\"]|['\"]$/g, ""))
-      .filter(Boolean);
-  }
-  return trimmed.replace(/^['\"]|['\"]$/g, "");
-}
-
-function parseFrontmatter(source: string): Record<string, unknown> {
+function parseFrontmatter(source: string): Record<string, FrontmatterScalar | FrontmatterScalar[]> {
   if (!source.startsWith("---")) return {};
   const end = source.indexOf("\n---", 3);
   if (end === -1) return {};
   const yaml = source.slice(4, end);
-  const entries: Record<string, unknown> = {};
+  const entries: Record<string, FrontmatterScalar | FrontmatterScalar[]> = {};
   let listKey: string | undefined;
 
   for (const line of yaml.split("\n")) {
     const listItem = line.match(/^\s*-\s*(.+)$/);
     if (listItem && listKey) {
-      const list = Array.isArray(entries[listKey]) ? entries[listKey] : [];
+      const existing = entries[listKey];
+      const list: FrontmatterScalar[] = Array.isArray(existing) ? [...existing] : [];
       list.push(parseScalar(listItem[1]));
       entries[listKey] = list;
       continue;
@@ -186,16 +178,6 @@ function parseFrontmatter(source: string): Record<string, unknown> {
   }
 
   return entries;
-}
-
-function toStringArray(value: unknown): string[] {
-  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string");
-  if (typeof value === "string")
-    return value
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-  return [];
 }
 
 function metaFromDocument(filePath: string, rawSource: string): ContentMeta {
@@ -328,11 +310,7 @@ export function getClientPrerenderedMdxHtml(path: string) {
   if (!data) return undefined;
 
   try {
-    const parsed = JSON.parse(data) as {
-      mdxHtml?: unknown;
-      mdxHtmlBase64?: unknown;
-      mdxPath?: unknown;
-    };
+    const parsed = JSON.parse(data) as PrerenderDataPayload;
     const normalizedPath = path.replace(/\/$/, "") || "/";
     if (parsed.mdxPath !== normalizedPath) return undefined;
     if (typeof parsed.mdxHtmlBase64 === "string") return decodeBase64(parsed.mdxHtmlBase64);

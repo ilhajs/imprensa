@@ -2,16 +2,19 @@ import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import rehypeShiki from "@shikijs/rehype";
 import { transformerTwoslash } from "@shikijs/twoslash";
+import type { PluggableList } from "unified";
 
 export type LuzpressShikiOptions =
   | false
-  | {
+  | ({
       themes?: Record<string, string>;
       langs?: string[];
       twoslash?: boolean;
-      transformers?: unknown[];
-      [key: string]: unknown;
-    };
+      transformers?: PluggableList;
+    } & Record<
+      string,
+      string | number | boolean | string[] | Record<string, string> | PluggableList | undefined
+    >);
 
 const FINE_GRAINED_LANGS: Record<string, string> = {
   bash: "bash",
@@ -66,7 +69,7 @@ export function getShikiHighlighterOptions(options: LuzpressShikiOptions | undef
   return { themes, langs };
 }
 
-export function shikiPlugin(options: LuzpressShikiOptions | undefined): unknown[] {
+export function shikiPlugin(options: LuzpressShikiOptions | undefined): PluggableList {
   if (options === false) return [];
 
   const { twoslash = true, transformers = [], themes, langs, ...shiki } = options ?? {};

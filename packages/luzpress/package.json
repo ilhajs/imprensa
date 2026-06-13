@@ -89,8 +89,10 @@
     "vite-prerender-plugin": "^0.5.13"
   },
   "devDependencies": {
+    "@types/mdast": "^4.0.4",
     "tsdown": "^0.22.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "unified": "^11.0.5"
   },
   "peerDependencies": {
     "areia": "^0.1.18",

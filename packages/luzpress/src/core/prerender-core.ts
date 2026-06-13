@@ -1,28 +1,36 @@
-import type { Head } from "unhead";
+import type { ResolvableHead as Head } from "unhead/types";
 import type { PrerenderArguments } from "vite-prerender-plugin";
+import type {
+  HydratableRenderOptions,
+  HydrateOptions,
+  LuzpressIslandRegistry,
+  LuzpressPageRouter,
+} from "./ilha-types";
+import { appendCanonicalTags, headLinkEntries, headMetaEntries } from "./prerender-head";
 
-export type RouterLike = {
-  mount: (target: string) => unknown;
-  hydrate: (registry: any, options?: any) => unknown;
-  renderHydratable: (
-    url: string,
-    registry: any,
-    options?: Record<string, unknown>,
-  ) => string | Promise<string>;
-  routes: () => Array<{ pattern: string }>;
-};
+/** Minimal router surface for apps that re-export codegen `pageRouter` into prerender. */
+export type RouterLike = Pick<
+  LuzpressPageRouter,
+  "mount" | "hydrate" | "renderHydratable" | "routes"
+>;
 
 type RenderedMdx = { html: string; path: string } | undefined;
 
 function encodeBase64(value: string) {
-  const bufferCtor = (globalThis as any).Buffer;
+  const bufferCtor = (
+    globalThis as {
+      Buffer?: {
+        from: (value: string, encoding: "utf8") => { toString: (encoding: "base64") => string };
+      };
+    }
+  ).Buffer;
   if (bufferCtor) return bufferCtor.from(value, "utf8").toString("base64");
   return btoa(unescape(encodeURIComponent(value)));
 }
 
 export type LuzpressPrerenderOptions = {
   pageRouter: RouterLike;
-  registry: any;
+  registry: LuzpressIslandRegistry;
   mdxRoutes?: Iterable<string>;
   renderMdx?: (url: string) => RenderedMdx | Promise<RenderedMdx>;
   setPrerenderedMdxHtml?: (html: string | undefined) => void;
@@ -39,59 +47,48 @@ export function createPrerender(options: LuzpressPrerenderOptions) {
 
     const renderedHtml = await options.pageRouter.renderHydratable(url, options.registry, {
       snapshot: true,
-    });
+    } satisfies HydratableRenderOptions);
     const html = renderedHtml
       .replace(/<script/gi, "&lt;script")
       .replace(/<\/script>/gi, "&lt;/script&gt;");
 
     const canonicalUrl = options.hostname ? new URL(url, options.hostname).href : undefined;
     const mergedHead: Head = {
-      ...(options.headDefaults ?? {}),
-      ...((await options.getMdxHead?.(url)) ?? {}),
+      ...options.headDefaults,
+      ...(await options.getMdxHead?.(url)),
     };
 
+    let linkTags = headLinkEntries(mergedHead);
+    let metaTags = headMetaEntries(mergedHead);
     if (canonicalUrl) {
-      mergedHead.link = [
-        ...((mergedHead.link as Record<string, string>[] | undefined)?.filter(
-          (link) => link.rel !== "canonical",
-        ) ?? []),
-        { rel: "canonical", href: canonicalUrl },
-      ];
-      mergedHead.meta = [
-        ...((mergedHead.meta as Record<string, string>[] | undefined)?.filter(
-          (meta) => meta.property !== "og:url" && meta.name !== "twitter:url",
-        ) ?? []),
-        { property: "og:url", content: canonicalUrl },
-        { name: "twitter:url", content: canonicalUrl },
-      ];
+      const canonical = appendCanonicalTags(linkTags, metaTags, canonicalUrl);
+      linkTags = canonical.links;
+      metaTags = canonical.meta;
     }
+
     const head: {
       title?: string;
-      elements?: Set<{ type: string; props: Record<string, string> }>;
+      elements?: Set<{ type: string; props: Record<string, string>; children?: string }>;
     } = {};
 
-    if (mergedHead.title) head.title = mergedHead.title as string;
+    if (mergedHead.title) head.title = String(mergedHead.title);
 
-    const elements = new Set<{ type: string; props: Record<string, string> }>();
-    if (mergedHead.meta) {
-      for (const m of mergedHead.meta as Record<string, string>[]) {
-        elements.add({ type: "meta", props: m });
-      }
+    const elements = new Set<{ type: string; props: Record<string, string>; children?: string }>();
+    for (const m of metaTags) {
+      elements.add({ type: "meta", props: m });
     }
-    if (mergedHead.link) {
-      for (const l of mergedHead.link as Record<string, string>[]) {
-        elements.add({ type: "link", props: l });
-      }
+    for (const l of linkTags) {
+      elements.add({ type: "link", props: l });
     }
 
     if (mdxPage && options.hostname) {
       const pageUrl = new URL(url, options.hostname).href;
-      const metaList = mergedHead.meta as Record<string, string>[] | undefined;
+      const metaList = metaTags;
       const title =
         (typeof mergedHead.title === "string" && mergedHead.title) ||
-        metaList?.find((m) => m.property === "og:title")?.content ||
+        metaList.find((m) => m.property === "og:title")?.content ||
         "Documentation";
-      const description = metaList?.find((m) => m.name === "description")?.content;
+      const description = metaList.find((m) => m.name === "description")?.content;
       const jsonLd = {
         "@context": "https://schema.org",
         "@type": "TechArticle",
@@ -127,3 +124,5 @@ export function createPrerender(options: LuzpressPrerenderOptions) {
     };
   };
 }
+
+export type { HydrateOptions };

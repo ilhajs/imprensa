@@ -2,6 +2,7 @@
 import ilha from "ilha";
 import { shiki } from "luzpress";
 import { preview as previewConfig } from "luzpress/config";
+import type { LuzpressShikiHighlighter } from "../core/shiki-types";
 
 const DEFAULT_IMPORTMAP = { imports: {} as Record<string, string> };
 
@@ -22,9 +23,9 @@ function makeIframeDoc(code: string) {
 <html>
 <head>
   <meta charset="utf-8">
-  <script>const localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };<\/script>
-  <script type="importmap">${JSON.stringify(importmap)}<\/script>
-  <script type="module" src="https://esm.sh/tsx"><\/script>
+  <script>const localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };</script>
+  <script type="importmap">${JSON.stringify(importmap)}</script>
+  <script type="module" src="https://esm.sh/tsx"></script>
   ${head}
 </head>
 <body>
@@ -33,7 +34,7 @@ function makeIframeDoc(code: string) {
     ${script}
     const __resolved = typeof __island !== 'undefined' ? __island : typeof App !== 'undefined' ? App : undefined;
     if (__resolved?.mount) __resolved.mount(document.getElementById('root'));
-  <\/script>
+  </script>
 </body>
 </html>`;
 }
@@ -68,12 +69,12 @@ export const Preview = ilha
     });
 
     shiki.then(async (highlighter) => {
-      const h = highlighter as any;
-      await h.loadLanguage("tsx");
+      const previewHighlighter = highlighter as LuzpressShikiHighlighter;
+      await previewHighlighter.loadLanguage("tsx");
       const div = document.createElement("div");
       div.className =
         "rounded-lg overflow-hidden border border-areia-border text-sm [&_pre]:!p-4 [&_pre]:!m-0 [&_pre]:overflow-x-auto";
-      div.innerHTML = h.codeToHtml(code, {
+      div.innerHTML = previewHighlighter.codeToHtml(code, {
         lang: "tsx",
         themes: { light: "night-owl-light", dark: "houston" },
       });

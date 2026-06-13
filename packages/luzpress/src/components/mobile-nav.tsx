@@ -2,19 +2,25 @@
 import { Button, LinkButton, Popover } from "areia";
 import { contentTree, type ContentTreeNode } from "luzpress/mdx";
 import { NavFooterBar } from "./nav-footer-bar";
+import type { LuzpressUiTree } from "./ilha-ui";
+import { treeIndentClass } from "./tree-indent";
 
 function normalizePath(path: string) {
   return path.replace(/\/$/, "") || "/";
 }
 
-function renderMobileTree(nodes: ContentTreeNode[], currentPath: string, depth = 0): unknown[] {
+function renderMobileTree(
+  nodes: ContentTreeNode[],
+  currentPath: string,
+  depth = 0,
+): LuzpressUiTree[] {
   return nodes.flatMap((node) => {
     const active = node.path ? normalizePath(node.path) === currentPath : false;
-    const items: unknown[] = [];
+    const items: LuzpressUiTree[] = [];
     if (node.path) {
       items.push(
         <Popover.Close>
-          <div style={{ marginLeft: `${depth * 0.5}rem` }}>
+          <div class={treeIndentClass(depth)}>
             <LinkButton
               href={node.path}
               variant={active ? "outline" : "ghost"}
@@ -27,10 +33,7 @@ function renderMobileTree(nodes: ContentTreeNode[], currentPath: string, depth =
       );
     } else {
       items.push(
-        <span
-          class="mt-2 block text-sm font-medium text-areia-subtle"
-          style={{ marginLeft: `${depth * 0.5}rem` }}
-        >
+        <span class={`mt-2 block text-sm font-medium text-areia-subtle ${treeIndentClass(depth)}`}>
           {node.title}
         </span>,
       );

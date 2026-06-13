@@ -5,134 +5,142 @@
 
 @source "./src/**/*.{ts,tsx}";
 
-* {
-  --areia-code-block-bg: var(--areia-surface-muted);
-  --shiki-dark-bg: var(--areia-code-block-bg) !important;
-  --twoslash-popup-bg: var(--areia-surface-elevated);
-  --twoslash-popup-color: var(--areia-text-default);
-  --twoslash-border-color: var(--areia-border);
-  --twoslash-docs-color: var(--areia-text-subtle);
-  --twoslash-popup-shadow: var(--areia-shadow-lg);
+@layer base {
+  * {
+    --areia-code-block-bg: var(--areia-surface-muted);
+    --shiki-dark-bg: var(--areia-code-block-bg) !important;
+    --twoslash-popup-bg: var(--areia-surface-elevated);
+    --twoslash-popup-color: var(--areia-text-default);
+    --twoslash-border-color: var(--areia-border);
+    --twoslash-docs-color: var(--areia-text-subtle);
+    --twoslash-popup-shadow: var(--areia-shadow-lg);
+  }
+
+  html,
+  body {
+    @apply min-h-screen bg-areia-background;
+  }
+
+  html:not([data-theme-ready]) body {
+    @apply invisible;
+  }
+
+  [data-ilha-slot] {
+    display: contents;
+  }
 }
 
-html,
-body {
-  min-height: 100vh;
-  background: var(--areia-background);
+@layer components {
+  .luz-tree-indent-0 {
+    @apply ml-0;
+  }
+  .luz-tree-indent-1 {
+    @apply ml-2;
+  }
+  .luz-tree-indent-2 {
+    @apply ml-4;
+  }
+  .luz-tree-indent-3 {
+    @apply ml-6;
+  }
+  .luz-tree-indent-4 {
+    @apply ml-8;
+  }
+  .luz-tree-indent-5 {
+    @apply ml-10;
+  }
+  .luz-tree-indent-6 {
+    @apply ml-12;
+  }
+
+  .prose :where(h1, h2, h3, h4, h5, h6) {
+    @apply font-semibold scroll-mt-20;
+  }
+
+  .prose
+    :is(h1, h2, h3, h4, h5, h6)
+    :where(a.heading-anchor):not(:where(.not-prose, .not-prose *)) {
+    color: var(--areia-text-strong) !important;
+    text-decoration: none !important;
+    text-decoration-line: none !important;
+  }
+
+  .prose
+    :is(h1, h2, h3, h4, h5, h6)
+    :where(a.heading-anchor:hover):not(:where(.not-prose, .not-prose *)) {
+    color: var(--areia-text-strong) !important;
+    text-decoration: underline !important;
+    text-decoration-line: underline !important;
+    text-underline-offset: 0.25rem;
+  }
+
+  .prose :where(:not(pre) > code):not(:where(.not-prose, .not-prose *)) {
+    @apply rounded bg-areia-surface-muted px-1 py-0.5;
+  }
+
+  .prose :where(pre):not(:where(.not-prose, .not-prose *)) {
+    @apply my-5 h-auto max-w-full overflow-x-auto rounded-md border border-areia-border p-4 leading-snug;
+    background: var(--areia-code-block-bg) !important;
+  }
+
+  .prose :where(pre:not(.shiki) code):not(:where(.not-prose, .not-prose *)) {
+    @apply block min-w-max whitespace-pre bg-transparent leading-snug;
+  }
+
+  .prose :where(pre.shiki code, pre code span):not(:where(.not-prose, .not-prose *)) {
+    @apply bg-transparent leading-snug;
+  }
+
+  .prose :where(pre.shiki):not(:where(.not-prose, .not-prose *)),
+  .prose :where(pre.shiki):not(:where(.not-prose, .not-prose *)) code {
+    background-color: var(--areia-code-block-bg) !important;
+  }
 }
 
-[data-ilha-slot] {
-  display: contents;
-}
+@layer utilities {
+  .shiki {
+    @apply !overflow-x-auto !overflow-y-hidden !leading-snug;
+  }
 
-.shiki {
-  overflow-y: hidden !important;
-  overflow-x: auto !important;
-  line-height: 1.35 !important;
-}
+  .shiki code {
+    @apply block min-w-max overflow-visible border-0 bg-transparent p-0 leading-snug;
+  }
 
-.shiki code {
-  display: block;
-  min-width: max-content;
-  overflow: visible !important;
-  background: transparent !important;
-  border: 0;
-  padding: 0;
-  line-height: inherit !important;
-}
+  .shiki.twoslash,
+  .shiki.twoslash code {
+    overflow: visible !important;
+  }
 
-html:not([data-theme-ready]) body {
-  visibility: hidden;
-}
+  .shiki .line {
+    @apply inline-block min-w-full leading-snug;
+  }
 
-.prose :where(h1, h2, h3, h4, h5, h6) {
-  font-weight: 600;
-  scroll-margin-top: 5rem;
-}
+  .shiki .highlighted,
+  .shiki .diff {
+    @apply -mx-4 px-4;
+  }
 
-.prose :where(.heading-anchor) {
-  color: inherit;
-  text-decoration: none;
-}
+  .twoslash-popup-code,
+  .twoslash-popup-code span {
+    @apply !bg-transparent;
+  }
 
-.prose :where(.heading-anchor:hover) {
-  color: var(--areia-primary);
-}
+  html.dark .shiki,
+  html.dark .shiki span {
+    color: var(--shiki-dark) !important;
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+    text-decoration: var(--shiki-dark-text-decoration) !important;
+  }
 
-.prose :where(:not(pre) > code):not(:where(.not-prose, .not-prose *)) {
-  border-radius: 0.25rem;
-  background: var(--areia-surface-muted);
-  padding: 0.125rem 0.25rem;
-}
+  html.dark .shiki,
+  html.dark .prose :where(pre.shiki):not(:where(.not-prose, .not-prose *)) {
+    background-color: var(--areia-code-block-bg) !important;
+  }
 
-.prose :where(pre):not(:where(.not-prose, .not-prose *)) {
-  height: auto;
-  margin-top: 1.25em;
-  margin-bottom: 1.25em;
-  padding: 1rem;
-  border-radius: 0.375rem;
-  border: 1px solid var(--areia-border);
-  background: var(--areia-code-block-bg) !important;
-  line-height: 1.35 !important;
-  overflow-x: auto;
-  max-width: 100%;
-}
-
-.prose :where(pre:not(.shiki) code):not(:where(.not-prose, .not-prose *)) {
-  display: block;
-  min-width: max-content;
-  white-space: pre;
-  background-color: transparent;
-  line-height: inherit !important;
-}
-
-.prose :where(pre.shiki code, pre code span):not(:where(.not-prose, .not-prose *)) {
-  background-color: transparent;
-  line-height: inherit !important;
-}
-
-.shiki.twoslash,
-.shiki.twoslash code {
-  overflow: visible !important;
-}
-
-.shiki .line {
-  display: inline-block;
-  min-width: 100%;
-  line-height: inherit !important;
-}
-
-.shiki .highlighted,
-.shiki .diff {
-  margin-inline: -1rem;
-  padding-inline: 1rem;
-}
-
-.twoslash-popup-code,
-.twoslash-popup-code span {
-  background: transparent !important;
-}
-
-html.dark .shiki,
-html.dark .shiki span {
-  color: var(--shiki-dark) !important;
-  font-style: var(--shiki-dark-font-style) !important;
-  font-weight: var(--shiki-dark-font-weight) !important;
-  text-decoration: var(--shiki-dark-text-decoration) !important;
-}
-
-.prose :where(pre.shiki):not(:where(.not-prose, .not-prose *)),
-.prose :where(pre.shiki):not(:where(.not-prose, .not-prose *)) code {
-  background-color: var(--areia-code-block-bg) !important;
-}
-
-html.dark .shiki,
-html.dark .prose :where(pre.shiki):not(:where(.not-prose, .not-prose *)) {
-  background-color: var(--areia-code-block-bg) !important;
-}
-
-/* night-owl-light blue (#4876d6) on #fbfbfb fails ~4.19:1 — darken for WCAG AA */
-html:not(.dark) .shiki.shiki-themes span[style*="4876D6"],
-html:not(.dark) .shiki.shiki-themes span[style*="4876d6"] {
-  color: #3558a8 !important;
+  /* night-owl-light blue (#4876d6) on #fbfbfb fails ~4.19:1 — darken for WCAG AA */
+  html:not(.dark) .shiki.shiki-themes span[style*="4876D6"],
+  html:not(.dark) .shiki.shiki-themes span[style*="4876d6"] {
+    color: #3558a8 !important;
+  }
 }

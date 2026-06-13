@@ -5,8 +5,10 @@ import ilha from "ilha";
 import { contentTree, type ContentTreeNode } from "luzpress/mdx";
 import { LogoButton, SearchSidebarTrigger } from "./search";
 import { NavFooterBar } from "./nav-footer-bar";
+import type { LuzpressUiTree } from "./ilha-ui";
+import { treeIndentClass } from "./tree-indent";
 
-function renderTree(nodes: ContentTreeNode[], currentPath: string, depth = 0): unknown[] {
+function renderTree(nodes: ContentTreeNode[], currentPath: string, depth = 0): LuzpressUiTree[] {
   return nodes.map((node) => {
     const active = node.path ? (node.path.replace(/\/$/, "") || "/") === currentPath : false;
     const link = node.path ? (
@@ -21,7 +23,7 @@ function renderTree(nodes: ContentTreeNode[], currentPath: string, depth = 0): u
       <span class="text-sm font-medium text-areia-subtle">{node.title}</span>
     );
     return (
-      <div class="flex flex-col gap-1 mt-px" style={{ marginLeft: `${depth * 0.5}rem` }}>
+      <div class={`flex flex-col gap-1 mt-px ${treeIndentClass(depth)}`}>
         {node.children.length > 0 ? (
           <Collapsible defaultOpen>
             <Collapsible.Trigger class="w-full rounded-md px-2 py-1 text-left hover:bg-areia-control-hover">
