@@ -15,9 +15,6 @@
     "README.md",
     "CHANGELOG.md",
     "docs/",
-    "src/components/",
-    "src/core/",
-    "src/docs/",
     "tsconfig.json"
   ],
   "type": "module",
@@ -47,20 +44,24 @@
       "import": "./dist/docs/mdx.mjs"
     },
     "./config": {
-      "types": "./index.d.ts",
-      "import": "./src/docs/config.ts"
+      "types": "./dist/docs/config.d.mts",
+      "import": "./dist/docs/config.mjs"
     },
     "./icons": {
-      "types": "./src/components/icons.tsx",
-      "import": "./src/components/icons.tsx"
+      "types": "./dist/components/icons.d.mts",
+      "import": "./dist/components/icons.mjs"
     },
     "./components": {
-      "types": "./src/components/index.tsx",
-      "import": "./src/components/index.tsx"
+      "types": "./dist/components/index.d.mts",
+      "import": "./dist/components/index.mjs"
     },
     "./doc": {
-      "types": "./src/components/doc-toolbar.tsx",
-      "import": "./src/components/doc-toolbar.tsx"
+      "types": "./dist/components/doc.d.mts",
+      "import": "./dist/components/doc.mjs"
+    },
+    "./landing-shiki": {
+      "types": "./dist/docs/landing-shiki.d.mts",
+      "import": "./dist/docs/landing-shiki.mjs"
     },
     "./tsconfig.json": "./tsconfig.json",
     "./default.css": "./default.css"

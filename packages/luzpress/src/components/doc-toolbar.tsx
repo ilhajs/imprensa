@@ -10,8 +10,6 @@ import { toast } from "sonner";
 import { articleClass, getDocLinks } from "luzpress/mdx";
 import { DocPager } from "./doc-pager";
 
-export { DocPager, getAdjacentDocs, type DocNavItem } from "./doc-pager";
-
 function absoluteUrl(path: string) {
   if (typeof window === "undefined") return path;
   return new URL(path, window.location.origin).href;
