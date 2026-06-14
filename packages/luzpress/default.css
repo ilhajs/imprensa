@@ -18,7 +18,7 @@
 
   html,
   body {
-    @apply min-h-screen bg-areia-background;
+    @apply m-0 min-h-screen bg-areia-background;
   }
 
   html:not([data-theme-ready]) body {
@@ -31,6 +31,77 @@
 }
 
 @layer components {
+  /*
+   * Docs routes: one viewport (100dvh). Avoid 100vh min-height on body + 100dvh shell
+   * (mobile URL bar ≈ 50px page scroll under the sidebar).
+   */
+  html.luz-docs-layout {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  html.luz-docs-layout body {
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0 !important;
+    overflow: hidden;
+  }
+
+  html.luz-docs-layout #app {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  html.luz-docs-layout .luz-root {
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  html.luz-docs-layout .luz-root-main {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .luz-docs-shell [data-slot="resizable"] {
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* Areia sets overflow:hidden on panels — scroll happens on inner wrappers only. */
+  .luz-docs-shell .luz-docs-sidebar-panel[data-slot="resizable-panel"],
+  .luz-docs-shell .luz-docs-main-panel[data-slot="resizable-panel"] {
+    min-height: 0 !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .luz-docs-sidebar-panel {
+    @apply bg-areia-surface-elevated;
+  }
+
+  .luz-docs-sidebar-panel > * {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .luz-docs-main-scroll {
+    height: 100%;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .luz-tree-indent-0 {
     @apply ml-0;
   }

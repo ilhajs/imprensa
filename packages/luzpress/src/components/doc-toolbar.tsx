@@ -124,7 +124,7 @@ export function DocArticle(props: { path: string; children: RawHtml | string; cl
   const articleClasses = props.class ?? articleClass;
 
   return (
-    <div class="flex-1 mx-auto w-full max-w-4xl flex flex-col min-h-full">
+    <div class="mx-auto flex w-full max-w-4xl min-h-0 flex-1 flex-col">
       <DocToolbar path={props.path} />
       <article class={`${articleClasses} flex-1`}>{props.children}</article>
       <DocPager path={props.path} />

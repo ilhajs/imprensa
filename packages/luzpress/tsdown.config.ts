@@ -6,6 +6,7 @@ export default defineConfig({
     "src/core/runtime.ts",
     "src/core/client-runtime.ts",
     "src/core/prerender-core.ts",
+    "src/core/shiki-build.ts",
     "src/docs/rehype.ts",
     "src/docs/mdx.ts",
     "src/docs/config.ts",

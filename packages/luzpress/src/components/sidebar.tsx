@@ -45,12 +45,12 @@ export const Sidebar = ilha.render(() => {
   const { path } = useRoute();
   const currentPath = path().replace(/\/$/, "") || "/";
   return (
-    <div class="h-full flex flex-col gap-2 p-2">
+    <div class="flex h-full min-h-0 flex-col gap-2 p-2">
       <div class="flex items-center">
         <LogoButton />
       </div>
       <SearchSidebarTrigger />
-      <nav class="min-h-0 flex-1 overflow-y-auto flex flex-col gap-1 px-0.5">
+      <nav class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-y-contain px-0.5">
         {renderTree(contentTree, currentPath)}
       </nav>
       <NavFooterBar class="mt-auto" />

@@ -9,7 +9,7 @@ export default defineConfig({
       repoPath: "templates/starter",
       shiki: {
         themes: { light: "night-owl-light", dark: "houston" },
-        langs: ["ts", "tsx", "mdx", "shell", "yaml"],
+        langs: ["typescript", "tsx", "mdx", "shell", "yaml", "json"],
       },
       head: {
         title: "Luz — Documentation starter for Ilha",

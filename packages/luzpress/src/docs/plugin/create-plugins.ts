@@ -170,7 +170,18 @@ export const shiki = ${JSON.stringify(shiki === false ? false : (shiki ?? {}))};
 export const hostname = ${JSON.stringify(hostname ?? "")};
 export const shikiThemes = ${JSON.stringify(shikiThemes)};`;
       }
-      if (id === "\0luzpress:shiki") return shikiFineGrainedRuntime(highlighterOptions);
+      if (id === "\0luzpress:shiki") {
+        if (!highlighterOptions.clientShiki || highlighterOptions.langs.length === 0) {
+          return `export const shiki = {
+  loadLanguage: async () => {},
+  codeToHtml: () => "",
+};`;
+        }
+        return shikiFineGrainedRuntime({
+          themes: highlighterOptions.themes,
+          langs: highlighterOptions.langs,
+        });
+      }
       if (id !== "\0luzpress:runtime") return;
 
       return LUZPRESS_VIRTUAL_RUNTIME.replace("__SHIKI_THEMES__", JSON.stringify(shikiThemes));
@@ -207,10 +218,6 @@ export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("u
             output: {
               codeSplitting: {
                 groups: [
-                  {
-                    name: "luzpress-shiki",
-                    test: /luzpress[/]shiki|@shikijs[/]|(?:^|[/])shiki[/]/,
-                  },
                   {
                     name: "luzpress-search",
                     test: /minisearch/,

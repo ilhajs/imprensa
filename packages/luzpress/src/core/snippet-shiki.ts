@@ -1,10 +1,8 @@
-import { createHighlighter, type Highlighter } from "shiki";
 import type { LuzpressShikiOptions } from "./shiki";
+import { resolveShikiLangs, resolveShikiThemeIds } from "./shiki-client-langs";
 
 const WRAPPER_CLASS =
   "max-w-full overflow-x-auto rounded-xl border border-areia-border text-xs leading-relaxed [&_pre]:min-w-max [&_pre]:p-4 [&_pre]:text-xs [&_pre]:leading-relaxed [&_pre]:!m-0";
-
-let highlighterPromise: Promise<Highlighter> | undefined;
 
 function themePair(shiki: LuzpressShikiOptions | undefined) {
   if (shiki === false || !shiki?.themes) {
@@ -14,13 +12,10 @@ function themePair(shiki: LuzpressShikiOptions | undefined) {
 }
 
 async function getHighlighter(shiki: LuzpressShikiOptions | undefined) {
-  if (!highlighterPromise) {
-    const themes = themePair(shiki);
-    const themeIds = [...new Set(Object.values(themes))];
-    const langs = shiki === false ? ["ts"] : [...new Set(shiki?.langs ?? ["ts"])];
-    highlighterPromise = createHighlighter({ themes: themeIds, langs });
-  }
-  return highlighterPromise;
+  const { createConfiguredHighlighterCore } = await import("./shiki-build");
+  const themeIds = resolveShikiThemeIds(shiki);
+  const langIds = resolveShikiLangs(shiki);
+  return createConfiguredHighlighterCore(themeIds, langIds);
 }
 
 export async function codeToSnippetHtml(

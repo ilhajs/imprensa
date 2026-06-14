@@ -56,11 +56,20 @@ function mountSidebarLayoutPersistence(host: Element) {
   };
 }
 
+const DOCS_LAYOUT_CLASS = "luz-docs-layout";
+
+function mountDocsViewportLock() {
+  document.documentElement.classList.add(DOCS_LAYOUT_CLASS);
+  return () => {
+    document.documentElement.classList.remove(DOCS_LAYOUT_CLASS);
+  };
+}
+
 export const RootLayout = defineLayout((children) =>
   ilha.render(() => (
-    <div class="flex h-dvh flex-col bg-areia-background text-areia-default">
+    <div class="luz-root flex min-h-dvh flex-col bg-areia-background text-areia-default">
       <Toaster richColors closeButton />
-      <main class="flex min-h-0 flex-1 flex-col">{children}</main>
+      <main class="luz-root-main flex min-h-0 flex-1 flex-col">{children}</main>
     </div>
   )),
 );
@@ -72,15 +81,22 @@ export const ContentLayout = defineLayout((children) => {
       if (hash)
         requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView());
     })
-    .onMount(({ host }) => mountSidebarLayoutPersistence(host))
+    .onMount(({ host }) => {
+      const unlockViewport = mountDocsViewportLock();
+      const disconnectLayout = mountSidebarLayoutPersistence(host);
+      return () => {
+        disconnectLayout();
+        unlockViewport();
+      };
+    })
     .render(() => (
-      <div class="flex flex-1 min-h-0 bg-areia-background text-areia-default">
-        <Resizable direction="horizontal" class="h-full w-full">
+      <div class="luz-docs-shell flex h-dvh w-full overflow-hidden bg-areia-background text-areia-default">
+        <Resizable direction="horizontal" class="h-full min-h-0 w-full">
           <Resizable.Panel
             defaultSize={initialSidebarLayout[0]}
             minSize={15}
             maxSize={35}
-            class="bg-areia-surface-elevated overflow-y-auto max-md:!hidden"
+            class="luz-docs-sidebar-panel max-md:!hidden"
           >
             <Sidebar />
           </Resizable.Panel>
@@ -88,9 +104,9 @@ export const ContentLayout = defineLayout((children) => {
           <Resizable.Panel
             defaultSize={initialSidebarLayout[1]}
             minSize={50}
-            class="!overflow-y-auto"
+            class="luz-docs-main-panel"
           >
-            <div class="flex min-h-full w-full flex-col p-4">{children}</div>
+            <div class="luz-docs-main-scroll flex w-full flex-col p-4">{children}</div>
           </Resizable.Panel>
         </Resizable>
       </div>
