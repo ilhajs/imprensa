@@ -4,6 +4,7 @@ export default defineConfig({
   entry: [
     "src/index.ts",
     "src/core/runtime.ts",
+    "src/core/client-runtime.ts",
     "src/core/prerender-core.ts",
     "src/docs/rehype.ts",
     "src/docs/mdx.ts",

@@ -3,14 +3,15 @@ export {
   applyInitialTheme,
   applyThemeToHtml,
   createLuzpress,
-  createPrerender,
   getStoredTheme,
   mountOrHydrate,
   setStoredTheme,
   shiki,
   shikiThemes,
-} from "./core/runtime";
-export type { LuzpressPrerenderOptions } from "./core/runtime";
+} from "./core/client-runtime";
+
+export { createPrerender } from "./core/prerender-core";
+export type { LuzpressPrerenderOptions } from "./core/prerender-core";
 
 export type { LuzpressLlmsOptions, LuzpressOptions, LuzpressShikiOptions } from "./docs/options";
 

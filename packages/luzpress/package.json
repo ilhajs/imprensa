@@ -24,15 +24,15 @@
   "exports": {
     ".": {
       "browser": {
-        "types": "./dist/core/runtime.d.mts",
-        "import": "./dist/core/runtime.mjs"
+        "types": "./dist/core/client-runtime.d.mts",
+        "import": "./dist/core/client-runtime.mjs"
       },
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs"
     },
     "./runtime": {
-      "types": "./dist/core/runtime.d.mts",
-      "import": "./dist/core/runtime.mjs"
+      "types": "./dist/core/client-runtime.d.mts",
+      "import": "./dist/core/client-runtime.mjs"
     },
     "./prerender": {
       "types": "./dist/core/prerender-core.d.mts",

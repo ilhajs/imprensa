@@ -1,7 +1,6 @@
 /** @jsxImportSource ilha */
 import ilha from "ilha";
-import { shiki, shikiThemes } from "luzpress";
-import { preview as previewConfig } from "luzpress/config";
+import { preview as previewConfig, shikiThemes } from "luzpress/config";
 import type { LuzpressShikiHighlighter } from "../core/shiki-types";
 
 const DEFAULT_IMPORTMAP = { imports: {} as Record<string, string> };
@@ -68,8 +67,8 @@ export const Preview = ilha
       });
     });
 
-    shiki.then(async (highlighter) => {
-      const previewHighlighter = highlighter as LuzpressShikiHighlighter;
+    void import("luzpress/shiki").then(async ({ shiki }) => {
+      const previewHighlighter = shiki as LuzpressShikiHighlighter;
       await previewHighlighter.loadLanguage("tsx");
       const div = document.createElement("div");
       div.className =

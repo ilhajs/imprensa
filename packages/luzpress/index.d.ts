@@ -4,6 +4,16 @@ declare const __LUZPRESS_REPO_BRANCH__: string;
 declare const __LUZPRESS_REPO_PATH__: string;
 declare const __LUZPRESS_RAW_SOURCES__: Record<string, string>;
 
+declare module "luzpress/shiki" {
+  export const shiki: {
+    loadLanguage: (lang: string) => Promise<void>;
+    codeToHtml: (
+      code: string,
+      options: { lang: string; themes: { light: string; dark: string } },
+    ) => string;
+  };
+}
+
 declare module "luzpress/landing-shiki" {
   export const fileTreeHtml: string;
   export const mdxHtml: string;
@@ -16,6 +26,7 @@ declare module "luzpress/config" {
   export const preview: { importmap?: string; head?: string };
   export const shiki: LuzpressShikiOptions;
   export const hostname: string;
+  export const shikiThemes: { light: string; dark: string };
 }
 
 declare module "ilha:pages/server" {

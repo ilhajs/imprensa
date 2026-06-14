@@ -2,3 +2,4 @@
 export const socials = [];
 export const shiki = {};
 export const hostname = "";
+export const shikiThemes = { light: "night-owl-light", dark: "houston" };

@@ -1,6 +1,6 @@
 /** @jsxImportSource ilha */
 import ilha from "ilha";
-import { shiki, shikiThemes } from "luzpress";
+import { shikiThemes } from "luzpress/config";
 import type { LuzpressShikiHighlighter } from "../core/shiki-types";
 
 const WRAPPER_CLASS =
@@ -25,8 +25,8 @@ export const Snippet = ilha
     pre.innerHTML = `<code>${escapeHtml(code)}</code>`;
     mount.appendChild(pre);
 
-    void shiki.then(async (highlighter) => {
-      const h = highlighter as LuzpressShikiHighlighter;
+    void import("luzpress/shiki").then(async ({ shiki }) => {
+      const h = shiki as LuzpressShikiHighlighter;
       await h.loadLanguage(lang);
       const div = document.createElement("div");
       div.innerHTML = h.codeToHtml(code, { lang, themes: shikiThemes });

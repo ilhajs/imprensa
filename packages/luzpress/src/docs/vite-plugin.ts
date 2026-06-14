@@ -171,7 +171,8 @@ export function createLuzpressVitePlugins(options: LuzpressOptions = {}): Plugin
         return `export const socials = ${JSON.stringify(socials)};
 export const preview = ${JSON.stringify(preview)};
 export const shiki = ${JSON.stringify(shiki === false ? false : (shiki ?? {}))};
-export const hostname = ${JSON.stringify(hostname ?? "")};`;
+export const hostname = ${JSON.stringify(hostname ?? "")};
+export const shikiThemes = ${JSON.stringify(shikiThemes)};`;
       }
       if (id === "\0luzpress:shiki") return shikiFineGrainedRuntime(highlighterOptions);
       if (id !== "\0luzpress:runtime") return;
@@ -182,7 +183,6 @@ export const hostname = ${JSON.stringify(hostname ?? "")};`;
           applyInitialTheme,
           applyThemeToHtml,
           createLuzpress,
-          createPrerender,
           getStoredTheme,
           mountOrHydrate,
           setStoredTheme,
@@ -268,6 +268,9 @@ export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("u
             $lib: path.resolve(root, "src", "lib"),
             sonner,
             "luzpress/prerender": LUZPRESS_PRERENDER_ENTRY,
+            "luzpress/runtime": path.resolve(
+              fileURLToPath(new URL("./core/client-runtime.mjs", import.meta.url)),
+            ),
           },
           dedupe: [
             "@areia/slots",
