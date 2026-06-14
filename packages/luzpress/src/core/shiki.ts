@@ -93,9 +93,12 @@ export function shikiFineGrainedRuntime(options: { themes: string[]; langs: stri
     return `import lang${index} from ${JSON.stringify(href)};`;
   });
 
+  const shikiCore = resolveImportSpecifier("shiki/core");
+  const shikiEngine = resolveImportSpecifier("shiki/engine/javascript");
+
   return `
-        import { createHighlighterCore } from "shiki/core";
-        import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+        import { createHighlighterCore } from ${JSON.stringify(shikiCore)};
+        import { createJavaScriptRegexEngine } from ${JSON.stringify(shikiEngine)};
         ${themeImports.join("\n        ")}
         ${langImports.join("\n        ")}
         export const shiki = createHighlighterCore({
