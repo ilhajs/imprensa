@@ -1,6 +1,6 @@
 /** @jsxImportSource ilha */
 import ilha from "ilha";
-import { shiki } from "luzpress";
+import { shiki, shikiThemes } from "luzpress";
 import { preview as previewConfig } from "luzpress/config";
 import type { LuzpressShikiHighlighter } from "../core/shiki-types";
 
@@ -76,7 +76,7 @@ export const Preview = ilha
         "rounded-lg overflow-hidden border border-areia-border text-sm [&_pre]:!p-4 [&_pre]:!m-0 [&_pre]:overflow-x-auto";
       div.innerHTML = previewHighlighter.codeToHtml(code, {
         lang: "tsx",
-        themes: { light: "night-owl-light", dark: "houston" },
+        themes: shikiThemes,
       });
       wrapper.replaceChild(div, pre);
     });

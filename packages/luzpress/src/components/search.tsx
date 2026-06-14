@@ -4,10 +4,18 @@ import ilha from "ilha";
 import { Command, Monitor, Moon, Search, Sun } from "lucide";
 import { applyThemeToHtml, getStoredTheme, setStoredTheme } from "luzpress/runtime";
 
-export { getSearchResults } from "./search-core";
-export type { SearchResult } from "./search-core";
-export { SearchDialogPanel, closeSearchDialog, mountSearchCommand } from "./search-dialog";
-export type { SearchDialogState } from "./search-dialog";
+export { getSearchResults, type SearchResult } from "./search-core";
+export {
+  closeSearch,
+  closeSearch as closeSearchDialog,
+  openSearch,
+  searchOpen,
+  searchQuery,
+  searchStore,
+  toggleSearch,
+  type LuzSearchState,
+  type SearchBindAccessors,
+} from "./search-store";
 
 export function LogoButton() {
   return (
@@ -60,13 +68,17 @@ export const ThemeToggle = ilha
     />
   ));
 
-/** @deprecated Use search on ContentLayout / Topbar; kept for runtime export compatibility. */
+/**
+ * @deprecated Replaced by `GlobalSearch` (body-mounted in `createLuzpress().init()`).
+ * Kept so the vite plugin island registry stays stable.
+ */
 export const SearchOverlay = ilha.render(() => <></>);
 
 export function SearchTriggerButton(props: { class?: string }) {
   const extra = props.class ?? "";
   return (
     <Button
+      type="button"
       data-search-trigger
       aria-label="Search documentation"
       icon={<Icon icon={Search} />}
@@ -79,6 +91,7 @@ export function SearchSidebarTrigger() {
   return (
     <div class="relative inline-flex w-full min-w-0">
       <Button
+        type="button"
         data-search-trigger
         aria-label="Search documentation"
         icon={<Icon icon={Search} />}
@@ -97,6 +110,7 @@ export function SearchSidebarTrigger() {
 export function SearchMobileTriggerButton() {
   return (
     <Button
+      type="button"
       shape="square"
       data-search-trigger
       aria-label="Search documentation"
@@ -106,11 +120,11 @@ export function SearchMobileTriggerButton() {
   );
 }
 
-/** Landing / marketing topbar: icon on xs, “Search” + ⌘K from sm up. */
 export function SearchNavbarTrigger() {
   return (
     <div class="relative inline-flex min-w-0">
       <Button
+        type="button"
         data-search-trigger
         aria-label="Search documentation"
         icon={<Icon icon={Search} />}

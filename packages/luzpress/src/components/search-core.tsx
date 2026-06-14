@@ -1,4 +1,3 @@
-/** @jsxImportSource ilha */
 import MiniSearch from "minisearch";
 import { searchDocuments } from "luzpress/mdx";
 
@@ -31,24 +30,6 @@ export function getMatchedExcerpt(text: string, query: string) {
   const end = Math.min(text.length, firstMatch + 140);
   const excerpt = text.slice(start, end).trim();
   return `${start > 0 ? "…" : ""}${excerpt}${end < text.length ? "…" : ""}`;
-}
-
-export function highlightQuery(text: string, query: string) {
-  const terms = getQueryTerms(query).filter((term) => term.length > 1);
-  if (terms.length === 0) return text;
-  const pattern = new RegExp(
-    `(${terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
-    "gi",
-  );
-  return text
-    .split(pattern)
-    .map((part) =>
-      terms.includes(part.toLowerCase()) ? (
-        <mark class="rounded bg-areia-primary px-0.5 text-areia-primary-foreground">{part}</mark>
-      ) : (
-        part
-      ),
-    );
 }
 
 export function getSearchResults(query: string): SearchResult[] {

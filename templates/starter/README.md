@@ -28,8 +28,7 @@ npm run dev
 
 ```bash
 npm run dev      # start dev server
-npm run gen:hero # regenerate landing-page Shiki HTML (runs before build)
-npm run build    # gen:hero + prerender + typecheck
+npm run build    # vite build + prerender + typecheck
 npm run preview  # preview production build
 npm run lint     # oxlint
 ```
@@ -38,19 +37,15 @@ npm run lint     # oxlint
 
 ```text
 src/
-  main.ts                 # client entry + prerender export
-  app.css                 # branding tokens + luzpress styles
+  main.ts                 # client + export prerender (vite-prerender-plugin)
+  app.css
+  lib/
+    landing-snippets.ts   # optional; powers luzpress/landing-shiki
+    landing-previews.tsx  # raw() HTML from luzpress/landing-shiki
+    components/           # landing / app UI
   pages/
-    index.tsx             # landing page (static Shiki previews, no client Shiki)
-    lib/hero-preview-html.generated.ts  # built by scripts/gen-hero-previews.ts
-    +layout.tsx           # root shell
-    (content)/            # MDX docs (sidebar layout)
-      +layout.tsx
-      [...slug].tsx       # MDX renderer
-      getting-started.mdx
-      guide/writing.mdx
-  lib/components/         # app-specific UI
-public/                   # logo, icons
+    index.tsx, +layout.tsx, (content)/…
+public/
 ```
 
 ## Layouts
@@ -60,7 +55,7 @@ Two chrome patterns ship by default:
 - **Landing (`/`)** — `Topbar` with logo, search, theme toggle, GitHub link
 - **Docs (`/getting-started`, etc.)** — resizable `Sidebar` with the same controls plus navigation tree
 
-Customize or merge these in `src/lib/components/`.
+Customize or merge UI in `src/lib/components/`.
 
 ## Writing docs
 
@@ -91,7 +86,7 @@ Disable with `detectDeadLink: false` in `vite.config.ts` while migrating content
 1. **Brand color** — set `--areia-primary` in `src/app.css`
 2. **Logo** — replace `public/logo.svg`
 3. **Site name** — edit `LogoButton` text via a custom component, or fork from `luzpress/components`
-4. **GitHub link** — update `src/lib/components/topbar.tsx`
+4. **GitHub link** — update `src/lib/components/topbar.tsx` or `luzpress` socials in `vite.config.ts`
 5. **Landing copy** — edit `src/pages/index.tsx`
 6. **Footer** — edit `src/lib/components/footer.tsx`
 
@@ -114,7 +109,7 @@ Content pages use `DocArticle` from `luzpress/doc` (already wired in `[...slug].
 
 ## Dependencies
 
-The starter only declares packages you import directly (`areia`, `ilha`, `lucide`). `shiki` is a devDependency for `gen:hero` only (landing previews are baked at build time). Everything else — MDX pipeline, Tailwind, prerender, search internals — comes through `luzpress`.
+The starter only declares packages you import directly (`areia`, `ilha`, `lucide`). MDX Shiki, Tailwind, prerender, and search come through `luzpress`.
 
 ## LLM exports
 

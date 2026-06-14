@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "gen:hero": "bun run scripts/gen-hero-previews.ts",
-    "build": "bun run gen:hero && vite build && tsc",
+    "build": "vite build && tsc",
     "preview": "vite preview",
     "lint": "oxlint",
     "fmt": "oxfmt"
@@ -14,9 +13,10 @@
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",
     "@fontsource-variable/geist-mono": "^5.2.8",
-    "@ilha/router": "^0.6.2",
-    "areia": "^0.1.18",
-    "ilha": "^0.7.1",
+    "@ilha/router": "^0.6.3",
+    "@ilha/store": "^0.4.0",
+    "areia": "^0.1.20",
+    "ilha": "^0.8.0",
     "lucide": "^1.17.0",
     "luzpress": "^0.1.0",
     "sonner": "^2.0.7"
@@ -24,7 +24,6 @@
   "devDependencies": {
     "oxfmt": "^0.53.0",
     "oxlint": "^1.68.0",
-    "shiki": "^4.2.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.12"
   }

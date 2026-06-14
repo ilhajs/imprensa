@@ -1,17 +1,15 @@
 import { Badge, ClipboardText, Icon, LinkButton, LayerCard } from "areia";
-import ilha, { raw } from "ilha";
+import ilha from "ilha";
 import { Book, Code2, FileText, Globe, Search } from "lucide";
 import { Footer } from "$lib/components/footer";
-import { GitHubIcon } from "$lib/components/github-icon";
 import { bindHeroTechCardTracking, HeroTechCards } from "$lib/components/hero-tech-card";
-import { heroPreviewHtml } from "$lib/hero-preview-html.generated";
-import { Topbar } from "$lib/components/topbar";
-
-const previews = {
-  fileTree: raw(heroPreviewHtml.fileTree),
-  mdxSyntax: raw(heroPreviewHtml.mdxSyntax),
-  buildOutput: raw(heroPreviewHtml.buildOutput),
-};
+import {
+  LandingBuildPreview,
+  LandingFileTreePreview,
+  LandingMdxPreview,
+} from "$lib/landing-previews";
+import { Topbar } from "luzpress/components";
+import { GithubIcon } from "luzpress/icons";
 
 export default ilha
   .onMount(({ host }) => bindHeroTechCardTracking(host))
@@ -75,7 +73,7 @@ export default ilha
                   Create pages from <code>src/pages</code> with nested guide routes, shared layouts,
                   and content-first URLs.
                 </p>
-                {previews.fileTree}
+                <LandingFileTreePreview />
               </LayerCard.Content>
             </LayerCard>
 
@@ -93,7 +91,7 @@ export default ilha
                   Write docs in MDX with Markdown, syntax-highlighted code, and embedded Ilha
                   islands or Areia components right where readers need them.
                 </p>
-                {previews.mdxSyntax}
+                <LandingMdxPreview />
               </LayerCard.Content>
             </LayerCard>
 
@@ -143,7 +141,7 @@ export default ilha
                   Build prerendered pages that can be hosted almost anywhere: Vercel, Netlify,
                   GitHub Pages, Cloudflare, or any static file server.
                 </p>
-                {previews.buildOutput}
+                <LandingBuildPreview />
               </LayerCard.Content>
             </LayerCard>
           </div>
@@ -167,7 +165,7 @@ export default ilha
               <LinkButton
                 variant="outline"
                 href="https://github.com/ilhajs/luz"
-                icon={<GitHubIcon class="size-6 shrink-0" />}
+                icon={<GithubIcon class="size-6 shrink-0" />}
                 external
                 class="w-full sm:w-auto"
               >

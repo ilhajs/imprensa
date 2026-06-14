@@ -1,6 +1,7 @@
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { pages } from "@ilha/router/vite";
 import mdx, { type Options as MdxRollupOptions } from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
@@ -10,6 +11,7 @@ import type { PluginOption } from "vite";
 import { vitePrerenderPlugin } from "vite-prerender-plugin";
 import sitemap from "vite-plugin-sitemap";
 import { collectMdxRoutes, collectRawMdxSources, normalizeContentDir } from "../core/routes";
+import { codeToSnippetHtml } from "../core/snippet-shiki";
 import { getShikiHighlighterOptions, shikiFineGrainedRuntime, shikiPlugin } from "../core/shiki";
 import { generateLlmsArtifacts } from "./llms";
 import { MDX_CONFIG_MARKER } from "./mdx-config";
@@ -27,6 +29,18 @@ const CONFIG_STUB = fileURLToPath(new URL("../src/docs/config.ts", import.meta.u
 const LUZPRESS_PRERENDER_ENTRY = path.resolve(
   fileURLToPath(new URL("./core/prerender-core.mjs", import.meta.url)),
 );
+
+/** Optional app file: `export const landingSnippets = { key: { code, lang } }` → `luzpress/landing-shiki` */
+const LANDING_SNIPPETS_FILE = "src/lib/landing-snippets.ts";
+
+async function loadAppLandingSnippets(root: string) {
+  const file = path.join(root, LANDING_SNIPPETS_FILE);
+  if (!existsSync(file)) return null;
+  const mod = (await import(pathToFileURL(file).href)) as {
+    landingSnippets?: Record<string, { code: string; lang: string }>;
+  };
+  return mod.landingSnippets ?? null;
+}
 
 export function createLuzpressVitePlugins(options: LuzpressOptions = {}): PluginOption[] {
   const {
@@ -61,6 +75,10 @@ export function createLuzpressVitePlugins(options: LuzpressOptions = {}): Plugin
   ];
 
   const highlighterOptions = getShikiHighlighterOptions(shiki);
+  const shikiThemes =
+    shiki === false || !shiki?.themes
+      ? { light: "night-owl-light", dark: "houston" }
+      : shiki.themes;
   let isBuild = false;
 
   const ilhaPagesOptions = {
@@ -94,7 +112,7 @@ export function createLuzpressVitePlugins(options: LuzpressOptions = {}): Plugin
   plugins.push(
     vitePrerenderPlugin({
       renderTarget: "#app",
-      prerenderScript: path.join(process.cwd(), "src/prerender.ts"),
+      prerenderScript: path.join(process.cwd(), "src/main.ts"),
     }),
   );
   plugins.push(sitemap({ hostname, dynamicRoutes: collectMdxRoutes(contentDir) }));
@@ -135,11 +153,25 @@ export function createLuzpressVitePlugins(options: LuzpressOptions = {}): Plugin
       if (id === "luzpress/mdx") return MDX_SOURCE;
       if (id === "luzpress/components") return COMPONENTS_INDEX;
       if (id === "luzpress/doc") return DOC_TOOLBAR;
+      if (id === "luzpress/landing-shiki") return "\0luzpress:landing-shiki";
     },
-    load(id) {
+    async load(id) {
+      if (id === "\0luzpress:landing-shiki") {
+        if (shiki === false) return "export {};";
+        const landingSnippets = await loadAppLandingSnippets(process.cwd());
+        if (!landingSnippets) return "export {};";
+        const lines: string[] = [];
+        for (const [key, { code, lang }] of Object.entries(landingSnippets)) {
+          const html = await codeToSnippetHtml(code, lang, shiki);
+          lines.push(`export const ${key}Html = ${JSON.stringify(html)};`);
+        }
+        return lines.join("\n") || "export {};";
+      }
       if (id === "\0luzpress:config") {
         return `export const socials = ${JSON.stringify(socials)};
-export const preview = ${JSON.stringify(preview)};`;
+export const preview = ${JSON.stringify(preview)};
+export const shiki = ${JSON.stringify(shiki === false ? false : (shiki ?? {}))};
+export const hostname = ${JSON.stringify(hostname ?? "")};`;
       }
       if (id === "\0luzpress:shiki") return shikiFineGrainedRuntime(highlighterOptions);
       if (id !== "\0luzpress:runtime") return;
@@ -161,6 +193,7 @@ export const preview = ${JSON.stringify(preview)};`;
           ThemeToggle,
         } from "luzpress/components";
         export const shiki = import("luzpress/shiki").then((m) => m.shiki);
+        export const shikiThemes = ${JSON.stringify(shikiThemes)};
         export {
           DocArticle,
           DocPager,

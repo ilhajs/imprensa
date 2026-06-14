@@ -1,7 +1,7 @@
 {
   "name": "luzpress",
-  "version": "0.1.0",
-  "description": "Ilha based documentation site Vite meta plugin",
+  "version": "0.1.0-alpha.0",
+  "description": "Vite plugin and runtime for Ilha + Areia documentation sites (MDX, prerender, search)",
   "license": "MIT",
   "author": "Ryuz <ryuzer@proton.me>",
   "repository": {
@@ -12,6 +12,9 @@
     "dist",
     "default.css",
     "index.d.ts",
+    "README.md",
+    "CHANGELOG.md",
+    "docs/",
     "src/components/",
     "src/core/",
     "src/docs/",
@@ -63,11 +66,13 @@
     "./default.css": "./default.css"
   },
   "scripts": {
-    "build": "tsdown"
+    "build": "tsdown",
+    "prepublishOnly": "bun run build"
   },
   "dependencies": {
-    "@areia/slots": "^0.1.3",
-    "@ilha/router": "^0.6.2",
+    "@areia/slots": "^0.1.5",
+    "@ilha/router": "^0.6.3",
+    "@ilha/store": "^0.4.0",
     "@mdx-js/rollup": "^3.1.1",
     "@shikijs/engine-javascript": "^4.2.0",
     "@shikijs/langs": "^4.2.0",
@@ -95,8 +100,9 @@
     "unified": "^11.0.5"
   },
   "peerDependencies": {
-    "areia": "^0.1.18",
-    "ilha": "^0.7.1",
+    "@ilha/store": "^0.4.0",
+    "areia": "^0.1.20",
+    "ilha": "^0.8.0",
     "lucide": "^1.17.0",
     "vite": "^8"
   }

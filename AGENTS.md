@@ -4,10 +4,11 @@ Luz is a docs-site toolkit: **luzpress** (Vite meta-plugin) + **templates/starte
 
 ## Before touching code
 
-Read (or fetch) once per task when using islands, router, or UI primitives:
+Read (or fetch) once per task when using islands, router, store, or UI primitives:
 
 - https://ilha.build/llms.txt
 - https://areia.ilha.build/llms.txt
+- https://ilha.build/guide/libraries/store.md (global UI e.g. search: `@ilha/store` + `store.bind()` for `bind:open` / `bind:value`; no VDOM — portaled Areia dialog still needs bridge or `portal={false}`)
 
 ## Repo layout
 
@@ -30,7 +31,7 @@ Entry: `src/index.ts` re-exports plugin + runtime types. **Do not** grow a secon
 bun install
 bun run build                    # all packages (tsdown → packages/luzpress/dist/…)
 cd templates/starter && bun run dev
-cd templates/starter && bun run build   # gen:hero + vite build + tsc — primary integration check
+cd templates/starter && bun run build   # vite build + tsc — primary integration check
 ```
 
 Lint/format: `bun run lint`, `bun run fmt` (root).
@@ -47,7 +48,7 @@ Built artifacts live under **`dist/`** with subpaths (`dist/core/runtime.mjs`, `
 
 - Wires: `@mdx-js/rollup`, `@ilha/router/vite` **`pages()`** — **`mode: "spa"` in `vite dev`**, **`mode: "static"` on build** (override via `pages.mode` in `luzpress()`), `interceptLinks: false`, Tailwind, `vite-prerender-plugin`, sitemap, optional dead-link rehype.
 - **Dev client entry:** `createLuzpress().init()` must use **`pageRouter.mount("#app")`** (SPA), not `hydrateStatic` — static-mode router warns and no-ops on `.mount()`.
-- **Prerender entry:** `src/prerender.ts` uses `createPrerender` from **`luzpress/prerender`**, static imports from **`../.ilha/pages.server`** (not `ilha:` — Node cannot load that protocol). Plugin sets `prerenderScript` + `renderTarget: "#app"`. **`main.ts`** only calls `void init()` — no `prerender` export.
+- **Prerender:** `vite-prerender-plugin` uses **`src/main.ts`** (`prerenderScript`); export `prerender` from `createLuzpress().prerender` (loads **`ilha:pages/server`** inside luzpress — no app `ilha-pages-server.ts`). **`main.ts`** also runs `void init()` for the client.
 - **Virtual / resolved IDs:** `luzpress`, `luzpress/mdx`, `luzpress/config`, `luzpress/shiki`, `luzpress/components`, `luzpress/doc` — paths in `docs/vite-plugin.ts` use **`../src/...` from bundled `dist/index.mjs`**, not relative to `src/docs/` alone.
 - **`luzpress/mdx.ts`** contains a literal `MDX_CONFIG_MARKER` block replaced at build time (`contentDir`, repo, raw sources, `headDefaults`). Keep marker and `docs/mdx-config.ts` in sync if you change inject shape.
 - Injects **sidebar layout boot** script/style into HTML (`SIDEBAR_LAYOUT_BOOT_SCRIPT` in `components/sidebar-layout.ts`) so saved split applies before paint.
@@ -55,7 +56,7 @@ Built artifacts live under **`dist/`** with subpaths (`dist/core/runtime.mjs`, `
 ## Starter app conventions
 
 - Pages: `templates/starter/src/pages/` — Ilha file routes; MDX under `(content)/`.
-- `src/main.ts`: `createLuzpress({ hostname }).init()` + `export const prerender = …`
+- `src/main.ts`: `createLuzpress().init()` + `export const prerender = …` (hostname only in `luzpress({ hostname })` in vite.config)
 - Content layout: `luzpress/components` → `ContentLayout` (resizable sidebar + search).
 - Theme flash: inline script in `index.html` for `luz:theme`; sidebar split uses `luzpress:sidebar-layout` + boot CSS vars.
 

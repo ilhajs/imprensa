@@ -7,6 +7,8 @@ import type {
   LuzpressPageRouter,
 } from "./ilha-types";
 import { appendCanonicalTags, headLinkEntries, headMetaEntries } from "./prerender-head";
+import { paintSnippetSlotsInHtml } from "./snippet-shiki";
+import type { LuzpressShikiOptions } from "./shiki";
 
 /** Minimal router surface for apps that re-export codegen `pageRouter` into prerender. */
 export type RouterLike = Pick<
@@ -37,6 +39,7 @@ export type LuzpressPrerenderOptions = {
   getMdxHead?: (url: string) => Head | undefined | Promise<Head | undefined>;
   headDefaults?: Head | null;
   hostname?: string;
+  shiki?: LuzpressShikiOptions;
 };
 
 export function createPrerender(options: LuzpressPrerenderOptions) {
@@ -45,9 +48,12 @@ export function createPrerender(options: LuzpressPrerenderOptions) {
     const mdxPage = await options.renderMdx?.(url);
     options.setPrerenderedMdxHtml?.(mdxPage?.html);
 
-    const renderedHtml = await options.pageRouter.renderHydratable(url, options.registry, {
+    let renderedHtml = await options.pageRouter.renderHydratable(url, options.registry, {
       snapshot: true,
     } satisfies HydratableRenderOptions);
+    if (options.shiki !== false) {
+      renderedHtml = await paintSnippetSlotsInHtml(renderedHtml, options.shiki);
+    }
     const html = renderedHtml
       .replace(/<script/gi, "&lt;script")
       .replace(/<\/script>/gi, "&lt;/script&gt;");

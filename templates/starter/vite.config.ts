@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import { luzpress } from "luzpress";
-
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -10,7 +9,7 @@ export default defineConfig({
       repoPath: "templates/starter",
       shiki: {
         themes: { light: "night-owl-light", dark: "houston" },
-        langs: ["ts", "tsx", "mdx", "shell"],
+        langs: ["ts", "tsx", "mdx", "shell", "yaml"],
       },
       head: {
         title: "Luz — Documentation starter for Ilha",

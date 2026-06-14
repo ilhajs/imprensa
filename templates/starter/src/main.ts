@@ -3,6 +3,8 @@ import "@fontsource-variable/geist-mono";
 import "./app.css";
 import { createLuzpress } from "luzpress/runtime";
 
-const luzpress = createLuzpress({ hostname: "https://luz.ilha.build" });
+const luzpress = createLuzpress();
 
 void luzpress.init();
+
+export const prerender = luzpress.prerender;

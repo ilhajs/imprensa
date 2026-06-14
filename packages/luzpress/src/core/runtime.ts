@@ -4,10 +4,14 @@ import type { PrerenderArguments } from "vite-prerender-plugin";
 import { createPrerender, type RouterLike } from "./prerender-core";
 import type { LuzpressIslandRegistry } from "./ilha-types";
 import type { LuzpressShikiHighlighter } from "./shiki-types";
+import type { LuzpressShikiOptions } from "./shiki";
 
 export { createPrerender, type LuzpressPrerenderOptions } from "./prerender-core";
 
 export const shiki = new Promise<LuzpressShikiHighlighter>(() => {});
+
+/** Overridden at app build time by the luzpress Vite plugin from `luzpress()` shiki.themes. */
+export const shikiThemes = { light: "night-owl-light", dark: "houston" };
 
 export const THEME_STORAGE_KEY = "luz:theme";
 
@@ -119,9 +123,7 @@ async function loadMdxHelpers() {
   }>;
 }
 
-export function createLuzpress(
-  options: { dev?: boolean; target?: string; hostname?: string; static?: boolean } = {},
-) {
+export function createLuzpress(options: { dev?: boolean; target?: string; static?: boolean } = {}) {
   return {
     async init() {
       if (typeof window === "undefined") return;
@@ -134,6 +136,9 @@ export function createLuzpress(
 
       if (dev) await applyClientHead(mdx.getMdxHead, mdx.headDefaults);
 
+      const { ensureGlobalSearchMounted } = await import("../components/global-search");
+      ensureGlobalSearchMounted();
+
       return mountOrHydrate({
         pageRouter: codegen.pageRouter,
         registry: codegen.registry,
@@ -143,10 +148,16 @@ export function createLuzpress(
       });
     },
     async prerender(data?: PrerenderArguments) {
-      const [{ pageRouter, registry }, mdx] = await Promise.all([
+      const [{ pageRouter, registry }, mdx, config] = await Promise.all([
         loadServerIlhaCodegen(),
         loadMdxHelpers(),
+        import("luzpress/config") as Promise<{
+          shiki?: LuzpressShikiOptions;
+          hostname?: string;
+        }>,
       ]);
+
+      const hostname = config.hostname || undefined;
 
       return createPrerender({
         pageRouter,
@@ -156,7 +167,8 @@ export function createLuzpress(
         setPrerenderedMdxHtml: mdx.setPrerenderedMdxHtml,
         getMdxHead: mdx.getMdxHead,
         headDefaults: mdx.headDefaults,
-        hostname: options.hostname,
+        hostname,
+        shiki: config.shiki,
       })(data);
     },
   };

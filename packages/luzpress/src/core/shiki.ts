@@ -16,42 +16,32 @@ export type LuzpressShikiOptions =
       string | number | boolean | string[] | Record<string, string> | PluggableList | undefined
     >);
 
-const FINE_GRAINED_LANGS: Record<string, string> = {
-  bash: "bash",
-  shell: "shellscript",
-  sh: "shellscript",
-  shellscript: "shellscript",
-  js: "javascript",
-  javascript: "javascript",
-  jsx: "jsx",
-  ts: "typescript",
-  typescript: "typescript",
-  tsx: "tsx",
-  md: "markdown",
-  markdown: "markdown",
-  mdx: "mdx",
-  css: "css",
-  html: "html",
-  json: "json",
-  diff: "diff",
-};
-
-const FINE_GRAINED_THEMES: Record<string, string> = {
-  houston: "houston",
-  "night-owl-light": "night-owl-light",
-  "night-owl": "night-owl",
-  "github-light": "github-light",
-  "github-dark": "github-dark",
-  "dark-plus": "dark-plus",
-  "light-plus": "light-plus",
-  "vitesse-light": "vitesse-light",
-  "vitesse-dark": "vitesse-dark",
-};
-
 const require = createRequire(import.meta.url);
 
 function resolveImportSpecifier(id: string) {
   return pathToFileURL(require.resolve(id)).href;
+}
+
+function resolveShikiLangModule(lang: string) {
+  const id = `@shikijs/langs/${lang}`;
+  try {
+    return resolveImportSpecifier(id);
+  } catch {
+    throw new Error(
+      `luzpress: cannot resolve Shiki language "${lang}" (${id}). Add the lang id to luzpress({ shiki: { langs: [...] } }) in vite.config — use ids that exist under @shikijs/langs (e.g. ts, tsx, mdx, shell, shellscript).`,
+    );
+  }
+}
+
+function resolveShikiThemeModule(theme: string) {
+  const id = `@shikijs/themes/${theme}`;
+  try {
+    return resolveImportSpecifier(id);
+  } catch {
+    throw new Error(
+      `luzpress: cannot resolve Shiki theme "${theme}" (${id}). Set shiki.themes in vite.config to theme ids from @shikijs/themes.`,
+    );
+  }
 }
 
 export function getShikiHighlighterOptions(options: LuzpressShikiOptions | undefined) {
@@ -64,7 +54,7 @@ export function getShikiHighlighterOptions(options: LuzpressShikiOptions | undef
 
   const shiki = options ?? {};
   const themes = shiki.themes ? Object.values(shiki.themes) : ["night-owl-light", "houston"];
-  const langs = shiki.langs ?? ["ts"];
+  const langs = [...new Set(shiki.langs ?? ["ts"])];
 
   return { themes, langs };
 }
@@ -89,24 +79,18 @@ export function shikiPlugin(options: LuzpressShikiOptions | undefined): Pluggabl
   ];
 }
 
+/** Browser bundle: import only themes/langs from `luzpress({ shiki })` (and optional extra langs). */
 export function shikiFineGrainedRuntime(options: { themes: string[]; langs: string[] }) {
   const themes = [...new Set(options.themes)];
   const langs = [...new Set(options.langs)];
+
   const themeImports = themes.map((theme, index) => {
-    const pkg = FINE_GRAINED_THEMES[theme];
-    if (!pkg)
-      throw new Error(
-        `luzpress: unsupported browser Shiki theme "${theme}". Add it to FINE_GRAINED_THEMES in luzpress or use a supported theme.`,
-      );
-    return `import theme${index} from ${JSON.stringify(resolveImportSpecifier(`@shikijs/themes/${pkg}`))};`;
+    const href = resolveShikiThemeModule(theme);
+    return `import theme${index} from ${JSON.stringify(href)};`;
   });
   const langImports = langs.map((lang, index) => {
-    const pkg = FINE_GRAINED_LANGS[lang];
-    if (!pkg)
-      throw new Error(
-        `luzpress: unsupported browser Shiki language "${lang}". Add it to FINE_GRAINED_LANGS in luzpress or use a supported language.`,
-      );
-    return `import lang${index} from ${JSON.stringify(resolveImportSpecifier(`@shikijs/langs/${pkg}`))};`;
+    const href = resolveShikiLangModule(lang);
+    return `import lang${index} from ${JSON.stringify(href)};`;
   });
 
   return `

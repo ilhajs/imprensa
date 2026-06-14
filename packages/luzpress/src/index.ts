@@ -8,6 +8,7 @@ export {
   mountOrHydrate,
   setStoredTheme,
   shiki,
+  shikiThemes,
 } from "./core/runtime";
 export type { LuzpressPrerenderOptions } from "./core/runtime";
 
