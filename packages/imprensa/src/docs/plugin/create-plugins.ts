@@ -15,10 +15,10 @@ import { getShikiHighlighterOptions, shikiFineGrainedRuntime, shikiPlugin } from
 import { generateLlmsArtifacts } from "../llms";
 import { MDX_CONFIG_MARKER } from "../mdx-config";
 import type { ImprensaOptions } from "../options";
-import { remarkPreview } from "../remark";
 import { SIDEBAR_LAYOUT_BOOT_SCRIPT } from "../../components/sidebar-layout";
 import { rehypeDeadLinks } from "../rehype";
 import { buildLandingShikiModule } from "./landing-shiki";
+import { viteMdxPreviewFences } from "./mdx-preview-fences";
 import { IMPRENSA_VIRTUAL_RUNTIME } from "./virtual-runtime";
 
 /**
@@ -143,10 +143,11 @@ export function createImprensaVitePlugins(options: ImprensaOptions = {}): Plugin
   };
 
   const plugins: PluginOption[] = [
+    viteMdxPreviewFences(),
     mdx({
       jsxImportSource: "ilha",
       ...restMdxOptions,
-      remarkPlugins: [remarkPreview, remarkGfm, ...resolvedRemarkPlugins],
+      remarkPlugins: [remarkGfm, ...resolvedRemarkPlugins],
       rehypePlugins: [
         ...shikiPlugin(shiki),
         ...coreRehypePlugins,

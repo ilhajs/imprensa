@@ -7,6 +7,8 @@ import type {
   ImprensaPageRouter,
 } from "./ilha-types";
 import { appendCanonicalTags, headLinkEntries, headMetaEntries } from "./prerender-head";
+import type { PreviewSandboxConfig } from "./preview-iframe";
+import { paintFilledPreviewWrappersInHtml, paintPreviewSlotsInHtml } from "./preview-paint";
 import { paintSnippetSlotsInHtml } from "./snippet-shiki";
 import type { ImprensaShikiOptions } from "./shiki";
 
@@ -40,12 +42,33 @@ export type ImprensaPrerenderOptions = {
   headDefaults?: Head | null;
   hostname?: string;
   shiki?: ImprensaShikiOptions;
+  preview?: PreviewSandboxConfig;
 };
 
 export function createPrerender(options: ImprensaPrerenderOptions) {
   return async function prerender(data?: PrerenderArguments) {
     const url = data?.url ?? "/";
-    const mdxPage = await options.renderMdx?.(url);
+    let mdxPage = await options.renderMdx?.(url);
+    if (mdxPage?.html) {
+      const previewOpts = {
+        shiki: options.shiki,
+        preview: options.preview,
+      };
+      try {
+        const painted = await paintPreviewSlotsInHtml(mdxPage.html, {
+          shiki: false,
+          preview: previewOpts.preview,
+        });
+        let html = painted;
+        if (!html.includes("<iframe") && mdxPage.html.includes("preview-wrapper")) {
+          html = await paintPreviewSlotsInHtml(mdxPage.html, previewOpts);
+        }
+        html = await paintFilledPreviewWrappersInHtml(html, previewOpts);
+        mdxPage = { ...mdxPage, html };
+      } catch (err) {
+        console.error("[imprensa] preview paint failed for", url, err);
+      }
+    }
     options.setPrerenderedMdxHtml?.(mdxPage?.html);
 
     let renderedHtml = await options.pageRouter.renderHydratable(url, options.registry, {

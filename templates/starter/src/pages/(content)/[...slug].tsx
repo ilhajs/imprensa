@@ -2,7 +2,7 @@ import { useRoute } from "@ilha/router";
 import { LinkButton } from "areia";
 import ilha from "ilha";
 import { DocArticle } from "imprensa/doc";
-import { getMdxContent, loadMdxHtml } from "imprensa/mdx";
+import { getMdxContent, getMdxContentNeedsAsyncPaint, loadMdxHtml } from "imprensa/mdx";
 
 const LazyDocArticle = ilha
   .input<{ path: string }>()
@@ -39,8 +39,11 @@ export default ilha.render(() => {
   const { path } = useRoute();
   const pathname = path();
   const prerendered = getMdxContent(pathname);
+  const needsPreviewPaint = getMdxContentNeedsAsyncPaint(pathname);
 
-  if (prerendered) return <DocArticle path={pathname}>{prerendered}</DocArticle>;
+  if (prerendered && !needsPreviewPaint) {
+    return <DocArticle path={pathname}>{prerendered}</DocArticle>;
+  }
 
   return <LazyDocArticle path={pathname} />;
 });

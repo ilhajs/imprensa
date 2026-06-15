@@ -5,6 +5,7 @@ import type { ImprensaSocialLink } from "./socials";
 export type { ImprensaSocialLink, ImprensaSocialService } from "./socials";
 
 export const socials: ImprensaSocialLink[] = [];
+export const preview: { importmap?: string; head?: string } = {};
 export const shiki: ImprensaShikiOptions = {};
 export const hostname = "";
 export const shikiThemes = { light: "night-owl-light", dark: "houston" };

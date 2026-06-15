@@ -5,6 +5,7 @@ export {
   getClientPrerenderedMdxHtml,
   getDocLinks,
   getMdxContent,
+  getMdxContentNeedsAsyncPaint,
   getMdxHead,
   getMdxSourceForRoute,
   getPrerenderedMdxHtml,

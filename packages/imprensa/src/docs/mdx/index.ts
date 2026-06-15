@@ -15,6 +15,7 @@ export { contentMeta, contentTree, mdxRoutes, searchDocuments } from "./routes";
 export {
   getClientPrerenderedMdxHtml,
   getMdxContent,
+  getMdxContentNeedsAsyncPaint,
   getMdxHead,
   getPrerenderedMdxHtml,
   loadMdxHtml,

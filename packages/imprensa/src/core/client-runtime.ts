@@ -153,6 +153,7 @@ export function createImprensa(options: { dev?: boolean; target?: string; static
         import("imprensa/config") as Promise<{
           shiki?: ImprensaShikiOptions;
           hostname?: string;
+          preview?: { importmap?: string; head?: string };
         }>,
       ]);
 
@@ -168,6 +169,7 @@ export function createImprensa(options: { dev?: boolean; target?: string; static
         headDefaults: mdx.headDefaults,
         hostname,
         shiki: config.shiki,
+        preview: config.preview,
       })(data);
     },
   };

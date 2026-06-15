@@ -30,8 +30,8 @@ export async function createConfiguredHighlighterCore(themes: string[], langs: s
   cachedKey = key;
   cachedHighlighter = (async () => {
     const [themeMods, langMods] = await Promise.all([
-      Promise.all(themes.map((t) => import(resolveShikiThemeModuleHref(t)))),
-      Promise.all(langs.map((l) => import(resolveShikiLangModuleHref(l)))),
+      Promise.all(themes.map((t) => import(/* @vite-ignore */ resolveShikiThemeModuleHref(t)))),
+      Promise.all(langs.map((l) => import(/* @vite-ignore */ resolveShikiLangModuleHref(l)))),
     ]);
 
     return createHighlighterCore({
