@@ -20,15 +20,18 @@ import { rehypeDeadLinks } from "../rehype";
 import { buildLandingShikiModule } from "./landing-shiki";
 import { IMPRENSA_VIRTUAL_RUNTIME } from "./virtual-runtime";
 
-/** Resolved from published `dist/index.mjs` → `src/...`. */
+/**
+ * MDX runtime config is transformed by this Vite plugin, so it needs the packaged source.
+ * UI subpaths can use published dist files; consumers should not need the full source tree.
+ */
 const MDX_SOURCE = fileURLToPath(new URL("../src/docs/mdx.ts", import.meta.url));
 const MDX_RUNTIME_CONFIG = fileURLToPath(
   new URL("../src/docs/mdx/runtime-config.ts", import.meta.url),
 );
-const COMPONENTS_INDEX = fileURLToPath(new URL("../src/components/index.tsx", import.meta.url));
-const DOC_ENTRY = fileURLToPath(new URL("../src/components/doc.tsx", import.meta.url));
-const CONFIG_STUB = fileURLToPath(new URL("../src/docs/config.ts", import.meta.url));
-const ICONS_ENTRY = fileURLToPath(new URL("../src/components/icons.tsx", import.meta.url));
+const COMPONENTS_INDEX = fileURLToPath(new URL("./components/index.mjs", import.meta.url));
+const DOC_ENTRY = fileURLToPath(new URL("./components/doc.mjs", import.meta.url));
+const CONFIG_STUB = fileURLToPath(new URL("./docs/config.mjs", import.meta.url));
+const ICONS_ENTRY = fileURLToPath(new URL("./components/icons.mjs", import.meta.url));
 const IMPRENSA_PRERENDER_ENTRY = path.resolve(
   fileURLToPath(new URL("./core/prerender-core.mjs", import.meta.url)),
 );
@@ -203,8 +206,8 @@ export const shikiThemes = ${JSON.stringify(shikiThemes)};`;
 export const imprensaRepo = ${JSON.stringify(repo)};
 export const imprensaRepoBranch = ${JSON.stringify(repoBranch)};
 export const imprensaRepoPath = ${JSON.stringify(repoPath)};
-export const mdxRawSources = ${JSON.stringify(collectRawMdxSources(process.cwd(), contentDir))} as Record<string, string>;
-export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("unhead/types").ResolvableHead | null;`,
+export const mdxRawSources = ${JSON.stringify(collectRawMdxSources(process.cwd(), contentDir))};
+export const headDefaults = ${JSON.stringify(headDefaults ?? null)};`,
       );
     },
     handleHotUpdate(ctx) {

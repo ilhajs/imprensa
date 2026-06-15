@@ -1,6 +1,6 @@
 {
   "name": "imprensa",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Vite plugin and runtime for Ilha + Areia documentation sites (MDX, prerender, search)",
   "keywords": [
     "areia",
@@ -28,6 +28,9 @@
   },
   "files": [
     "dist",
+    "src/docs/frontmatter.ts",
+    "src/docs/mdx.ts",
+    "src/docs/mdx/",
     "default.css",
     "index.d.ts",
     "README.md",
