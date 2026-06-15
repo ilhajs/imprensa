@@ -32,15 +32,17 @@ See `templates/starter` in the [imprensa](https://github.com/ilhajs/imprensa) mo
 
 ## Exports
 
-| Subpath                | Role                                     |
-| ---------------------- | ---------------------------------------- |
-| `imprensa`             | Vite plugin                              |
-| `imprensa/runtime`     | `createImprensa`, theme, mount/hydrate   |
-| `imprensa/prerender`   | Static prerender entry                   |
-| `imprensa/mdx`         | Routes, search index, MDX render helpers |
-| `imprensa/components`  | Layout, sidebar, search triggers         |
-| `imprensa/doc`         | Doc toolbar, pager                       |
-| `imprensa/default.css` | Docs theme + Tailwind layers             |
+| Subpath                | Role                                                     |
+| ---------------------- | -------------------------------------------------------- |
+| `imprensa`             | Vite plugin                                              |
+| `imprensa/runtime`     | `createImprensa`, theme, mount/hydrate                   |
+| `imprensa/prerender`   | Static prerender entry                                   |
+| `imprensa/mdx`         | Routes, search index, MDX render helpers                 |
+| `imprensa/components`  | Layout, sidebar, search triggers                         |
+| `imprensa/doc`         | Doc toolbar, pager                                       |
+| `imprensa/default.css` | Docs theme + Tailwind layers (import from `src/app.css`) |
+
+Import `imprensa/default.css` in your app stylesheet and keep `imprensa()` in Vite plugins so Tailwind scans imprensa’s `dist/` and `src/components` for utility classes.
 
 ## Global search
 

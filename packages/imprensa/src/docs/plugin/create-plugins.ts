@@ -77,6 +77,23 @@ function isAppPageFile(file: string, root: string) {
   return !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
+/** Tailwind v4 @source paths are relative to the stylesheet file (package root for npm consumers). */
+function patchImprensaDefaultCss(code: string, id: string) {
+  const file = id.split("?")[0] ?? id;
+  if (
+    !file.endsWith(`${path.sep}imprensa${path.sep}default.css`) &&
+    !file.endsWith("/imprensa/default.css")
+  ) {
+    return;
+  }
+  const pkgRoot = path.dirname(file);
+  const distGlob = path.join(pkgRoot, "dist", "**", "*.{mjs,js}").replace(/\\/g, "/");
+  if (code.includes(distGlob)) return code;
+  const srcGlob = path.join(pkgRoot, "src", "components", "**", "*.{ts,tsx}").replace(/\\/g, "/");
+  const injection = `@source "${distGlob}";\n@source "${srcGlob}";\n`;
+  return code.replace(/@plugin "areia";\s*\n/, `@plugin "areia";\n${injection}`);
+}
+
 export function createImprensaVitePlugins(options: ImprensaOptions = {}): PluginOption[] {
   const {
     shiki,
@@ -219,6 +236,9 @@ export const shikiThemes = ${JSON.stringify(shikiThemes)};`;
       return IMPRENSA_VIRTUAL_RUNTIME.replace("__SHIKI_THEMES__", JSON.stringify(shikiThemes));
     },
     transform(code, id) {
+      const cssPatch = patchImprensaDefaultCss(code, id);
+      if (cssPatch) return cssPatch;
+
       if (/\.mdx?$/.test(id) && code.startsWith("---")) {
         const end = code.indexOf("\n---", 3);
         if (end !== -1) return { code: code.slice(end + 4), map: null };

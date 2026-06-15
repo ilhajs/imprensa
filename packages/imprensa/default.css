@@ -3,7 +3,9 @@
 @plugin "@tailwindcss/typography";
 @plugin "areia";
 
-@source "./src/**/*.{ts,tsx}";
+/* Class names live in prebuilt dist chunks and optional source components (npm tarball). */
+@source "./dist/**/*.{mjs,js}";
+@source "./src/components/**/*.{ts,tsx}";
 
 @layer base {
   * {
