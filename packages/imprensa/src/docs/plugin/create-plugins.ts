@@ -296,8 +296,8 @@ export const logoSrc = ${JSON.stringify(logoSrc)};`;
 
       return {
         optimizeDeps: {
-          // Force imprensa/mdx through resolveId → source + transform (not raw dist placeholders).
-          exclude: ["imprensa/mdx"],
+          // Virtual / transformed entries — must not prebundle dist stubs.
+          exclude: ["imprensa/mdx", "imprensa/shiki"],
         },
         server: {
           watch: {

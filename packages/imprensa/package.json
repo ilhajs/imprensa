@@ -1,6 +1,6 @@
 {
   "name": "imprensa",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Vite plugin and runtime for Ilha + Areia documentation sites (MDX, prerender, search)",
   "keywords": [
     "areia",
@@ -68,6 +68,10 @@
     "./config": {
       "types": "./dist/docs/config.d.mts",
       "import": "./dist/docs/config.mjs"
+    },
+    "./shiki": {
+      "types": "./dist/docs/shiki-stub.d.mts",
+      "import": "./dist/docs/shiki-stub.mjs"
     },
     "./icons": {
       "types": "./dist/components/icons.d.mts",

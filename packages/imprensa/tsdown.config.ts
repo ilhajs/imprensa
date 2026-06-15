@@ -10,6 +10,7 @@ export default defineConfig({
     "src/docs/rehype.ts",
     "src/docs/mdx.ts",
     "src/docs/config.ts",
+    "src/docs/shiki-stub.ts",
     "src/docs/landing-shiki.ts",
     "src/components/index.tsx",
     "src/components/icons.tsx",
