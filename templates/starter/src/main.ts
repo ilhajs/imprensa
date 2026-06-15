@@ -1,10 +1,10 @@
 import "@fontsource-variable/geist";
 import "@fontsource-variable/geist-mono";
 import "./app.css";
-import { createLuzpress } from "luzpress/runtime";
+import { createImprensa } from "imprensa/runtime";
 
-const luzpress = createLuzpress();
+const imprensa = createImprensa();
 
-void luzpress.init();
+void imprensa.init();
 
-export const prerender = luzpress.prerender;
+export const prerender = imprensa.prerender;

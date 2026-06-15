@@ -1,23 +1,23 @@
 import { defineConfig } from "vite";
-import { luzpress } from "luzpress";
+import { imprensa } from "imprensa";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    luzpress({
-      hostname: "https://luz.ilha.build",
-      repo: "https://github.com/ilhajs/luz",
+    imprensa({
+      hostname: "https://imprensa.ilha.build",
+      repo: "https://github.com/ilhajs/imprensa",
       repoPath: "templates/starter",
       shiki: {
         themes: { light: "night-owl-light", dark: "houston" },
         langs: ["typescript", "tsx", "mdx", "shell", "yaml", "json"],
       },
       head: {
-        title: "Luz — Documentation starter for Ilha",
+        title: "Imprensa — Documentation starter for Ilha",
       },
       socials: [
         { service: "x", url: "https://x.com/ilha_js" },
         { service: "discord", url: "https://discord.gg/WnVTMCTz74" },
-        { service: "github", url: "https://github.com/ilhajs/luz" },
+        { service: "github", url: "https://github.com/ilhajs/imprensa" },
       ],
       preview: {
         importmap: JSON.stringify({

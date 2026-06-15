@@ -1,5 +1,5 @@
 {
-  "extends": "luzpress/tsconfig.json",
+  "extends": "imprensa/tsconfig.json",
   "compilerOptions": {
     "noUnusedLocals": false
   },

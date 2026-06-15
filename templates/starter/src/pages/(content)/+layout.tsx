@@ -1,2 +1,2 @@
-import { ContentLayout } from "luzpress/components";
+import { ContentLayout } from "imprensa/components";
 export default ContentLayout;

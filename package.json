@@ -1,5 +1,5 @@
 {
-  "name": "luz",
+  "name": "imprensa",
   "private": true,
   "workspaces": [
     "packages/*",

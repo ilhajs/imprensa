@@ -1,9 +1,9 @@
 /** @jsxImportSource ilha */
 import ilha from "ilha";
 import { Link, LinkButton } from "areia";
-import { LogoButton, SearchNavbarTrigger, ThemeToggle } from "luzpress/components";
-import { Icon } from "luzpress/icons";
-import { socials } from "luzpress/config";
+import { LogoButton, SearchNavbarTrigger, ThemeToggle } from "imprensa/components";
+import { Icon } from "imprensa/icons";
+import { socials } from "imprensa/config";
 
 export const Topbar = ilha.render(() => (
   <header class="sticky top-0 z-50 border-b border-areia-border bg-areia-background/80 backdrop-blur-lg">

@@ -1,4 +1,4 @@
-/** Landing card samples → Shiki HTML via virtual module `luzpress/landing-shiki` (read automatically when this file exists). */
+/** Landing card samples → Shiki HTML via virtual module `imprensa/landing-shiki` (read automatically when this file exists). */
 
 export const landingSnippets = {
   fileTree: {

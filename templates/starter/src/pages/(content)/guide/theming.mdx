@@ -1,13 +1,13 @@
 ---
 title: Theming
-description: Customize Luz with Areia tokens, dark mode, fonts, logos, and Shiki code themes.
+description: Customize Imprensa with Areia tokens, dark mode, fonts, logos, and Shiki code themes.
 order: 4
 tags: [theme, areia]
 ---
 
 # Theming
 
-Luz UI is built with [Areia](https://areia.ilha.build) and Tailwind CSS v4. The starter keeps styling mostly in utility classes and theme tokens, so you can rebrand without rewriting components.
+Imprensa UI is built with [Areia](https://areia.ilha.build) and Tailwind CSS v4. The starter keeps styling mostly in utility classes and theme tokens, so you can rebrand without rewriting components.
 
 ## Theme tokens
 
@@ -29,11 +29,11 @@ The starter includes a theme toggle with three modes:
 - **Dark** — force dark colors
 - **System** — follow `prefers-color-scheme`
 
-The choice is saved in `localStorage` as `luz:theme`. The runtime applies the theme before rendering to avoid a flash of the wrong color scheme.
+The choice is saved in `localStorage` as `imprensa:theme`. The runtime applies the theme before rendering to avoid a flash of the wrong color scheme.
 
 ## Logo and brand name
 
-Replace `public/logo.svg` with your logo. The default `LogoButton` from `luzpress/components` renders `/logo.svg` beside the text “Luz”.
+Replace `public/logo.svg` with your logo. The default `LogoButton` from `imprensa/components` renders `/logo.svg` beside the text “Imprensa”.
 
 For a product site, create your own logo button or top bar in `src/lib/components/` and use it from the landing page or layout.
 
@@ -60,7 +60,7 @@ To use another font, replace those imports and update the Areia font tokens:
 Configure Shiki in `vite.config.ts`:
 
 ```ts
-luzpress({
+imprensa({
   shiki: {
     themes: { light: "night-owl-light", dark: "houston" },
   },

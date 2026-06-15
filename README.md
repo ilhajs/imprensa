@@ -1,12 +1,12 @@
-# Luz
+# Imprensa
 
-Luz is a documentation site toolkit for [Ilha](https://ilha.build). It ships as a Vite meta plugin (**luzpress**) plus a starter template you can scaffold and customize.
+Imprensa is a documentation site toolkit for [Ilha](https://ilha.build). It ships as a Vite meta plugin (**imprensa**) plus a starter template you can scaffold and customize.
 
 ## Packages
 
 | Path                | Description                                                            |
 | ------------------- | ---------------------------------------------------------------------- |
-| `packages/luzpress` | Vite meta plugin — MDX, Shiki, Ilha pages, Tailwind, prerender, search |
+| `packages/imprensa` | Vite meta plugin — MDX, Shiki, Ilha pages, Tailwind, prerender, search |
 | `templates/starter` | Example docs site — landing page, sidebar layout, sample MDX           |
 
 ## Quick start
@@ -22,23 +22,23 @@ bun run dev
 Scaffold a new project:
 
 ```bash
-npx giget@latest gh:ilhajs/luz/templates/starter my-docs
+npx giget@latest gh:ilhajs/imprensa/templates/starter my-docs
 cd my-docs
 npm install
 npm run dev
 ```
 
-## luzpress
+## imprensa
 
 Add one plugin to `vite.config.ts`:
 
 ```ts
 import { defineConfig } from "vite";
-import { luzpress } from "luzpress";
+import { imprensa } from "imprensa";
 
 export default defineConfig({
   plugins: [
-    luzpress({
+    imprensa({
       shiki: {
         themes: { light: "night-owl-light", dark: "houston" },
         langs: ["ts", "mdx", "shell"],
@@ -52,12 +52,12 @@ export default defineConfig({
 
 ```ts
 import "./app.css";
-import { createLuzpress } from "luzpress";
+import { createImprensa } from "imprensa";
 
-const luzpress = createLuzpress();
-luzpress.init();
+const imprensa = createImprensa();
+imprensa.init();
 
-export const prerender = luzpress.prerender;
+export const prerender = imprensa.prerender;
 ```
 
 ### Plugin options
@@ -77,12 +77,12 @@ export const prerender = luzpress.prerender;
 Import global styles in your app CSS:
 
 ```css
-@import "luzpress/default.css";
+@import "imprensa/default.css";
 ```
 
-Shared UI (search, theme toggle, logo) is available from `luzpress/components`. MDX helpers live in `luzpress/mdx`. Content pages can use `DocArticle` from `luzpress/doc` to render a toolbar with **Copy Markdown** and links to GitHub, raw markdown, ChatGPT, and Claude.
+Shared UI (search, theme toggle, logo) is available from `imprensa/components`. MDX helpers live in `imprensa/mdx`. Content pages can use `DocArticle` from `imprensa/doc` to render a toolbar with **Copy Markdown** and links to GitHub, raw markdown, ChatGPT, and Claude.
 
-On build, luzpress also copies each doc's source next to its prerendered HTML as `.md` (e.g. `dist/getting-started/index.md`) and writes:
+On build, imprensa also copies each doc's source next to its prerendered HTML as `.md` (e.g. `dist/getting-started/index.md`) and writes:
 
 - `dist/llms.txt` — outline with links to source files
 - `dist/llms-full.txt` — concatenated raw doc content
@@ -97,7 +97,7 @@ bun run fmt      # oxfmt
 
 ## Publishing
 
-1. Build and publish `luzpress` to npm
-2. Starter template depends on `luzpress` via semver (`^0.1.0`)
+1. Build and publish `imprensa` to npm
+2. Starter template depends on `imprensa` via semver (`^0.1.0`)
 
 See `templates/starter/README.md` for template-specific customization.

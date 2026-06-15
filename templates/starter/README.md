@@ -1,6 +1,6 @@
-# Luz Starter
+# Imprensa Starter
 
-A documentation site template powered by [luzpress](https://github.com/ilhajs/luz/tree/main/packages/luzpress), [Ilha](https://ilha.build), and [Areia](https://github.com/ilhajs/areia).
+A documentation site template powered by [imprensa](https://github.com/ilhajs/imprensa/tree/main/packages/imprensa), [Ilha](https://ilha.build), and [Areia](https://github.com/ilhajs/areia).
 
 ## Requirements
 
@@ -18,7 +18,7 @@ Open http://localhost:5173.
 ### Scaffold from GitHub
 
 ```bash
-npx giget@latest gh:ilhajs/luz/templates/starter my-docs
+npx giget@latest gh:ilhajs/imprensa/templates/starter my-docs
 cd my-docs
 npm install
 npm run dev
@@ -40,8 +40,8 @@ src/
   main.ts                 # client + export prerender (vite-prerender-plugin)
   app.css
   lib/
-    landing-snippets.ts   # optional; powers luzpress/landing-shiki
-    landing-previews.tsx  # raw() HTML from luzpress/landing-shiki
+    landing-snippets.ts   # optional; powers imprensa/landing-shiki
+    landing-previews.tsx  # raw() HTML from imprensa/landing-shiki
     components/           # landing / app UI
   pages/
     index.tsx, +layout.tsx, (content)/…
@@ -66,7 +66,7 @@ Add optional frontmatter to control navigation, search, SEO, and AI exports:
 ```mdx
 ---
 title: Getting Started
-description: Create a Luz documentation site.
+description: Create a Imprensa documentation site.
 order: 1
 tags: [setup, starter]
 ---
@@ -86,8 +86,8 @@ Disable with `detectDeadLink: false` in `vite.config.ts` while migrating content
 
 1. **Brand color** — set `--areia-primary` in `src/app.css`
 2. **Logo** — replace `public/logo.svg`
-3. **Site name** — edit `LogoButton` text via a custom component, or fork from `luzpress/components`
-4. **Top bar / socials** — edit `src/lib/components/topbar.tsx` (`DEFAULT_TOPBAR_SOCIALS` or `socials` prop); sidebar footer uses `luzpress({ socials })` in `vite.config.ts`
+3. **Site name** — edit `LogoButton` text via a custom component, or fork from `imprensa/components`
+4. **Top bar / socials** — edit `src/lib/components/topbar.tsx` (`DEFAULT_TOPBAR_SOCIALS` or `socials` prop); sidebar footer uses `imprensa({ socials })` in `vite.config.ts`
 5. **Landing copy** — edit `src/pages/index.tsx`
 6. **Footer** — edit `src/lib/components/footer.tsx`
 
@@ -95,7 +95,7 @@ Disable with `detectDeadLink: false` in `vite.config.ts` while migrating content
 
 ```ts
 // vite.config.ts
-luzpress({
+imprensa({
   repo: "https://github.com/org/repo",
   repoPath: "templates/starter", // optional monorepo prefix
   contentDir: "src/pages/(content)",
@@ -106,11 +106,11 @@ luzpress({
 });
 ```
 
-Content pages use `DocArticle` from `luzpress/doc` (already wired in `[...slug].tsx`) to show an **Open** menu above the page title (copy markdown, GitHub, view as markdown, ChatGPT, Claude).
+Content pages use `DocArticle` from `imprensa/doc` (already wired in `[...slug].tsx`) to show an **Open** menu above the page title (copy markdown, GitHub, view as markdown, ChatGPT, Claude).
 
 ## Dependencies
 
-The starter only declares packages you import directly (`areia`, `ilha`, `lucide`). MDX Shiki, Tailwind, prerender, and search come through `luzpress`.
+The starter only declares packages you import directly (`areia`, `ilha`, `lucide`). MDX Shiki, Tailwind, prerender, and search come through `imprensa`.
 
 ## LLM exports
 
@@ -124,7 +124,7 @@ Each production build writes:
 Disable with `llms: false` in `vite.config.ts`, or customize the outline:
 
 ```ts
-luzpress({
+imprensa({
   llms: {
     siteName: "My Docs",
     summary: "API and guides for My Product.",

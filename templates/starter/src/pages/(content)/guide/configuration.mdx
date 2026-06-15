@@ -1,20 +1,20 @@
 ---
 title: Configuration
-description: Configure the luzpress Vite plugin, metadata, search inputs, code highlighting, and generated artifacts.
+description: Configure the imprensa Vite plugin, metadata, search inputs, code highlighting, and generated artifacts.
 order: 2
 tags: [config, plugin]
 ---
 
 # Configuration
 
-Configure Luz in `vite.config.ts` with the `luzpress()` Vite plugin.
+Configure Imprensa in `vite.config.ts` with the `imprensa()` Vite plugin.
 
 ```ts
 import { defineConfig } from "vite";
-import { luzpress } from "luzpress";
+import { imprensa } from "imprensa";
 
 export default defineConfig({
-  plugins: [luzpress({ hostname: "https://docs.example.com" })],
+  plugins: [imprensa({ hostname: "https://docs.example.com" })],
 });
 ```
 
@@ -25,7 +25,7 @@ export default defineConfig({
 The public origin of the site. Set this for correct sitemap and absolute metadata URLs.
 
 ```ts
-luzpress({ hostname: "https://docs.example.com" });
+imprensa({ hostname: "https://docs.example.com" });
 ```
 
 ### `contentDir`
@@ -33,7 +33,7 @@ luzpress({ hostname: "https://docs.example.com" });
 The MDX content directory. Defaults to `src/pages/(content)`.
 
 ```ts
-luzpress({ contentDir: "src/pages/docs" });
+imprensa({ contentDir: "src/pages/docs" });
 ```
 
 ### `head`
@@ -41,7 +41,7 @@ luzpress({ contentDir: "src/pages/docs" });
 Default metadata for pages. Page frontmatter can override it.
 
 ```ts
-luzpress({
+imprensa({
   head: {
     title: "My Docs",
     description: "Documentation for my project.",
@@ -54,7 +54,7 @@ luzpress({
 Links shown by the starter navigation components.
 
 ```ts
-luzpress({
+imprensa({
   socials: [
     { service: "github", url: "https://github.com/you/repo" },
     { service: "x", url: "https://x.com/you" },
@@ -68,7 +68,7 @@ luzpress({
 Repository metadata for doc toolbar actions such as “Open in GitHub” and “View as Markdown”.
 
 ```ts
-luzpress({
+imprensa({
   repo: "https://github.com/you/repo",
   repoBranch: "main",
   repoPath: "docs", // optional path prefix inside the repository
@@ -80,13 +80,13 @@ luzpress({
 `detectDeadLink` validates internal links and heading anchors during build. Keep it enabled for published docs.
 
 ```ts
-luzpress({ detectDeadLink: true }); // default
+imprensa({ detectDeadLink: true }); // default
 ```
 
 Temporarily disable it during migrations:
 
 ```ts
-luzpress({ detectDeadLink: false });
+imprensa({ detectDeadLink: false });
 ```
 
 ## Syntax highlighting
@@ -94,7 +94,7 @@ luzpress({ detectDeadLink: false });
 Shiki is enabled by default. Configure loaded languages and themes, or disable it for a lighter build.
 
 ```ts
-luzpress({
+imprensa({
   shiki: {
     themes: { light: "night-owl-light", dark: "houston" },
     langs: ["ts", "tsx", "mdx", "shell", "json"],
@@ -104,12 +104,12 @@ luzpress({
 ```
 
 ```ts
-luzpress({ shiki: false });
+imprensa({ shiki: false });
 ```
 
 ## Generated artifacts
 
-By default Luz emits:
+By default Imprensa emits:
 
 - prerendered HTML for every route
 - `sitemap.xml` when `hostname` is set
@@ -118,7 +118,7 @@ By default Luz emits:
 Disable AI exports if you do not want them published:
 
 ```ts
-luzpress({ llms: false });
+imprensa({ llms: false });
 ```
 
 ## Preview sandbox
@@ -126,7 +126,7 @@ luzpress({ llms: false });
 Code fences marked `preview` render in an iframe. Add import map entries or extra iframe head HTML when your examples need them.
 
 ```ts
-luzpress({
+imprensa({
   preview: {
     importmap: JSON.stringify({ imports: { "my-lib": "https://esm.sh/my-lib" } }),
     head: `<script src="https://cdn.tailwindcss.com"></script>`,

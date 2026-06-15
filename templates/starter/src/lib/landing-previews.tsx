@@ -1,6 +1,6 @@
 /** @jsxImportSource ilha */
 import { raw } from "ilha";
-import { buildHtml, fileTreeHtml, mdxHtml } from "luzpress/landing-shiki";
+import { buildHtml, fileTreeHtml, mdxHtml } from "imprensa/landing-shiki";
 
 export function LandingFileTreePreview() {
   return raw(fileTreeHtml);

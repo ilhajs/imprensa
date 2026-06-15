@@ -1,13 +1,13 @@
 ---
 title: Deployment
-description: Build, preview, and deploy the static output produced by Luz.
+description: Build, preview, and deploy the static output produced by Imprensa.
 order: 5
 tags: [deploy, static]
 ---
 
 # Deployment
 
-Luz prerenders your documentation to static files. The generated `dist/` directory can be served by any static host.
+Imprensa prerenders your documentation to static files. The generated `dist/` directory can be served by any static host.
 
 ## Build locally
 
@@ -28,7 +28,7 @@ bun run preview
 Set `hostname` for production sites so sitemap and metadata URLs are correct.
 
 ```ts
-luzpress({ hostname: "https://docs.example.com" });
+imprensa({ hostname: "https://docs.example.com" });
 ```
 
 ## Hosting presets

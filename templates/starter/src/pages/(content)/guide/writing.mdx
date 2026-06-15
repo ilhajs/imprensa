@@ -7,7 +7,7 @@ tags: [mdx, writing]
 
 # Writing
 
-Luz pages are MDX: Markdown for prose, JSX for components, and frontmatter for metadata. Write for humans first; Luz uses the same content for navigation, search, sitemap metadata, and AI exports.
+Imprensa pages are MDX: Markdown for prose, JSX for components, and frontmatter for metadata. Write for humans first; Imprensa uses the same content for navigation, search, sitemap metadata, and AI exports.
 
 ## Page metadata
 
@@ -16,7 +16,7 @@ Start each page with frontmatter:
 ```mdx
 ---
 title: Configuration
-description: Configure the luzpress Vite plugin.
+description: Configure the imprensa Vite plugin.
 order: 2
 tags: [config, plugin]
 ---
@@ -28,7 +28,7 @@ Use:
 - `description` for previews and AI summaries
 - `order` for sidebar sorting
 - `tags` for search context
-- `type` to choose how Luz treats the file: `doc` (default), `custom`, or `link`
+- `type` to choose how Imprensa treats the file: `doc` (default), `custom`, or `link`
 - `draft: true` for unpublished work
 
 ## Page types
@@ -41,7 +41,7 @@ type: doc
 ---
 ```
 
-Use `custom` when the MDX file renders its own layout and should not receive Luz prose classes, doc toolbar, or pager:
+Use `custom` when the MDX file renders its own layout and should not receive Imprensa prose classes, doc toolbar, or pager:
 
 ```mdx
 ---
@@ -58,7 +58,7 @@ Use `link` for sidebar items that point somewhere else. Link pages are shown in 
 ---
 title: GitHub
 type: link
-link: https://github.com/ilhajs/luz
+link: https://github.com/ilhajs/imprensa
 external: true
 ---
 ```

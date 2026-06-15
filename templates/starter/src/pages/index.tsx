@@ -9,7 +9,7 @@ import {
   LandingMdxPreview,
 } from "$lib/landing-previews";
 import { Topbar } from "$lib/components/topbar";
-import { Icon as SocialIcon } from "luzpress/icons";
+import { Icon as SocialIcon } from "imprensa/icons";
 
 export default ilha
   .onMount(({ host }) => bindHeroTechCardTracking(host))
@@ -26,8 +26,8 @@ export default ilha
                 Launch a polished docs site without starting from a blank page.
               </h1>
               <p class="mx-auto max-w-2xl text-[0.9375rem] leading-[1.65] sm:text-lg sm:leading-7 text-areia-subtle text-balance px-1 sm:px-0">
-                Luz is a reusable Ilha starter with MDX pages, searchable content, static output,
-                and Areia UI components already wired together.
+                Imprensa is a reusable Ilha starter with MDX pages, searchable content, static
+                output, and Areia UI components already wired together.
               </p>
             </div>
             <div class="flex flex-wrap items-center justify-center gap-3">
@@ -39,7 +39,7 @@ export default ilha
               </LinkButton>
             </div>
             <ClipboardText.Static
-              text="npx giget@latest gh:ilhajs/luz/templates/starter my-docs"
+              text="npx giget@latest gh:ilhajs/imprensa/templates/starter my-docs"
               tooltip
               class="w-full max-w-md text-left px-0.5 sm:px-0"
             />
@@ -164,7 +164,7 @@ export default ilha
               </LinkButton>
               <LinkButton
                 variant="outline"
-                href="https://github.com/ilhajs/luz"
+                href="https://github.com/ilhajs/imprensa"
                 icon={<SocialIcon icon="github" class="size-6 shrink-0" />}
                 external
                 class="w-full sm:w-auto"

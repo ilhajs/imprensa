@@ -1,18 +1,18 @@
 ---
 title: Getting Started
-description: Create a Luz documentation site and understand the starter structure.
+description: Create a Imprensa documentation site and understand the starter structure.
 order: 1
 tags: [setup, starter]
 ---
 
 # Getting Started
 
-Luz is a documentation toolkit for [Ilha](https://ilha.build): `luzpress` provides the Vite integration, MDX routing, search, Shiki highlighting, static prerendering, sitemap output, and AI-friendly `llms.txt` files. This starter is a ready-to-edit Luz site.
+Imprensa is a documentation toolkit for [Ilha](https://ilha.build): `imprensa` provides the Vite integration, MDX routing, search, Shiki highlighting, static prerendering, sitemap output, and AI-friendly `llms.txt` files. This starter is a ready-to-edit Imprensa site.
 
 ## Create a site
 
 ```bash
-npx giget@latest gh:ilhajs/luz/templates/starter my-docs
+npx giget@latest gh:ilhajs/imprensa/templates/starter my-docs
 cd my-docs
 bun install
 bun dev
@@ -34,7 +34,7 @@ my-docs/
 │   │       └── *.mdx       # documentation pages
 │   ├── app.css             # global styles and theme tokens
 │   └── main.ts             # client entry + prerender export
-└── vite.config.ts          # luzpress() configuration
+└── vite.config.ts          # imprensa() configuration
 ```
 
 `(content)` is an Ilha route group. For example, `src/pages/(content)/guide/writing.mdx` becomes `/guide/writing`.
@@ -56,16 +56,16 @@ Write documentation here.
 
 The page is added to the sidebar, command search, sitemap, and AI exports automatically.
 
-## Configure Luz
+## Configure Imprensa
 
 ```ts
 // vite.config.ts
 import { defineConfig } from "vite";
-import { luzpress } from "luzpress";
+import { imprensa } from "imprensa";
 
 export default defineConfig({
   plugins: [
-    luzpress({
+    imprensa({
       hostname: "https://docs.example.com",
       socials: [{ service: "github", url: "https://github.com/you/repo" }],
     }),

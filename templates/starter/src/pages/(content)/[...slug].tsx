@@ -1,8 +1,8 @@
 import { useRoute } from "@ilha/router";
 import { LinkButton } from "areia";
 import ilha from "ilha";
-import { DocArticle } from "luzpress/doc";
-import { getMdxContent, loadMdxHtml } from "luzpress/mdx";
+import { DocArticle } from "imprensa/doc";
+import { getMdxContent, loadMdxHtml } from "imprensa/mdx";
 
 const LazyDocArticle = ilha
   .input<{ path: string }>()
