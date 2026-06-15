@@ -38,14 +38,38 @@ const IMPRENSA_PRERENDER_ENTRY = path.resolve(
 const IMPRENSA_CLIENT_RUNTIME = path.resolve(
   fileURLToPath(new URL("./core/client-runtime.mjs", import.meta.url)),
 );
+/** Published bundle still references __IMPRENSA_* until the Vite plugin rewrites them. */
+const MDX_DIST_BUNDLE = path.join(
+  fileURLToPath(new URL("../../..", import.meta.url)),
+  "dist/docs/mdx.mjs",
+);
 
 function isMdxConfigTarget(id: string) {
+  const normalized = id.split("?")[0] ?? id;
   return (
-    id === MDX_RUNTIME_CONFIG ||
-    id.endsWith("/imprensa/src/docs/mdx/runtime-config.ts") ||
-    id === MDX_SOURCE ||
-    id.endsWith("/imprensa/src/docs/mdx.ts")
+    normalized === MDX_RUNTIME_CONFIG ||
+    normalized.endsWith("/imprensa/src/docs/mdx/runtime-config.ts") ||
+    normalized === MDX_SOURCE ||
+    normalized.endsWith("/imprensa/src/docs/mdx.ts") ||
+    normalized === MDX_DIST_BUNDLE ||
+    normalized.endsWith("/imprensa/dist/docs/mdx.mjs")
   );
+}
+
+function injectedMdxRuntimeConfig(options: {
+  contentDir: string;
+  repo: string;
+  repoBranch: string;
+  repoPath: string;
+  headDefaults: ImprensaOptions["head"];
+}) {
+  const { contentDir, repo, repoBranch, repoPath, headDefaults } = options;
+  return `export const contentDir = ${JSON.stringify(normalizeContentDir(contentDir))};
+export const imprensaRepo = ${JSON.stringify(repo)};
+export const imprensaRepoBranch = ${JSON.stringify(repoBranch)};
+export const imprensaRepoPath = ${JSON.stringify(repoPath)};
+export const mdxRawSources = ${JSON.stringify(collectRawMdxSources(process.cwd(), contentDir))};
+export const headDefaults = ${JSON.stringify(headDefaults ?? null)};`;
 }
 
 function isAppPageFile(file: string, root: string) {
@@ -200,15 +224,26 @@ export const shikiThemes = ${JSON.stringify(shikiThemes)};`;
         if (end !== -1) return { code: code.slice(end + 4), map: null };
       }
       if (!isMdxConfigTarget(id)) return;
-      return code.replace(
-        MDX_CONFIG_MARKER,
-        `export const contentDir = ${JSON.stringify(normalizeContentDir(contentDir))};
-export const imprensaRepo = ${JSON.stringify(repo)};
-export const imprensaRepoBranch = ${JSON.stringify(repoBranch)};
-export const imprensaRepoPath = ${JSON.stringify(repoPath)};
-export const mdxRawSources = ${JSON.stringify(collectRawMdxSources(process.cwd(), contentDir))};
-export const headDefaults = ${JSON.stringify(headDefaults ?? null)};`,
-      );
+
+      const injected = injectedMdxRuntimeConfig({
+        contentDir,
+        repo,
+        repoBranch,
+        repoPath,
+        headDefaults,
+      });
+
+      if (code.includes(MDX_CONFIG_MARKER)) {
+        return code.replace(MDX_CONFIG_MARKER, injected);
+      }
+
+      // Prebundled dist/docs/mdx.mjs (dev optimizeDeps) inlines runtime-config without the marker.
+      if (/__IMPRENSA_CONTENT_DIR__/.test(code)) {
+        return code.replace(
+          /\/\/#region src\/docs\/mdx\/runtime-config\.ts[\s\S]*?\/\/#endregion/,
+          `//#region src/docs/mdx/runtime-config.ts\n${injected}\n//#endregion`,
+        );
+      }
     },
     handleHotUpdate(ctx) {
       if (!isAppPageFile(ctx.file, ctx.server.config.root)) return;
@@ -234,6 +269,10 @@ export const headDefaults = ${JSON.stringify(headDefaults ?? null)};`,
       }
 
       return {
+        optimizeDeps: {
+          // Force imprensa/mdx through resolveId → source + transform (not raw dist placeholders).
+          exclude: ["imprensa/mdx"],
+        },
         server: {
           watch: {
             usePolling: true,
