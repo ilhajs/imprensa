@@ -75,14 +75,13 @@ export const ThemeToggle = ilha
 export const SearchOverlay = ilha.render(() => <></>);
 
 export function SearchTriggerButton(props: { class?: string }) {
-  const extra = props.class ?? "";
   return (
     <Button
       type="button"
       data-search-trigger
       aria-label="Search documentation"
       icon={<Icon icon={Search} />}
-      class={extra}
+      class={props.class}
     />
   );
 }

@@ -52,7 +52,7 @@ public/
 
 Two chrome patterns ship by default:
 
-- **Landing (`/`)** — `Topbar` with logo, search, theme toggle, GitHub link
+- **Landing (`/`)** — `src/lib/components/topbar.tsx` (logo, search, theme toggle, social links)
 - **Docs (`/getting-started`, etc.)** — resizable `Sidebar` with the same controls plus navigation tree
 
 Customize or merge UI in `src/lib/components/`.
@@ -75,9 +75,10 @@ tags: [setup, starter]
 Build-time checks (enabled by default):
 
 - Exactly one `h1` per page
-- `h1` text should match the visible page title
 - No skipped heading levels
 - No dead internal links or anchor references
+
+The `h1` does not need to match the frontmatter `title`; use `title` for navigation/search and the `h1` for the best visible page heading.
 
 Disable with `detectDeadLink: false` in `vite.config.ts` while migrating content.
 
@@ -86,7 +87,7 @@ Disable with `detectDeadLink: false` in `vite.config.ts` while migrating content
 1. **Brand color** — set `--areia-primary` in `src/app.css`
 2. **Logo** — replace `public/logo.svg`
 3. **Site name** — edit `LogoButton` text via a custom component, or fork from `luzpress/components`
-4. **GitHub link** — update `src/lib/components/topbar.tsx` or `luzpress` socials in `vite.config.ts`
+4. **Top bar / socials** — edit `src/lib/components/topbar.tsx` (`DEFAULT_TOPBAR_SOCIALS` or `socials` prop); sidebar footer uses `luzpress({ socials })` in `vite.config.ts`
 5. **Landing copy** — edit `src/pages/index.tsx`
 6. **Footer** — edit `src/lib/components/footer.tsx`
 

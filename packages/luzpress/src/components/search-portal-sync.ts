@@ -84,11 +84,12 @@ export function syncPortaledSearchList(
   const items = results
     .map((result) => {
       const excerpt = getMatchedExcerpt(result.text, query);
+      const titleHtml = highlightPlain(result.title, query);
       const excerptHtml = excerpt
         ? `<div class="mt-1 line-clamp-2 text-xs text-areia-foreground/60">${highlightPlain(excerpt, query)}</div>`
         : "";
       return `<div data-slot="command-item" data-value="${escapeHtml(result.path)}" data-keywords="${escapeHtml(`${result.title}\n${result.text}`)}" class="cursor-pointer rounded-lg px-3 py-2 text-sm data-selected:bg-areia-control-hover">
-        <div class="font-medium">${escapeHtml(result.title)}</div>
+        <div class="font-medium">${titleHtml}</div>
         ${excerptHtml}
       </div>`;
     })

@@ -14,11 +14,16 @@ export type PrerenderDataPayload = {
   mdxPath?: string;
 };
 
+export type ContentPageType = "doc" | "custom" | "link";
+
 export type ContentMeta = {
   title: string;
   description?: string;
   order?: number;
   priority: number;
+  type: ContentPageType;
+  link?: string;
+  external?: boolean;
   section?: string;
   badge?: string;
   draft?: boolean;
@@ -29,6 +34,9 @@ export type ContentMeta = {
 export type ContentTreeNode = {
   title: string;
   path?: string;
+  type: ContentPageType;
+  link?: string;
+  external?: boolean;
   priority: number;
   order?: number;
   description?: string;

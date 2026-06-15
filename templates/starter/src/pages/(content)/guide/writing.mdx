@@ -1,64 +1,116 @@
 ---
 title: Writing
-description: Write high-quality MDX pages with strict headings, links, code blocks, previews, and components.
+description: Write concise MDX docs with frontmatter, headings, links, code samples, previews, and components.
 order: 6
 tags: [mdx, writing]
 ---
 
 # Writing
 
-MDX lets you mix Markdown with JSX components. Luzpress adds Shiki syntax highlighting and twoslash type annotations on top.
+Luz pages are MDX: Markdown for prose, JSX for components, and frontmatter for metadata. Write for humans first; Luz uses the same content for navigation, search, sitemap metadata, and AI exports.
 
-## Page titles
+## Page metadata
 
-Every MDX file must include a single `h1`. Frontmatter `title` becomes the sidebar title, search title, and AI export title; otherwise Luz falls back to the first `h1`. The heading should still match the visible page title for readers.
-
-## Heading levels
-
-Don't skip levels. After the page `h1`, use `h2`, then `h3`, and so on.
-
-## Internal links
-
-Use root-relative paths. The build fails on dead links and missing anchor targets.
+Start each page with frontmatter:
 
 ```mdx
-See [Getting Started](/getting-started) for setup instructions.
+---
+title: Configuration
+description: Configure the luzpress Vite plugin.
+order: 2
+tags: [config, plugin]
+---
 ```
+
+Use:
+
+- `title` for navigation, search, and metadata
+- `description` for previews and AI summaries
+- `order` for sidebar sorting
+- `tags` for search context
+- `type` to choose how Luz treats the file: `doc` (default), `custom`, or `link`
+- `draft: true` for unpublished work
+
+## Page types
+
+Most pages use the default type:
+
+```mdx
+---
+type: doc
+---
+```
+
+Use `custom` when the MDX file renders its own layout and should not receive Luz prose classes, doc toolbar, or pager:
+
+```mdx
+---
+title: Showcase
+type: custom
+---
+
+<div class="grid gap-4 md:grid-cols-3">...</div>
+```
+
+Use `link` for sidebar items that point somewhere else. Link pages are shown in navigation but are not rendered or prerendered as docs pages.
+
+```mdx
+---
+title: GitHub
+type: link
+link: https://github.com/ilhajs/luz
+external: true
+---
+```
+
+Set `external: true` to open the link in a new tab.
+
+## Headings
+
+Every page should have exactly one `h1`. It does not need to match the frontmatter `title`: use `title` for navigation/search labels and the `h1` for the best visible page heading. Do not skip heading levels.
+
+```mdx
+# Page title
+
+## Section
+
+### Detail
+```
+
+Keep headings specific; they become anchor targets and improve search quality.
+
+## Links
+
+Use root-relative internal links:
+
+```mdx
+See [Configuration](/guide/configuration).
+```
+
+By default, builds fail on dead internal links and missing anchor targets. That is intentional: fix broken links before publishing.
 
 ## Code blocks
 
-Fenced code blocks are highlighted with Shiki:
+Fence code with the correct language for highlighting:
 
 ````mdx
 ```ts
-const greet = (name: string) => `Hello, ${name}!`;
+const greet = (name: string) => `Hello, ${name}`;
 ```
 ````
 
-### Twoslash
-
-Add `twoslash` to enable type-aware hover popups in TypeScript samples:
+Use `twoslash` for TypeScript examples that benefit from type inspection:
 
 ```ts twoslash
-const a = 5;
+const count = 1;
 //    ^?
 ```
 
-### Supported languages
+Configure loaded languages and themes in `vite.config.ts`.
 
-Configure which languages Shiki loads in `vite.config.ts`:
+## Live previews
 
-```ts
-luzpress({
-  shiki: {
-    langs: ["ts", "tsx", "mdx", "shell", "json"],
-  },
-});
-```
-
-## Live preview
-
-Add `preview` to a code fence to render it interactively below the code:
+Add `preview` to render an interactive example below a code block:
 
 ```tsx preview
 import ilha from "ilha";
@@ -67,32 +119,31 @@ export default ilha
   .state("count", 0)
   .on("[data-action=inc]@click", ({ state }) => state.count(state.count() + 1))
   .render(({ state }) => (
-    <div class="flex flex-col gap-4">
-      <p>Count: {state.count()}</p>
-      <button data-action="inc" class="px-4 py-2 bg-blue-500 text-white rounded">
-        Increment
-      </button>
-    </div>
+    <button data-action="inc" class="rounded bg-blue-600 px-3 py-2 text-white">
+      Count: {state.count()}
+    </button>
   ));
 ```
 
-## Embedded components
+Keep previews small. They should demonstrate one idea, not become a second application.
 
-Import Areia or Ilha components at the top of an MDX file:
+## Components in MDX
+
+Import components at the top of the file:
 
 ```mdx
-import { Button, Badge } from "areia";
+import { Badge, Button } from "areia";
 
-<Button>Click me</Button>
 <Badge>New</Badge>
+<Button>Action</Button>
 ```
 
-No extra configuration needed — the JSX runtime is already wired up.
+Use components when they clarify the documentation. Prefer Markdown for ordinary prose.
 
-## Disable strict checks
+## Good docs style
 
-To skip dead-link validation while migrating content:
-
-```ts
-luzpress({ detectDeadLink: false });
-```
+- Lead with the practical answer.
+- Keep examples copy-pasteable.
+- Explain defaults before edge cases.
+- Link to related pages instead of repeating long sections.
+- Remove placeholder content before publishing.

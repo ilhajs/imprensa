@@ -1,21 +1,17 @@
 /** @jsxImportSource ilha */
 import { LinkButton } from "areia";
 import { socials } from "luzpress/config";
-import { DiscordIcon, GithubIcon, XIcon } from "./icons";
-import type { RawHtml } from "ilha";
+import { cx } from "./classes";
+import { Icon } from "./icons";
 import { ThemeToggle } from "./search";
 
-const socialIcons: Record<string, () => RawHtml> = {
-  github: () => <GithubIcon class="size-4" />,
-  x: () => <XIcon class="size-4" />,
-  discord: () => <DiscordIcon class="size-4" />,
-};
-
 export function NavFooterBar(props: { class?: string }) {
-  const extra = props.class ?? "";
   return (
     <div
-      class={`flex shrink-0 items-center justify-between rounded-lg border border-areia-border bg-areia-surface-muted/60 p-1 ${extra}`}
+      class={cx(
+        "flex shrink-0 items-center justify-between rounded-lg border border-areia-border bg-areia-surface-muted/60 p-1",
+        props.class,
+      )}
     >
       <div class="flex items-center gap-0">
         {socials.map((s) => (
@@ -23,7 +19,7 @@ export function NavFooterBar(props: { class?: string }) {
             href={s.url}
             shape="square"
             variant="ghost"
-            icon={socialIcons[s.service]?.()}
+            icon={<Icon icon={s.service} class="size-4" />}
             external
             aria-label={s.service}
             class="shrink-0"

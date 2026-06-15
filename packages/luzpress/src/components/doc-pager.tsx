@@ -2,6 +2,7 @@
 import { Icon, LayerCard } from "areia";
 import { ChevronLeft, ChevronRight } from "lucide";
 import { contentMeta, contentTree, searchDocuments, type ContentTreeNode } from "luzpress/mdx";
+import { cx } from "./classes";
 
 export type DocNavItem = {
   title: string;
@@ -34,7 +35,7 @@ function flattenContentTree(nodes: ContentTreeNode[]): { title: string; path: st
   const pages: { title: string; path: string }[] = [];
 
   for (const node of nodes) {
-    if (node.path) pages.push({ title: node.title, path: node.path });
+    if (node.path && node.type !== "link") pages.push({ title: node.title, path: node.path });
     if (node.children.length > 0) pages.push(...flattenContentTree(node.children));
   }
 
@@ -65,13 +66,16 @@ function DocNavCard(props: { item: DocNavItem; direction: "prev" | "next" }) {
       <LayerCard class="h-full transition-colors group-hover:bg-areia-control-hover">
         <LayerCard.Content class="flex flex-col gap-2 p-4">
           <div
-            class={`flex items-center gap-1.5 text-sm font-medium text-areia-strong ${isPrev ? "" : "justify-end text-right"}`}
+            class={cx(
+              "flex items-center gap-1.5 text-sm font-medium text-areia-strong",
+              !isPrev && "justify-end text-right",
+            )}
           >
             {isPrev ? <Icon icon={ChevronLeft} class="size-4 shrink-0" /> : null}
             <span>{props.item.title}</span>
             {!isPrev ? <Icon icon={ChevronRight} class="size-4 shrink-0" /> : null}
           </div>
-          <p class={`line-clamp-2 text-sm text-areia-subtle ${isPrev ? "" : "text-right"}`}>
+          <p class={cx("line-clamp-2 text-sm text-areia-subtle", !isPrev && "text-right")}>
             {props.item.excerpt}
           </p>
         </LayerCard.Content>

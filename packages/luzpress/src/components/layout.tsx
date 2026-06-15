@@ -1,12 +1,8 @@
 /** @jsxImportSource ilha */
-import type { RawHtml } from "ilha";
 import { defineLayout, routeHash } from "@ilha/router";
-import { LinkButton, Resizable, Toaster } from "areia";
-import { GithubIcon, XIcon, DiscordIcon } from "./icons";
-import { socials } from "luzpress/config";
+import { Resizable, Toaster } from "areia";
 import ilha from "ilha";
 
-import { LogoButton, SearchNavbarTrigger, ThemeToggle } from "./search";
 import { Sidebar } from "./sidebar";
 import { DEFAULT_SIDEBAR_LAYOUT, readSidebarLayout, writeSidebarLayout } from "./sidebar-layout";
 
@@ -67,9 +63,9 @@ function mountDocsViewportLock() {
 
 export const RootLayout = defineLayout((children) =>
   ilha.render(() => (
-    <div class="luz-root flex min-h-dvh flex-col bg-areia-background text-areia-default">
+    <div class="luz-root bg-areia-background text-areia-default">
       <Toaster richColors closeButton />
-      <main class="luz-root-main flex min-h-0 flex-1 flex-col">{children}</main>
+      <main class="luz-root-main">{children}</main>
     </div>
   )),
 );
@@ -112,41 +108,3 @@ export const ContentLayout = defineLayout((children) => {
       </div>
     ));
 });
-
-const socialIcons: Record<string, () => RawHtml> = {
-  github: () => <GithubIcon class="size-4" />,
-  x: () => <XIcon class="size-4" />,
-  discord: () => <DiscordIcon class="size-4" />,
-};
-
-export const Topbar = ilha.render(() => (
-  <>
-    <div
-      class="pointer-events-none fixed inset-x-0 top-0 z-40 h-14 border-b border-areia-border bg-areia-background/80 backdrop-blur-lg"
-      aria-hidden="true"
-    />
-    <header class="fixed inset-x-0 top-0 z-50">
-      <div class="container max-w-6xl mx-auto h-14 px-4 flex min-w-0 justify-between items-center gap-3">
-        <LogoButton />
-        <div class="flex shrink-0 gap-2 items-center">
-          <SearchNavbarTrigger />
-          <div class="hidden md:flex">
-            <ThemeToggle />
-          </div>
-          <div class="flex items-center">
-            {socials.map((s) => (
-              <LinkButton
-                href={s.url}
-                shape="square"
-                icon={socialIcons[s.service]?.()}
-                external
-                aria-label={s.service}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    </header>
-    <div class="h-14" aria-hidden="true" />
-  </>
-));

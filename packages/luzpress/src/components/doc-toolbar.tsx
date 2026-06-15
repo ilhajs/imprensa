@@ -7,8 +7,9 @@ import { MobileNavigationPopover } from "./mobile-nav";
 import { SearchMobileTriggerButton } from "./search";
 import { ChevronDown, Copy, ExternalLink, FileText, GitBranch, MessageSquare } from "lucide";
 import { toast } from "sonner";
-import { articleClass, getDocLinks } from "luzpress/mdx";
+import { articleClass, contentMeta, getDocLinks } from "luzpress/mdx";
 import { DocPager } from "./doc-pager";
+import { cx } from "./classes";
 
 function absoluteUrl(path: string) {
   if (typeof window === "undefined") return path;
@@ -88,7 +89,7 @@ export const DocToolbar = ilha.input<{ path: string }>().render(({ input }) => {
 
   return (
     <div
-      class="not-prose mb-6 flex w-full flex-wrap items-center justify-between gap-2"
+      class="not-prose fixed inset-x-0 top-0 z-30 mb-6 flex w-auto flex-wrap items-center justify-between gap-2 border-b border-areia-border bg-areia-background/90 px-4 py-2 backdrop-blur md:static md:inset-auto md:w-full md:border-b-0 md:bg-transparent md:p-0 md:backdrop-blur-none"
       data-doc-route={input.path}
     >
       <div class="flex shrink-0 items-center gap-2 md:hidden">
@@ -121,13 +122,22 @@ export const DocToolbar = ilha.input<{ path: string }>().render(({ input }) => {
 });
 
 export function DocArticle(props: { path: string; children: RawHtml | string; class?: string }) {
-  const articleClasses = props.class ?? articleClass;
+  const meta = contentMeta[props.path.replace(/\/$/, "") || "/"];
+  const articleClasses =
+    props.class ?? (meta?.type === "custom" ? "w-full max-w-none" : articleClass);
+
+  const isCustom = meta?.type === "custom";
 
   return (
-    <div class="mx-auto flex w-full max-w-4xl min-h-0 flex-1 flex-col">
-      <DocToolbar path={props.path} />
-      <article class={`${articleClasses} flex-1`}>{props.children}</article>
-      <DocPager path={props.path} />
+    <div
+      class={cx(
+        "flex min-h-0 w-full flex-1 flex-col",
+        !isCustom && "mx-auto max-w-4xl pt-14 md:pt-0",
+      )}
+    >
+      {isCustom ? null : <DocToolbar path={props.path} />}
+      <article class={cx(articleClasses, "flex-1")}>{props.children}</article>
+      {isCustom ? null : <DocPager path={props.path} />}
     </div>
   );
 }

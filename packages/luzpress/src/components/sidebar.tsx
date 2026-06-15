@@ -1,29 +1,46 @@
 /** @jsxImportSource ilha */
 import { useRoute } from "@ilha/router";
-import { Collapsible, LinkButton } from "areia";
+import { Collapsible, Icon, LinkButton } from "areia";
 import ilha from "ilha";
+import { ExternalLink } from "lucide";
 import { contentTree, type ContentTreeNode } from "luzpress/mdx";
 import { LogoButton, SearchSidebarTrigger } from "./search";
 import { NavFooterBar } from "./nav-footer-bar";
 import type { LuzpressUiTree } from "./ilha-ui";
+import { cx } from "./classes";
 import { treeIndentClass } from "./tree-indent";
+
+const ACTIVE_LINK_CLASS =
+  "border-areia-primary text-areia-primary ring-1 ring-inset ring-areia-primary/30";
 
 function renderTree(nodes: ContentTreeNode[], currentPath: string, depth = 0): LuzpressUiTree[] {
   return nodes.map((node) => {
-    const active = node.path ? (node.path.replace(/\/$/, "") || "/") === currentPath : false;
-    const link = node.path ? (
+    const href = node.type === "link" ? node.link : node.path;
+    const active =
+      node.path && node.type !== "link"
+        ? (node.path.replace(/\/$/, "") || "/") === currentPath
+        : false;
+    const link = href ? (
       <LinkButton
-        href={node.path}
+        href={href}
+        external={node.external}
         variant={active ? "outline" : "ghost"}
-        class={`w-full justify-start ${active ? "border-areia-primary text-areia-primary ring-1 ring-inset ring-areia-primary/30" : ""}`}
+        class={cx(
+          "w-full justify-start",
+          node.type === "link" && node.external && "justify-between",
+          active && ACTIVE_LINK_CLASS,
+        )}
       >
-        {node.title}
+        <span class="min-w-0 truncate">{node.title}</span>
+        {node.type === "link" && node.external ? (
+          <Icon icon={ExternalLink} class="size-3.5 shrink-0" />
+        ) : null}
       </LinkButton>
     ) : (
       <span class="text-sm font-medium text-areia-subtle">{node.title}</span>
     );
     return (
-      <div class={`flex flex-col gap-1 mt-px ${treeIndentClass(depth)}`}>
+      <div class={cx("mt-px flex flex-col gap-1", treeIndentClass(depth))}>
         {node.children.length > 0 ? (
           <Collapsible defaultOpen>
             <Collapsible.Trigger class="w-full rounded-md px-2 py-1 text-left hover:bg-areia-control-hover">

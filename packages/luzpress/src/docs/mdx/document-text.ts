@@ -77,11 +77,16 @@ export function metaFromDocument(filePath: string, rawSource: string): ContentMe
   const order = typeof fm.order === "number" ? fm.order : undefined;
   const priority = typeof fm.priority === "number" ? fm.priority : order !== undefined ? -order : 0;
 
+  const type = fm.type === "custom" || fm.type === "link" ? fm.type : "doc";
+
   return {
     title,
     description: typeof fm.description === "string" ? fm.description : undefined,
     order,
     priority,
+    type,
+    link: typeof fm.link === "string" ? fm.link : undefined,
+    external: fm.external === true,
     section: typeof fm.section === "string" ? fm.section : undefined,
     badge: typeof fm.badge === "string" ? fm.badge : undefined,
     draft: fm.draft === true,

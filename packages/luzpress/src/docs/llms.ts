@@ -16,6 +16,7 @@ type ContentMeta = {
   description?: string;
   order?: number;
   priority?: number;
+  type?: "doc" | "custom" | "link";
   draft?: boolean;
   hidden?: boolean;
   tags?: string[];
@@ -84,6 +85,7 @@ function parseFrontmatter(content: string): ContentMeta {
     description: typeof meta.description === "string" ? meta.description : undefined,
     order: typeof meta.order === "number" ? meta.order : undefined,
     priority: typeof meta.priority === "number" ? meta.priority : undefined,
+    type: meta.type === "custom" || meta.type === "link" ? meta.type : "doc",
     draft: meta.draft === true,
     hidden: meta.hidden === true || meta.sidebar === false,
     tags: toStringArray(meta.tags),
@@ -127,7 +129,7 @@ function collectContentFiles(contentDirPhysical: string): ContentFile[] {
 
       const content = fs.readFileSync(entryPath, "utf8");
       const meta = parseFrontmatter(content);
-      if (meta.draft || meta.hidden) continue;
+      if (meta.draft || meta.hidden || meta.type === "link") continue;
       const routePath = filePathToRoutePath(entryPath, contentDirPhysical);
 
       files.push({

@@ -2,9 +2,11 @@ import type { IlhaPagesOptions } from "@ilha/router/vite";
 import type { Options as MdxRollupOptions } from "@mdx-js/rollup";
 import type { ResolvableHead as Head } from "unhead/types";
 import type { LuzpressLlmsOptions } from "./llms";
+import type { LuzpressSocialLink } from "./socials";
 import type { LuzpressShikiOptions } from "../core/shiki";
 
 export type { LuzpressLlmsOptions } from "./llms";
+export type { LuzpressSocialLink, LuzpressSocialService } from "./socials";
 export type { LuzpressShikiOptions } from "../core/shiki";
 
 export type LuzpressOptions = {
@@ -21,7 +23,7 @@ export type LuzpressOptions = {
   /** Export MD/MDX sources to dist and generate llms.txt / llms-full.txt. Defaults to true. */
   llms?: boolean | LuzpressLlmsOptions;
   /** Social links shown in the navbar */
-  socials?: Array<{ service: "github" | "x" | "discord"; url: string }>;
+  socials?: LuzpressSocialLink[];
   /** Preview sandbox configuration */
   preview?: {
     /** JSON string of additional importmap imports to merge */

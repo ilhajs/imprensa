@@ -1,55 +1,63 @@
 ---
 title: Theming
-description: Customize Luz with Areia theme tokens, dark mode, logos, fonts, and code themes.
+description: Customize Luz with Areia tokens, dark mode, fonts, logos, and Shiki code themes.
 order: 4
 tags: [theme, areia]
 ---
 
 # Theming
 
-Luz uses [Areia](https://areia.ilha.build) for UI components and Tailwind CSS v4 for styling. The theme is driven by CSS custom properties on `:root`.
+Luz UI is built with [Areia](https://areia.ilha.build) and Tailwind CSS v4. The starter keeps styling mostly in utility classes and theme tokens, so you can rebrand without rewriting components.
 
-## Primary color
+## Theme tokens
 
-Set `--areia-primary` in `src/app.css`:
+Set tokens in `src/app.css`. The most common change is the primary color:
 
 ```css
-:root {
+* {
   --areia-primary: #7c3aed;
 }
 ```
 
-All interactive elements — buttons, links, focus rings — pick up the new color automatically.
+Areia components, links, focus rings, and active navigation states use these tokens automatically.
 
-## Dark mode
+## Light, dark, and system mode
 
-Dark mode is toggled via the theme button in the top bar. Three modes are available:
+The starter includes a theme toggle with three modes:
 
-- **Light** — forces light theme
-- **Dark** — forces dark theme
-- **System** — follows the OS preference (`prefers-color-scheme`)
+- **Light** — force light colors
+- **Dark** — force dark colors
+- **System** — follow `prefers-color-scheme`
 
-The selected mode is persisted in `localStorage` under `luz:theme`. On first visit the site defaults to system mode.
+The choice is saved in `localStorage` as `luz:theme`. The runtime applies the theme before rendering to avoid a flash of the wrong color scheme.
 
-## Logo
+## Logo and brand name
 
-Replace `public/logo.svg` with your own SVG. The `LogoButton` component in `luzpress/components` renders it at `size-6` next to the site name.
+Replace `public/logo.svg` with your logo. The default `LogoButton` from `luzpress/components` renders `/logo.svg` beside the text “Luz”.
 
-To change the site name, edit `LogoButton` in `src/lib/components/` or override it in your layout.
+For a product site, create your own logo button or top bar in `src/lib/components/` and use it from the landing page or layout.
 
 ## Fonts
 
-The starter ships with [Geist](https://vercel.com/font) via `@fontsource-variable/geist`. To use a different font, swap the import in `src/main.ts` and update `--areia-font-sans` in `src/app.css`:
+The starter imports Geist in `src/main.ts`:
+
+```ts
+import "@fontsource-variable/geist";
+import "@fontsource-variable/geist-mono";
+```
+
+To use another font, replace those imports and update the Areia font tokens:
 
 ```css
-:root {
+* {
   --areia-font-sans: "Inter", system-ui, sans-serif;
+  --areia-font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 ```
 
 ## Code themes
 
-Shiki themes are configured in `vite.config.ts`:
+Configure Shiki in `vite.config.ts`:
 
 ```ts
 luzpress({
@@ -59,4 +67,8 @@ luzpress({
 });
 ```
 
-Any [Shiki-bundled theme](https://shiki.style/themes) works.
+Use any [Shiki bundled theme](https://shiki.style/themes). Keep contrast high in both light and dark mode.
+
+## Styling guidance
+
+Prefer small local components and theme tokens over global overrides. If a style should affect all docs pages, put it in `src/app.css`; if it belongs to one UI section, keep it next to that component.

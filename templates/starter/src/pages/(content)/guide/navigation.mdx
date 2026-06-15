@@ -1,50 +1,96 @@
 ---
 title: Navigation
-description: Build sidebar navigation, mobile navigation, and command search from your MDX files.
+description: Understand file-based docs navigation, ordering, search, mobile navigation, and sidebar behavior.
 order: 3
 tags: [sidebar, search]
 ---
 
 # Navigation
 
-The sidebar and search index are built automatically from MDX files under `contentDir`.
+Luz builds navigation from your MDX files. There is no separate sidebar config to maintain.
 
-## Sidebar
+## File-based sidebar
 
-Every `.mdx` file under `src/pages/(content)/` appears in the sidebar. The title comes from frontmatter or the first `h1` in the file. Nested directories become collapsible groups labeled by their directory name.
+Every `.mdx` file under `contentDir` becomes a route and a sidebar item.
 
-```
+```txt
 (content)/
-├── getting-started.mdx   → /getting-started  "Getting Started"
-├── guide/
-│   ├── writing.mdx       → /guide/writing    "Writing"
-│   └── configuration.mdx → /guide/configuration "Configuration"
+├── getting-started.mdx        → /getting-started
+└── guide/
+    ├── configuration.mdx      → /guide/configuration
+    └── writing.mdx            → /guide/writing
 ```
 
-There is no manual nav config — add a file and it appears. Use frontmatter to tune ordering or hide a page:
+Nested folders become collapsible groups. The group label comes from the directory name.
+
+## Titles and order
+
+Use frontmatter to control the navigation label, description, and sort order.
 
 ```mdx
 ---
 title: API Reference
-description: Generated API docs for every public export.
+description: Generated API docs for public exports.
 order: 4
-hidden: false
 tags: [api, reference]
+---
+
+# API Reference
+```
+
+Lower `order` values appear first. If `title` is omitted, Luz falls back to the first `h1`.
+
+## Link items
+
+A file with `type: link` creates a sidebar item without creating a docs page. Use it for API references, GitHub repositories, community links, or external product pages.
+
+```mdx
+---
+title: API Reference
+type: link
+link: /api
 ---
 ```
 
-Lower `order` values appear first. Set `draft: true` to remove a page from search, navigation, and AI exports while you are writing it.
+```mdx
+---
+title: GitHub
+type: link
+link: https://github.com/ilhajs/luz
+external: true
+---
+```
 
-## Search
+External links open in a new tab.
 
-Command search is available via the search bar or `⌘K` / `Ctrl+K`. It indexes every page's title and body text using [MiniSearch](https://lucaong.github.io/minisearch/) with fuzzy matching and title boosting.
+## Draft and hidden pages
 
-Search results show the page title and a matched excerpt. Clicking a result navigates to that page.
+Use `draft: true` for unfinished pages. Drafts are removed from navigation, search, sitemap, and AI exports.
+
+```mdx
+---
+title: Work in Progress
+draft: true
+---
+```
+
+Use `hidden: true` when a page should be routable but not listed in navigation.
+
+## Command search
+
+The global search is opened from the search button or with `⌘K` / `Ctrl+K`. It indexes page titles, descriptions, tags, and body text with fuzzy matching.
+
+Good search results depend on good docs metadata:
+
+- write a direct `title`
+- add a one-sentence `description`
+- add a few useful `tags`
+- keep headings descriptive
 
 ## Mobile navigation
 
-On small screens the sidebar is hidden. A hamburger button in the top-left opens a popover with the full navigation tree.
+On small screens the desktop sidebar is replaced by a popover menu in the docs toolbar. It uses the same content tree, so mobile and desktop navigation stay in sync.
 
 ## Resizable sidebar
 
-On desktop the sidebar is resizable — drag the handle between the sidebar and content. The split position is saved to `localStorage` and restored on next visit.
+On desktop the docs sidebar is resizable. The chosen split is stored in `localStorage` and restored before paint to avoid layout flicker.

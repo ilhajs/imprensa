@@ -1,25 +1,39 @@
 ---
 title: Deployment
-description: Build, preview, and deploy your static Luz documentation site with sitemap and AI artifacts.
+description: Build, preview, and deploy the static output produced by Luz.
 order: 5
 tags: [deploy, static]
 ---
 
 # Deployment
 
-Luz prerenders all routes to static HTML at build time. The output is a plain static site that can be hosted anywhere.
+Luz prerenders your documentation to static files. The generated `dist/` directory can be served by any static host.
 
-## Build
+## Build locally
 
 ```bash
 bun run build
 ```
 
-Output goes to `dist/`. Every MDX route is prerendered to an `index.html` file.
+The build runs Vite, prerenders every route, and writes output to `dist/`.
 
-## Vercel
+Preview the production build before publishing:
 
-Create a `vercel.json` at the project root:
+```bash
+bun run preview
+```
+
+## Required configuration
+
+Set `hostname` for production sites so sitemap and metadata URLs are correct.
+
+```ts
+luzpress({ hostname: "https://docs.example.com" });
+```
+
+## Hosting presets
+
+### Vercel
 
 ```json
 {
@@ -28,11 +42,7 @@ Create a `vercel.json` at the project root:
 }
 ```
 
-Push to a Git repository and import it in the [Vercel dashboard](https://vercel.com/new).
-
-## Netlify
-
-Create a `netlify.toml` at the project root:
+### Netlify
 
 ```toml
 [build]
@@ -40,9 +50,7 @@ Create a `netlify.toml` at the project root:
   publish = "dist"
 ```
 
-## GitHub Pages
-
-Add a workflow at `.github/workflows/deploy.yml`:
+### GitHub Pages
 
 ```yaml
 name: Deploy
@@ -63,18 +71,21 @@ jobs:
           publish_dir: ./dist
 ```
 
-## Sitemap
+## Generated files
 
-Set `hostname` in `vite.config.ts` to generate `dist/sitemap.xml` automatically:
+A production build may include:
 
-```ts
-luzpress({ hostname: "https://docs.example.com" });
-```
+- `index.html` files for each page
+- hashed JS and CSS assets
+- `sitemap.xml` when `hostname` is configured
+- `llms.txt`, `llms-full.txt`, and `llms.json` when `llms` is enabled
 
-## AI agent support
+## Deployment checklist
 
-At build time, Luzpress generates `dist/llms.txt` (page index) and `dist/llms-full.txt` (full content) for AI agents and LLM tooling. Disable with:
+Before publishing:
 
-```ts
-luzpress({ llms: false });
-```
+- run `bun run build`
+- keep dead-link detection enabled
+- set `hostname`
+- verify social and repository links
+- confirm draft pages are not intended for publication

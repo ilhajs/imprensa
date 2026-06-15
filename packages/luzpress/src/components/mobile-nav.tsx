@@ -1,9 +1,14 @@
 /** @jsxImportSource ilha */
-import { Button, LinkButton, Popover } from "areia";
+import { Button, Icon, LinkButton, Popover } from "areia";
+import { ExternalLink } from "lucide";
 import { contentTree, type ContentTreeNode } from "luzpress/mdx";
 import { NavFooterBar } from "./nav-footer-bar";
+import { LogoButton } from "./search";
 import type { LuzpressUiTree } from "./ilha-ui";
+import { cx } from "./classes";
 import { treeIndentClass } from "./tree-indent";
+
+const ACTIVE_LINK_CLASS = "border-areia-primary text-areia-primary ring-1 ring-areia-primary/30";
 
 function normalizePath(path: string) {
   return path.replace(/\/$/, "") || "/";
@@ -15,25 +20,37 @@ function renderMobileTree(
   depth = 0,
 ): LuzpressUiTree[] {
   return nodes.flatMap((node) => {
-    const active = node.path ? normalizePath(node.path) === currentPath : false;
+    const href = node.type === "link" ? node.link : node.path;
+    const active =
+      node.path && node.type !== "link" ? normalizePath(node.path) === currentPath : false;
     const items: LuzpressUiTree[] = [];
-    if (node.path) {
+    if (href) {
       items.push(
         <Popover.Close>
           <div class={treeIndentClass(depth)}>
             <LinkButton
-              href={node.path}
+              href={href}
+              external={node.external}
               variant={active ? "outline" : "ghost"}
-              class={`w-full justify-start ${active ? "border-areia-primary text-areia-primary ring-1 ring-areia-primary/30" : ""}`}
+              class={cx(
+                "w-full justify-start",
+                node.type === "link" && node.external && "justify-between",
+                active && ACTIVE_LINK_CLASS,
+              )}
             >
-              {node.title}
+              <span class="min-w-0 truncate">{node.title}</span>
+              {node.type === "link" && node.external ? (
+                <Icon icon={ExternalLink} class="size-3.5 shrink-0" />
+              ) : null}
             </LinkButton>
           </div>
         </Popover.Close>,
       );
     } else {
       items.push(
-        <span class={`mt-2 block text-sm font-medium text-areia-subtle ${treeIndentClass(depth)}`}>
+        <span
+          class={cx("mt-2 block text-sm font-medium text-areia-subtle", treeIndentClass(depth))}
+        >
           {node.title}
         </span>,
       );
@@ -71,6 +88,9 @@ export function MobileNavigationPopover(props: { currentPath: string }) {
       }
       content={
         <div class="flex w-64 max-h-[70dvh] flex-col gap-2 p-1">
+          <div class="flex shrink-0 items-center px-1 pb-1">
+            <LogoButton />
+          </div>
           <nav class="min-h-0 flex-1 overflow-y-auto flex flex-col gap-1">
             {renderMobileTree(contentTree, currentPath)}
           </nav>

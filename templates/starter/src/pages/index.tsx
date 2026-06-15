@@ -8,8 +8,8 @@ import {
   LandingFileTreePreview,
   LandingMdxPreview,
 } from "$lib/landing-previews";
-import { Topbar } from "luzpress/components";
-import { GithubIcon } from "luzpress/icons";
+import { Topbar } from "$lib/components/topbar";
+import { Icon as SocialIcon } from "luzpress/icons";
 
 export default ilha
   .onMount(({ host }) => bindHeroTechCardTracking(host))
@@ -148,7 +148,7 @@ export default ilha
         </section>
 
         <section class="container max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 pb-20 sm:pb-28 lg:pb-32">
-          <div class="rounded-2xl border border-areia-border bg-areia-control/30 p-5 sm:p-8 lg:p-10 flex flex-col gap-6 sm:gap-8 md:flex-row md:items-center md:justify-between">
+          <div class="rounded-2xl border border-areia-border bg-areia-background p-5 sm:p-8 lg:p-10 flex flex-col gap-6 sm:gap-8 md:flex-row md:items-center md:justify-between">
             <div class="space-y-2.5 sm:space-y-4 max-w-2xl text-left">
               <h2 class="text-xl leading-snug sm:text-[1.75rem] font-semibold tracking-tight">
                 Make it yours.
@@ -165,7 +165,7 @@ export default ilha
               <LinkButton
                 variant="outline"
                 href="https://github.com/ilhajs/luz"
-                icon={<GithubIcon class="size-6 shrink-0" />}
+                icon={<SocialIcon icon="github" class="size-6 shrink-0" />}
                 external
                 class="w-full sm:w-auto"
               >

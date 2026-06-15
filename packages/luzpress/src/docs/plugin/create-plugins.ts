@@ -45,6 +45,11 @@ function isMdxConfigTarget(id: string) {
   );
 }
 
+function isAppPageFile(file: string, root: string) {
+  const relative = path.relative(path.join(root, "src/pages"), file).replace(/\\/g, "/");
+  return !relative.startsWith("..") && !path.isAbsolute(relative);
+}
+
 export function createLuzpressVitePlugins(options: LuzpressOptions = {}): PluginOption[] {
   const {
     shiki,
@@ -202,6 +207,19 @@ export const mdxRawSources = ${JSON.stringify(collectRawMdxSources(process.cwd()
 export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("unhead/types").ResolvableHead | null;`,
       );
     },
+    handleHotUpdate(ctx) {
+      if (!isAppPageFile(ctx.file, ctx.server.config.root)) return;
+
+      for (const module of ctx.server.moduleGraph.getModulesByFile(MDX_RUNTIME_CONFIG) ?? []) {
+        ctx.server.moduleGraph.invalidateModule(module);
+      }
+      for (const module of ctx.server.moduleGraph.getModulesByFile(MDX_SOURCE) ?? []) {
+        ctx.server.moduleGraph.invalidateModule(module);
+      }
+
+      ctx.server.ws.send({ type: "full-reload", path: "*" });
+      return [];
+    },
     config() {
       const root = process.cwd();
       let sonner = "sonner";
@@ -213,6 +231,11 @@ export const headDefaults = ${JSON.stringify(headDefaults ?? null)} as import("u
       }
 
       return {
+        server: {
+          watch: {
+            usePolling: true,
+          },
+        },
         build: {
           rolldownOptions: {
             output: {

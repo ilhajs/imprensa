@@ -2,11 +2,29 @@
   "name": "luzpress",
   "version": "0.1.0",
   "description": "Vite plugin and runtime for Ilha + Areia documentation sites (MDX, prerender, search)",
+  "keywords": [
+    "areia",
+    "docs",
+    "documentation",
+    "ilha",
+    "llms.txt",
+    "mdx",
+    "prerender",
+    "shiki",
+    "static-site",
+    "vite",
+    "vite-plugin"
+  ],
+  "homepage": "https://github.com/ilhajs/luz#readme",
+  "bugs": {
+    "url": "https://github.com/ilhajs/luz/issues"
+  },
   "license": "MIT",
   "author": "Ryuz <ryuzer@proton.me>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ilhajs/luz.git"
+    "url": "git+https://github.com/ilhajs/luz.git",
+    "directory": "packages/luzpress"
   },
   "files": [
     "dist",

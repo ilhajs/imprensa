@@ -1,57 +1,57 @@
 ---
 title: Configuration
-description: Configure Luzpress plugins, syntax highlighting, metadata, AI exports, and deployment settings.
+description: Configure the luzpress Vite plugin, metadata, search inputs, code highlighting, and generated artifacts.
 order: 2
 tags: [config, plugin]
 ---
 
 # Configuration
 
-All options are passed to the `luzpress()` plugin in `vite.config.ts`.
+Configure Luz in `vite.config.ts` with the `luzpress()` Vite plugin.
 
-## Options
+```ts
+import { defineConfig } from "vite";
+import { luzpress } from "luzpress";
+
+export default defineConfig({
+  plugins: [luzpress({ hostname: "https://docs.example.com" })],
+});
+```
+
+## Common options
 
 ### `hostname`
 
-The full origin URL of your site. Required for sitemap generation.
+The public origin of the site. Set this for correct sitemap and absolute metadata URLs.
 
 ```ts
 luzpress({ hostname: "https://docs.example.com" });
 ```
 
-### `shiki`
-
-Syntax highlighting options. Pass `false` to disable Shiki entirely.
-
-```ts
-luzpress({
-  shiki: {
-    themes: { light: "night-owl-light", dark: "houston" },
-    langs: ["ts", "tsx", "mdx", "shell"],
-    twoslash: true, // default: true
-  },
-});
-```
-
 ### `contentDir`
 
-Path to the MDX content directory relative to `src/`. Defaults to `src/pages/(content)`.
+The MDX content directory. Defaults to `src/pages/(content)`.
 
 ```ts
 luzpress({ contentDir: "src/pages/docs" });
 ```
 
-### `detectDeadLink`
+### `head`
 
-Fail the build on dead internal links and missing anchor targets. Defaults to `true`.
+Default metadata for pages. Page frontmatter can override it.
 
 ```ts
-luzpress({ detectDeadLink: false });
+luzpress({
+  head: {
+    title: "My Docs",
+    description: "Documentation for my project.",
+  },
+});
 ```
 
 ### `socials`
 
-Social links rendered in the top navigation bar.
+Links shown by the starter navigation components.
 
 ```ts
 luzpress({
@@ -63,51 +63,72 @@ luzpress({
 });
 ```
 
-### `repo` / `repoBranch` / `repoPath`
+### `repo`, `repoBranch`, `repoPath`
 
-GitHub repository for "Open in GitHub" and "View as Markdown" doc toolbar links.
+Repository metadata for doc toolbar actions such as “Open in GitHub” and “View as Markdown”.
 
 ```ts
 luzpress({
   repo: "https://github.com/you/repo",
   repoBranch: "main",
-  repoPath: "packages/docs", // path prefix inside the repo
+  repoPath: "docs", // optional path prefix inside the repository
 });
 ```
 
-### `llms`
+## Content checks
 
-Export `llms.txt`, `llms-full.txt`, and `llms.json` for AI agents. Defaults to `true`.
+`detectDeadLink` validates internal links and heading anchors during build. Keep it enabled for published docs.
+
+```ts
+luzpress({ detectDeadLink: true }); // default
+```
+
+Temporarily disable it during migrations:
+
+```ts
+luzpress({ detectDeadLink: false });
+```
+
+## Syntax highlighting
+
+Shiki is enabled by default. Configure loaded languages and themes, or disable it for a lighter build.
+
+```ts
+luzpress({
+  shiki: {
+    themes: { light: "night-owl-light", dark: "houston" },
+    langs: ["ts", "tsx", "mdx", "shell", "json"],
+    twoslash: true,
+  },
+});
+```
+
+```ts
+luzpress({ shiki: false });
+```
+
+## Generated artifacts
+
+By default Luz emits:
+
+- prerendered HTML for every route
+- `sitemap.xml` when `hostname` is set
+- `llms.txt`, `llms-full.txt`, and `llms.json` for AI agents
+
+Disable AI exports if you do not want them published:
 
 ```ts
 luzpress({ llms: false });
 ```
 
-### `head`
+## Preview sandbox
 
-Default `<head>` metadata applied to all pages.
-
-```ts
-luzpress({
-  head: {
-    title: "My Docs",
-    description: "Documentation for my project.",
-  },
-});
-```
-
-### `preview`
-
-Configuration for the live code preview sandbox.
+Code fences marked `preview` render in an iframe. Add import map entries or extra iframe head HTML when your examples need them.
 
 ```ts
 luzpress({
   preview: {
-    // additional import map entries merged with defaults
-    importmap: JSON.stringify({
-      imports: { "my-lib": "https://esm.sh/my-lib" },
-    }),
-    // HTML injected into the preview iframe <head> after esm.sh/tsx
+    importmap: JSON.stringify({ imports: { "my-lib": "https://esm.sh/my-lib" } }),
     head: `<script src="https://cdn.tailwindcss.com"></script>`,
   },
 });

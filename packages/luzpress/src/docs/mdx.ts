@@ -17,4 +17,4 @@ export {
   setPrerenderedMdxHtml,
 } from "./mdx/index";
 
-export type { ContentMeta, ContentTreeNode, SearchDocument } from "./mdx/index";
+export type { ContentMeta, ContentPageType, ContentTreeNode, SearchDocument } from "./mdx/index";

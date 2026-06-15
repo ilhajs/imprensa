@@ -1,13 +1,5 @@
 import type { ElementNode, VfileLike } from "./types";
-import {
-  collectHeadings,
-  expectedTitleFromFile,
-  fail,
-  getAnchorMap,
-  headingId,
-  textContent,
-  visitLinks,
-} from "./heading-utils";
+import { collectHeadings, fail, getAnchorMap, headingId, visitLinks } from "./heading-utils";
 import { hasRoute, normalizeRoute, pageFileToRoute } from "./route-graph";
 
 export function rehypeDeadLinks() {
@@ -22,21 +14,6 @@ export function rehypeDeadLinks() {
         "rehype-heading-structure",
         `Expected exactly one h1, found ${h1s.length}.`,
       );
-    }
-
-    const firstHeading = headings[0];
-    if (firstHeading) {
-      const actualTitle = textContent(firstHeading).trim();
-      const expectedTitle = file.path ? expectedTitleFromFile(file.path) : undefined;
-
-      if (expectedTitle && actualTitle !== expectedTitle) {
-        fail(
-          file,
-          firstHeading,
-          "rehype-heading-structure",
-          `First heading "${actualTitle}" should match sidebar/search title "${expectedTitle}".`,
-        );
-      }
     }
 
     for (let index = 1; index < headings.length; index++) {

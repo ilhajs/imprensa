@@ -7,6 +7,10 @@ import { attachPortaledSearchBridge, onSearchPortalMounted } from "./search-port
 
 const HOST_ID = "luz-global-search-host";
 
+function syncSearchHostVisibility(open = searchOpen()) {
+  document.getElementById(HOST_ID)?.toggleAttribute("hidden", !open);
+}
+
 function mountSearchShortcuts() {
   const onTriggerClick = (event: MouseEvent) => {
     const target = event.target;
@@ -38,7 +42,9 @@ function mountSearchShortcuts() {
 
 export const GlobalSearch = ilha
   .effect(() => {
-    if (!searchOpen()) return;
+    const open = searchOpen();
+    syncSearchHostVisibility(open);
+    if (!open) return;
     let tries = 0;
     const restore = () => {
       const portal = document.querySelector<HTMLElement>(
@@ -124,8 +130,11 @@ export function ensureGlobalSearchMounted() {
   if (!host) {
     host = document.createElement("div");
     host.id = HOST_ID;
+    host.hidden = true;
     document.body.appendChild(host);
   }
+
+  syncSearchHostVisibility(false);
 
   const result = GlobalSearch.mount(host);
   globalSearchUnmount = typeof result === "function" ? result : () => {};

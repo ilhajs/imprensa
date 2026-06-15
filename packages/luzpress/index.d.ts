@@ -21,8 +21,9 @@ declare module "luzpress/landing-shiki" {
 }
 
 declare module "luzpress/config" {
-  import type { LuzpressShikiOptions } from "luzpress";
-  export const socials: Array<{ service: "github" | "x" | "discord"; url: string }>;
+  import type { LuzpressShikiOptions, LuzpressSocialLink } from "luzpress";
+  export type { LuzpressSocialLink, LuzpressSocialService } from "luzpress";
+  export const socials: LuzpressSocialLink[];
   export const preview: { importmap?: string; head?: string };
   export const shiki: LuzpressShikiOptions;
   export const hostname: string;

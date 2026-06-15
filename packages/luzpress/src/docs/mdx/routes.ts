@@ -37,6 +37,9 @@ function insertTreeNode(tree: ContentTreeNode[], routePath: string, meta: Conten
       node = {
         title: isLeaf ? meta.title : titleize(segment),
         path: isLeaf ? path : undefined,
+        type: isLeaf ? meta.type : "doc",
+        link: isLeaf ? meta.link : undefined,
+        external: isLeaf ? meta.external : undefined,
         priority: isLeaf ? meta.priority : 0,
         order: isLeaf ? meta.order : undefined,
         description: isLeaf ? meta.description : undefined,
@@ -49,6 +52,9 @@ function insertTreeNode(tree: ContentTreeNode[], routePath: string, meta: Conten
     if (isLeaf) {
       node.title = meta.title;
       node.path = path;
+      node.type = meta.type;
+      node.link = meta.link;
+      node.external = meta.external;
       node.priority = meta.priority;
       node.order = meta.order;
       node.description = meta.description;
@@ -69,18 +75,18 @@ function insertTreeNode(tree: ContentTreeNode[], routePath: string, meta: Conten
   sort(tree);
 }
 
-export const mdxPages = new Map(
-  Object.entries(mdxModules).map(([filePath, loader]) => {
-    return [filePathToRoutePath(filePath), loader] as const;
-  }),
-);
-
 export const contentMeta = Object.fromEntries(
   Object.entries(mdxModules).map(([filePath]) => {
     const path = filePathToRoutePath(filePath);
     return [path, metaFromDocument(filePath, mdxRawSources[path] ?? "")];
   }),
 ) as Record<string, ContentMeta>;
+
+export const mdxPages = new Map(
+  Object.entries(mdxModules)
+    .map(([filePath, loader]) => [filePathToRoutePath(filePath), loader] as const)
+    .filter(([path]) => contentMeta[path]?.type !== "link"),
+);
 
 export const contentTree = Object.entries(mdxModules).reduce<ContentTreeNode[]>(
   (tree, [filePath]) => {
@@ -97,7 +103,7 @@ export const searchDocuments = Object.entries(mdxModules)
   .map<SearchDocument | undefined>(([filePath]) => {
     const path = filePathToRoutePath(filePath);
     const meta = contentMeta[path];
-    if (meta.draft) return undefined;
+    if (meta.draft || meta.type === "link") return undefined;
 
     return {
       id: path,
