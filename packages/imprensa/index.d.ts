@@ -28,6 +28,8 @@ declare module "imprensa/config" {
   export const shiki: ImprensaShikiOptions;
   export const hostname: string;
   export const shikiThemes: { light: string; dark: string };
+  export const siteName: string;
+  export const logoSrc: string;
 }
 
 declare module "ilha:pages/server" {

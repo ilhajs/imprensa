@@ -41,4 +41,8 @@ export type ImprensaOptions = {
   hostname?: string;
   /** Default head values applied to all pages (title, meta, etc.) */
   head?: Head;
+  /** Sidebar / mobile nav logo link label. Defaults to "Imprensa". */
+  siteName?: string;
+  /** Logo image URL for the sidebar brand. Defaults to "/logo.svg". */
+  logoSrc?: string;
 };

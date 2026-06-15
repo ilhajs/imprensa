@@ -2,6 +2,7 @@
 import { Button, Icon, LinkButton } from "areia";
 import ilha from "ilha";
 import { Command, Monitor, Moon, Search, Sun } from "lucide";
+import { logoSrc, siteName } from "imprensa/config";
 import { applyThemeToHtml, getStoredTheme, setStoredTheme } from "imprensa/runtime";
 
 export { getSearchResults, type SearchResult } from "./search-core";
@@ -19,8 +20,8 @@ export {
 
 export function LogoButton() {
   return (
-    <LinkButton href="/" class="font-semibold" icon={<img src="/logo.svg" class="size-6" />}>
-      Imprensa
+    <LinkButton href="/" class="font-semibold" icon={<img src={logoSrc} class="size-6" alt="" />}>
+      {siteName}
     </LinkButton>
   );
 }

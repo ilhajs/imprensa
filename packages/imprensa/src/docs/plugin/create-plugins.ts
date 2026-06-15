@@ -6,6 +6,7 @@ import mdx, { type Options as MdxRollupOptions } from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
+import remarkGfm from "remark-gfm";
 import type { PluginOption } from "vite";
 import { vitePrerenderPlugin } from "vite-prerender-plugin";
 import sitemap from "vite-plugin-sitemap";
@@ -109,6 +110,8 @@ export function createImprensaVitePlugins(options: ImprensaOptions = {}): Plugin
     head: headDefaults,
     socials = [],
     preview = {},
+    siteName = "Imprensa",
+    logoSrc = "/logo.svg",
   } = options;
 
   const { rehypePlugins, remarkPlugins, ...restMdxOptions } = mdxOptions;
@@ -143,7 +146,7 @@ export function createImprensaVitePlugins(options: ImprensaOptions = {}): Plugin
     mdx({
       jsxImportSource: "ilha",
       ...restMdxOptions,
-      remarkPlugins: [remarkPreview, ...resolvedRemarkPlugins],
+      remarkPlugins: [remarkPreview, remarkGfm, ...resolvedRemarkPlugins],
       rehypePlugins: [
         ...shikiPlugin(shiki),
         ...coreRehypePlugins,
@@ -217,7 +220,9 @@ export function createImprensaVitePlugins(options: ImprensaOptions = {}): Plugin
 export const preview = ${JSON.stringify(preview)};
 export const shiki = ${JSON.stringify(shiki === false ? false : (shiki ?? {}))};
 export const hostname = ${JSON.stringify(hostname ?? "")};
-export const shikiThemes = ${JSON.stringify(shikiThemes)};`;
+export const shikiThemes = ${JSON.stringify(shikiThemes)};
+export const siteName = ${JSON.stringify(siteName)};
+export const logoSrc = ${JSON.stringify(logoSrc)};`;
       }
       if (id === "\0imprensa:shiki") {
         if (!highlighterOptions.clientShiki || highlighterOptions.langs.length === 0) {

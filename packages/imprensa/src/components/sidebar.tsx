@@ -1,6 +1,6 @@
 /** @jsxImportSource ilha */
 import { useRoute } from "@ilha/router";
-import { Collapsible, Icon, LinkButton } from "areia";
+import { Icon, LinkButton } from "areia";
 import ilha from "ilha";
 import { ExternalLink } from "lucide";
 import { contentTree, type ContentTreeNode } from "imprensa/mdx";
@@ -42,14 +42,14 @@ function renderTree(nodes: ContentTreeNode[], currentPath: string, depth = 0): I
     return (
       <div class={cx("mt-px flex flex-col gap-1", treeIndentClass(depth))}>
         {node.children.length > 0 ? (
-          <Collapsible defaultOpen>
-            <Collapsible.Trigger class="w-full rounded-md px-2 py-1 text-left hover:bg-areia-control-hover">
+          <details class="group" open>
+            <summary class="w-full cursor-pointer list-none rounded-md px-2 py-1 text-left hover:bg-areia-control-hover [&::-webkit-details-marker]:hidden">
               {link}
-            </Collapsible.Trigger>
-            <Collapsible.Panel class="mt-1 flex flex-col p-px">
+            </summary>
+            <div class="mt-1 flex flex-col gap-1 p-px">
               {renderTree(node.children, currentPath, node.path ? depth + 1 : depth)}
-            </Collapsible.Panel>
-          </Collapsible>
+            </div>
+          </details>
         ) : (
           link
         )}

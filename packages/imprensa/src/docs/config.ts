@@ -8,3 +8,5 @@ export const socials: ImprensaSocialLink[] = [];
 export const shiki: ImprensaShikiOptions = {};
 export const hostname = "";
 export const shikiThemes = { light: "night-owl-light", dark: "houston" };
+export const siteName = "Imprensa";
+export const logoSrc = "/logo.svg";
