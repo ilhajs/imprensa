@@ -7,7 +7,7 @@ export function rehypeDeadLinks() {
     const headings = collectHeadings(tree);
     const h1s = headings.filter((heading) => heading.tagName === "h1");
 
-    if (h1s.length !== 1) {
+    if (headings.length > 0 && h1s.length !== 1) {
       fail(
         file,
         h1s[1] ?? headings[0],

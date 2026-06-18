@@ -134,16 +134,30 @@ export function createImprensa(options: { dev?: boolean; target?: string; static
 
       if (dev) await applyClientHead(mdx.getMdxHead, mdx.headDefaults);
 
-      const { ensureGlobalSearchMounted } = await import("../components/global-search");
+      const [{ ensureGlobalSearchMounted }, { ensureMdxIslandsMounted }] = await Promise.all([
+        import("../components/global-search"),
+        import("../components/mdx-islands"),
+      ]);
       ensureGlobalSearchMounted();
 
-      return mountOrHydrate({
+      const unmountApp = mountOrHydrate({
         pageRouter: codegen.pageRouter,
         registry: codegen.registry,
         dev,
         target: options.target,
         static: dev ? false : staticHydration,
       });
+
+      if (!dev) {
+        const { runDocMdxEnhancements } = await import("../components/doc-toolbar");
+        runDocMdxEnhancements(document);
+      } else {
+        ensureMdxIslandsMounted();
+      }
+
+      return () => {
+        if (typeof unmountApp === "function") unmountApp();
+      };
     },
     async prerender(data?: PrerenderArguments) {
       const [{ createPrerender }, codegen, mdx, config] = await Promise.all([
@@ -153,7 +167,6 @@ export function createImprensa(options: { dev?: boolean; target?: string; static
         import("imprensa/config") as Promise<{
           shiki?: ImprensaShikiOptions;
           hostname?: string;
-          preview?: { importmap?: string; head?: string };
         }>,
       ]);
 
@@ -169,7 +182,6 @@ export function createImprensa(options: { dev?: boolean; target?: string; static
         headDefaults: mdx.headDefaults,
         hostname,
         shiki: config.shiki,
-        preview: config.preview,
       })(data);
     },
   };

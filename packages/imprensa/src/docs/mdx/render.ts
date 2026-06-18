@@ -1,13 +1,9 @@
 import { raw } from "ilha";
 import type { ResolvableHead as Head } from "unhead/types";
-import {
-  mdxHtmlNeedsPreviewShiki,
-  paintFilledPreviewWrappersInBrowser,
-  paintFilledPreviewWrappersInHtml,
-  paintPreviewSlotsInHtml,
-} from "../../core/preview-paint";
+
+import { sanitizeMdxHtmlString } from "../../core/sanitize-mdx-html";
 import type { MdxContent } from "./types";
-import { mdxPages } from "./routes";
+import { filePathToRoutePath, mdxIslandSequences, mdxPages } from "./routes";
 
 let prerenderedMdxHtml: string | undefined;
 
@@ -58,82 +54,61 @@ function normalizePath(url: string) {
 
 async function loadMdxModule(url: string) {
   const pathname = normalizePath(url);
-  const loader = mdxPages.get(pathname);
-  return loader ? { pathname, mod: await loader() } : undefined;
+  const entry = [...mdxPages.entries()].find(([path]) => path === pathname);
+  if (!entry) return undefined;
+  const [path, loader] = entry;
+  const filePath = Object.keys(mdxIslandSequences).find((key) => filePathToRoutePath(key) === path);
+  return { pathname, filePath, mod: await loader() };
+}
+
+function tagMdxIslandSlots(html: string, filePath: string | undefined) {
+  if (!filePath) return html;
+  const sequence = mdxIslandSequences[filePath];
+  if (!sequence?.length) return html;
+  let index = 0;
+  return html.replace(
+    /<div\b(?=[^>]*\bdata-ilha-slot=)(?=[^>]*\bdata-ilha-props=)(?![^>]*\bdata-imprensa-mdx-island=)/g,
+    (match) => {
+      const key = sequence[index++];
+      return key ? `${match} data-imprensa-mdx-island=${JSON.stringify(key)}` : match;
+    },
+  );
 }
 
 export async function renderMdxContent(url: string) {
-  return (await loadMdxModule(url))?.mod.default({});
+  const loaded = await loadMdxModule(url);
+  if (!loaded) return undefined;
+  return sanitizeMdxHtmlString(tagMdxIslandSlots(toHtml(loaded.mod.default({})), loaded.filePath));
 }
 
 export async function getMdxHead(url: string): Promise<Head | undefined> {
   return (await loadMdxModule(url))?.mod.head;
 }
 
-function escapeUnsafeHtmlScriptTags(html: string) {
-  return html.replace(/<script/gi, "&lt;script").replace(/<\/script>/gi, "&lt;/script&gt;");
-}
-
-async function paintMdxHtml(html: string) {
-  let painted = html;
-  try {
-    const config = await import("imprensa/config");
-    const paintOpts = { shiki: config.shiki, preview: config.preview };
-    painted = await paintPreviewSlotsInHtml(html, paintOpts);
-    painted = await paintFilledPreviewWrappersInHtml(painted, paintOpts);
-  } catch {
-    try {
-      painted = await paintPreviewSlotsInHtml(html, { shiki: false, preview: {} });
-    } catch {
-      // leave html unchanged; client activator handles legacy empty slots
-    }
-    try {
-      painted = await paintFilledPreviewWrappersInHtml(painted, { shiki: false, preview: {} });
-    } catch {
-      // client DocPreviewMountHook upgrades via imprensa/shiki
-    }
-  }
-  return escapeUnsafeHtmlScriptTags(painted);
-}
-
 export async function renderMdx(url: string) {
   const loaded = await loadMdxModule(url);
   if (!loaded) return undefined;
 
-  const rawHtml = toHtml(loaded.mod.default({}));
   return {
-    html: await paintMdxHtml(rawHtml),
+    html: sanitizeMdxHtmlString(tagMdxIslandSlots(toHtml(loaded.mod.default({})), loaded.filePath)),
     path: loaded.pathname,
   };
 }
 
-async function paintMdxHtmlForBrowser(html: string) {
-  const config = await import("imprensa/config");
-  let painted = html;
-  try {
-    painted = await paintFilledPreviewWrappersInBrowser(painted, config.shikiThemes);
-  } catch (err) {
-    console.error("[imprensa] preview Shiki (browser) failed:", err);
-  }
-  return escapeUnsafeHtmlScriptTags(painted);
-}
-
-/** Client-only: load doc HTML and apply preview Shiki via `imprensa/shiki`. */
+/** Client-only: load doc HTML. */
 export async function loadMdxHtml(path: string) {
   const cached = getPrerenderedMdxHtml() ?? getClientPrerenderedMdxHtml(path);
   const content = cached ?? (await renderMdxContent(path));
   if (!content) return null;
   const html = typeof content === "string" ? content : toHtml(content);
-  return raw(await paintMdxHtmlForBrowser(html));
+  return raw(sanitizeMdxHtmlString(html));
 }
 
 export function getMdxContent(path: string) {
   const cached = getPrerenderedMdxHtml() ?? getClientPrerenderedMdxHtml(path);
-  return cached ? raw(cached) : undefined;
+  return cached ? raw(sanitizeMdxHtmlString(cached)) : undefined;
 }
 
-/** Use async `loadMdxHtml` when prerender blob has plain preview `<pre>` (prod static). */
-export function getMdxContentNeedsAsyncPaint(path: string): boolean {
-  const cached = getPrerenderedMdxHtml() ?? getClientPrerenderedMdxHtml(path);
-  return cached ? mdxHtmlNeedsPreviewShiki(cached) : false;
+export function getMdxContentNeedsAsyncPaint(_path: string): boolean {
+  return false;
 }

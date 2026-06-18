@@ -1,4 +1,3 @@
-/** @jsxImportSource ilha */
 import { raw } from "ilha";
 import { buildHtml, fileTreeHtml, mdxHtml } from "imprensa/landing-shiki";
 

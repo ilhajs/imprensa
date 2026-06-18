@@ -6,5 +6,3 @@ import { createImprensa } from "imprensa/runtime";
 const imprensa = createImprensa();
 
 void imprensa.init();
-
-export const prerender = imprensa.prerender;

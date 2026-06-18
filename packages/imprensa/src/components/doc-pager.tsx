@@ -1,7 +1,7 @@
-/** @jsxImportSource ilha */
 import { Icon, LayerCard } from "areia";
 import { ChevronLeft, ChevronRight } from "lucide";
-import { contentMeta, contentTree, searchDocuments, type ContentTreeNode } from "imprensa/mdx";
+import { contentTree } from "imprensa/content-tree";
+import { contentMeta, searchDocuments, type ContentTreeNode } from "imprensa/mdx";
 import { cx } from "./classes";
 
 export type DocNavItem = {

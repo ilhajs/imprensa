@@ -11,6 +11,8 @@ export {
   getPrerenderedMdxHtml,
   headDefaults,
   loadMdxHtml,
+  mdxIslandLoaders,
+  mdxIslandSequences,
   mdxRoutes,
   renderMdx,
   renderMdxContent,

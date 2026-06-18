@@ -108,25 +108,6 @@ const count = 1;
 
 Configure loaded languages and themes in `vite.config.ts`.
 
-## Live previews
-
-Add `preview` to render an interactive example below a code block:
-
-```tsx preview
-import ilha from "ilha";
-
-export default ilha
-  .state("count", 0)
-  .on("[data-action=inc]@click", ({ state }) => state.count(state.count() + 1))
-  .render(({ state }) => (
-    <button data-action="inc" class="rounded bg-blue-600 px-3 py-2 text-white">
-      Count: {state.count()}
-    </button>
-  ));
-```
-
-Keep previews small. They should demonstrate one idea, not become a second application.
-
 ## Components in MDX
 
 Import components at the top of the file:

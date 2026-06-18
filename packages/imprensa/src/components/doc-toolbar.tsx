@@ -1,4 +1,3 @@
-/** @jsxImportSource ilha */
 import type { RawHtml } from "ilha";
 import { useRoute } from "@ilha/router";
 import { Button, Dropdown, Icon } from "areia";
@@ -9,27 +8,13 @@ import { ChevronDown, Copy, ExternalLink, FileText, GitBranch, MessageSquare } f
 import { toast } from "sonner";
 import { articleClass, contentMeta, getDocLinks } from "imprensa/mdx";
 import { DocPager } from "./doc-pager";
-import { activatePreviewSlots, syncPreviewIframesInRoot } from "./preview";
+import { mountMdxIslandsInRoot } from "./mdx-islands";
 import { cx } from "./classes";
 
-/** Mount-only hook — do not pass doc HTML as a named prop (Ilha leaves it in data-ilha-props). */
-const DocPreviewMountHook = ilha
-  .onMount(({ host }) => {
-    const root = host.closest("article") ?? host.parentElement ?? host;
-    const run = () => {
-      activatePreviewSlots(root);
-      syncPreviewIframesInRoot(root);
-    };
-    run();
-    requestAnimationFrame(() => {
-      run();
-      requestAnimationFrame(run);
-    });
-    const observer = new MutationObserver(run);
-    observer.observe(root, { childList: true, subtree: true });
-    return () => observer.disconnect();
-  })
-  .render(() => <span hidden aria-hidden="true" data-imprensa-preview-sync class="hidden" />);
+/** Run once after static hydration — MDX islands only (no extra Ilha slot). */
+export function runDocMdxEnhancements(root: ParentNode = document) {
+  mountMdxIslandsInRoot(root);
+}
 
 function absoluteUrl(path: string) {
   if (typeof window === "undefined") return path;
@@ -156,10 +141,7 @@ export function DocArticle(props: { path: string; children: RawHtml | string; cl
       )}
     >
       {isCustom ? null : <DocToolbar path={props.path} />}
-      <article class={cx(articleClasses, "flex-1")}>
-        <DocPreviewMountHook />
-        {props.children}
-      </article>
+      <article class={cx(articleClasses, "flex-1")}>{props.children}</article>
       {isCustom ? null : <DocPager path={props.path} />}
     </div>
   );

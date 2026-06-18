@@ -6,8 +6,8 @@ export function normalizeShikiLangId(lang: string) {
 
 /** Grammars from `shiki.langs` (normalized), used for MDX build and browser alike. */
 export function resolveShikiLangs(options: ImprensaShikiOptions | undefined): string[] {
-  if (options === false) return ["typescript"];
-  const langs = [...new Set(options?.langs ?? ["typescript"])];
+  if (options === false) return ["typescript", "tsx"];
+  const langs = [...new Set(options?.langs ?? ["typescript", "tsx"])];
   return langs.map(normalizeShikiLangId);
 }
 

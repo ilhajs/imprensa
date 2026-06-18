@@ -1,4 +1,3 @@
-/** @jsxImportSource ilha */
 import type { RawHtml } from "ilha";
 import { raw } from "ilha";
 import type { ImprensaSocialService } from "../docs/socials";

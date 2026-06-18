@@ -13,6 +13,11 @@ export {
 export { createPrerender } from "./core/prerender-core";
 export type { ImprensaPrerenderOptions } from "./core/prerender-core";
 
-export type { ImprensaLlmsOptions, ImprensaOptions, ImprensaShikiOptions } from "./docs/options";
+export type {
+  ImprensaLlmsOptions,
+  ImprensaOptions,
+  ImprensaOrderConfig,
+  ImprensaShikiOptions,
+} from "./docs/options";
 
 export { imprensa } from "./docs/vite-plugin";

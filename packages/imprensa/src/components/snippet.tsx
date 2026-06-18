@@ -1,7 +1,13 @@
-/** @jsxImportSource ilha */
 import ilha from "ilha";
 import { shikiThemes } from "imprensa/config";
-import type { ImprensaShikiHighlighter } from "../core/shiki-types";
+
+type ImprensaShikiHighlighter = {
+  loadLanguage: (lang: string) => Promise<void>;
+  codeToHtml: (
+    code: string,
+    options: { lang: string; themes: { light: string; dark: string } },
+  ) => string;
+};
 
 const WRAPPER_CLASS =
   "max-w-full overflow-x-auto rounded-xl border border-areia-border text-xs leading-relaxed [&_pre]:min-w-max [&_pre]:p-4 [&_pre]:text-xs [&_pre]:leading-relaxed [&_pre]:!m-0";

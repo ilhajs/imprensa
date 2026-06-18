@@ -10,7 +10,14 @@ export type {
 } from "./types";
 export { articleClass } from "./types";
 
-export { contentMeta, contentTree, mdxRoutes, searchDocuments } from "./routes";
+export {
+  contentMeta,
+  contentTree,
+  mdxIslandLoaders,
+  mdxIslandSequences,
+  mdxRoutes,
+  searchDocuments,
+} from "./routes";
 
 export {
   getClientPrerenderedMdxHtml,

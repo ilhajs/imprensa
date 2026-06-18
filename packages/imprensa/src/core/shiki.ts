@@ -1,14 +1,24 @@
+import { createHash } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import rehypeShikiFromHighlighter from "@shikijs/rehype/core";
-import { transformerTwoslash } from "@shikijs/twoslash";
 import type { PluggableList } from "unified";
 import {
   createConfiguredHighlighterCore,
   resolveShikiLangModuleHref,
   resolveShikiThemeModuleHref,
 } from "./shiki-build";
+import { escapeTwoslashHoverTypeText } from "./rehype-sanitize-twoslash";
 import { resolveShikiLangs, resolveShikiThemeIds } from "./shiki-client-langs";
+
+type TwoslashCompilerOptions = Record<string, unknown>;
+
+type ImprensaTwoslashOptions = {
+  /** TypeScript compiler options passed to Twoslash. Defaults include Ilha JSX. */
+  compilerOptions?: TwoslashCompilerOptions;
+};
 
 export type ImprensaShikiOptions =
   | false
@@ -18,11 +28,19 @@ export type ImprensaShikiOptions =
       langs?: string[];
       /** Set `false` to disable the browser `imprensa/shiki` bundle. Default: true. */
       clientShiki?: boolean;
-      twoslash?: boolean;
+      /** Enable Twoslash. `auto` loads it only for documents with an explicit Twoslash marker. */
+      twoslash?: boolean | "auto" | ImprensaTwoslashOptions;
       transformers?: PluggableList;
     } & Record<
       string,
-      string | number | boolean | string[] | Record<string, string> | PluggableList | undefined
+      | string
+      | number
+      | boolean
+      | string[]
+      | Record<string, string>
+      | ImprensaTwoslashOptions
+      | PluggableList
+      | undefined
     >);
 
 const require = createRequire(import.meta.url);
@@ -48,11 +66,195 @@ export function getShikiHighlighterOptions(options: ImprensaShikiOptions | undef
   };
 }
 
+function hasTwoslashMarker(node: unknown): boolean {
+  if (!node || typeof node !== "object") return false;
+  const candidate = node as {
+    value?: unknown;
+    meta?: unknown;
+    children?: unknown[];
+    data?: Record<string, unknown>;
+    properties?: Record<string, unknown>;
+  };
+  if (
+    typeof candidate.value === "string" &&
+    /(?:^|\n)\s*(?:\/\/|\{|<!--)?\s*(?:\^\?|@twoslash\b)/.test(candidate.value)
+  ) {
+    return true;
+  }
+  const meta = candidate.meta ?? candidate.data?.meta ?? candidate.properties?.meta;
+  if (typeof meta === "string" && /\btwoslash\b/i.test(meta)) return true;
+  return Array.isArray(candidate.children) && candidate.children.some(hasTwoslashMarker);
+}
+
+function isTwoslashOptions(value: unknown): value is ImprensaTwoslashOptions {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function twoslashMode(
+  value: NonNullable<Exclude<ImprensaShikiOptions, false>>["twoslash"],
+): boolean | "auto" {
+  if (value === true || value === false || value === "auto") return value;
+  return "auto";
+}
+
+function twoslashCompilerOptions(
+  value: NonNullable<Exclude<ImprensaShikiOptions, false>>["twoslash"],
+) {
+  const userOptions = isTwoslashOptions(value) ? (value.compilerOptions ?? {}) : {};
+  return {
+    jsx: 4,
+    jsxImportSource: "ilha",
+    ...userOptions,
+  };
+}
+
+function createTwoslashTypesCache() {
+  const cacheDir = path.join(process.cwd(), "node_modules", ".cache", "imprensa", "twoslash");
+  return {
+    init() {
+      fs.mkdirSync(cacheDir, { recursive: true });
+    },
+    read(code: string, lang: string, options: unknown) {
+      const file = path.join(cacheDir, `${twoslashCacheKey(code, lang, options)}.json`);
+      if (!fs.existsSync(file)) return undefined;
+      try {
+        return JSON.parse(fs.readFileSync(file, "utf8"));
+      } catch {
+        return undefined;
+      }
+    },
+    write(code: string, twoslash: unknown, lang: string, options: unknown) {
+      const file = path.join(cacheDir, `${twoslashCacheKey(code, lang, options)}.json`);
+      try {
+        fs.writeFileSync(file, JSON.stringify(twoslash));
+      } catch {
+        // Cache writes are best-effort.
+      }
+    },
+  };
+}
+
+function twoslashCacheKey(code: string, lang: string, options: unknown) {
+  return createHash("sha256")
+    .update("v1\0")
+    .update(lang)
+    .update("\0")
+    .update(code)
+    .update("\0")
+    .update(JSON.stringify(options))
+    .digest("hex");
+}
+
+type ShikiLineNode = { type: string; properties?: Record<string, unknown> };
+type ShikiTransformer = {
+  name: string;
+  preprocess?: (this: { meta: Record<string, unknown> }, code: string) => string | undefined;
+  line?: (
+    this: {
+      options: { meta?: { __raw?: string } };
+      meta: Record<string, unknown>;
+      addClassToHast: (node: ShikiLineNode, className: string | string[]) => void;
+    },
+    node: ShikiLineNode,
+    line: number,
+  ) => ShikiLineNode | undefined;
+};
+
+const metaHighlightSymbol = Symbol("imprensa-highlighted-lines");
+const notationSymbol = Symbol("imprensa-notation-lines");
+
+function parseMetaHighlightString(meta: string | undefined) {
+  if (!meta) return [];
+  const match = meta.match(/\{([\d,-]+)\}/);
+  if (!match) return [];
+  return match[1].split(",").flatMap((value) => {
+    const range = value.split("-").map((n) => Number.parseInt(n, 10));
+    if (range.length === 1 || Number.isNaN(range[1])) return [range[0]];
+    return Array.from({ length: range[1] - range[0] + 1 }, (_, i) => range[0] + i);
+  });
+}
+
+function transformerMetaHighlight(): ShikiTransformer {
+  return {
+    name: "imprensa:meta-highlight",
+    line(node, lineNumber) {
+      const meta = this.meta as Record<symbol, number[]>;
+      meta[metaHighlightSymbol] ??= parseMetaHighlightString(this.options.meta?.__raw);
+      if (meta[metaHighlightSymbol].includes(lineNumber)) this.addClassToHast(node, "highlighted");
+      return node;
+    },
+  };
+}
+
+function transformerNotationMap(
+  classMap: Record<string, string | string[]>,
+  activePreClass: string,
+) {
+  const pattern = /(?:#?\s*)?\[!code\s+(highlight|hl|\+\+|--)(?::(\d+))?\]/g;
+  return {
+    preprocess(this: { meta: Record<string, unknown> }, code: string) {
+      const lineClasses = new Map<number, string | string[]>();
+      const lines = code.split("\n");
+      const output: string[] = [];
+      for (const line of lines) {
+        let cleaned = line;
+        let removed = false;
+        for (const match of line.matchAll(pattern)) {
+          const kind = match[1];
+          const className = classMap[kind];
+          if (!className) continue;
+          const range = Number.parseInt(match[2] ?? "1", 10);
+          const commentOnly = /^\s*(?:\/\/|\/\*|\*|<!--|\{\/\*)?\s*#?\s*\[!code\s+/.test(line);
+          const start = commentOnly ? output.length + 1 : output.length;
+          for (let index = start; index < start + range; index++)
+            lineClasses.set(index + 1, className);
+          cleaned = cleaned
+            .replace(pattern, "")
+            .replace(/\s*(?:\/\/|\/\*|\*|<!--|\{\/\*)?\s*$/, "");
+          removed = commentOnly && cleaned.trim() === "";
+        }
+        if (!removed) output.push(cleaned);
+      }
+      this.meta[notationSymbol] = { lineClasses, activePreClass };
+      return output.join("\n");
+    },
+    line(
+      this: {
+        meta: Record<string | symbol, unknown>;
+        addClassToHast: (node: ShikiLineNode, className: string | string[]) => void;
+      },
+      node: ShikiLineNode,
+      lineNumber: number,
+    ) {
+      const data = this.meta[notationSymbol] as
+        | { lineClasses: Map<number, string | string[]>; activePreClass: string }
+        | undefined;
+      const className = data?.lineClasses.get(lineNumber);
+      if (className) this.addClassToHast(node, className);
+      return node;
+    },
+  } satisfies ShikiTransformer;
+}
+
+function transformerNotationHighlight(): ShikiTransformer {
+  return {
+    name: "imprensa:notation-highlight",
+    ...transformerNotationMap({ highlight: "highlighted", hl: "highlighted" }, "has-highlighted"),
+  };
+}
+
+function transformerNotationDiff(): ShikiTransformer {
+  return {
+    name: "imprensa:notation-diff",
+    ...transformerNotationMap({ "++": ["diff", "add"], "--": ["diff", "remove"] }, "has-diff"),
+  };
+}
+
 export function shikiPlugin(options: ImprensaShikiOptions | undefined): PluggableList {
   if (options === false) return [];
 
   const {
-    twoslash = true,
+    twoslash = "auto",
     transformers = [],
     themes,
     langs: _langs,
@@ -68,13 +270,33 @@ export function shikiPlugin(options: ImprensaShikiOptions | undefined): Pluggabl
     function rehypeShikiConfigured() {
       return async (tree: unknown) => {
         const highlighter = await createConfiguredHighlighterCore(themeIds, langIds);
+        const mode = twoslashMode(twoslash);
+        const shouldUseTwoslash = mode === true || (mode === "auto" && hasTwoslashMarker(tree));
+        const baseTransformers = [
+          transformerNotationHighlight(),
+          transformerMetaHighlight(),
+          transformerNotationDiff(),
+        ];
+        const resolvedTransformers = shouldUseTwoslash
+          ? [
+              ...baseTransformers,
+              (await import("@shikijs/twoslash")).transformerTwoslash({
+                explicitTrigger: true,
+                langs: ["ts", "tsx", "typescript"],
+                typesCache: createTwoslashTypesCache(),
+                twoslashOptions: {
+                  compilerOptions: twoslashCompilerOptions(twoslash),
+                },
+                processHoverInfo: escapeTwoslashHoverTypeText,
+              }),
+              ...transformers,
+            ]
+          : [...baseTransformers, ...transformers];
         const run = rehypeShikiFromHighlighter(highlighter, {
           themes: themeRecord,
           langs: langIds,
           ...rest,
-          transformers: twoslash
-            ? [transformerTwoslash({ explicitTrigger: true }), ...transformers]
-            : transformers,
+          transformers: resolvedTransformers,
         });
         return run(tree);
       };

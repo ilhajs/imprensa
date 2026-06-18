@@ -21,6 +21,6 @@ Runtime virtual modules (`imprensa/mdx`, `imprensa/config`, `imprensa/shiki`, `i
 
 ## Large modules (split layout)
 
-- **Rehype:** `src/docs/rehype/` — route graph, heading utils, dead links, preview
+- **Rehype:** `src/docs/rehype/` — route graph, heading utils, dead links
 - **MDX:** `src/docs/mdx/` — types, document text, routes/index, render, source links, runtime config
 - **Vite:** `src/docs/plugin/` — `create-plugins.ts`, landing Shiki, virtual runtime barrel

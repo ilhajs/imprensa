@@ -1,4 +1,3 @@
-/** @jsxImportSource ilha */
 import ilha from "ilha";
 import { Link, LinkButton } from "areia";
 import { LogoButton, SearchNavbarTrigger, ThemeToggle } from "imprensa/components";

@@ -1,4 +1,3 @@
-/** @jsxImportSource ilha */
 import { Button, Icon, LinkButton } from "areia";
 import ilha from "ilha";
 import { Command, Monitor, Moon, Search, Sun } from "lucide";
@@ -89,7 +88,7 @@ export function SearchTriggerButton(props: { class?: string }) {
 
 export function SearchSidebarTrigger() {
   return (
-    <div class="relative inline-flex w-full min-w-0">
+    <div class="relative inline-flex w-full min-w-0 mt-2">
       <Button
         type="button"
         data-search-trigger

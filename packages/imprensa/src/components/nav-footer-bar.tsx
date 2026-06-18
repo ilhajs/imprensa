@@ -1,4 +1,3 @@
-/** @jsxImportSource ilha */
 import { LinkButton } from "areia";
 import { socials } from "imprensa/config";
 import { cx } from "./classes";

@@ -1,4 +1,3 @@
-/** @jsxImportSource ilha */
 import { defineLayout } from "@ilha/router";
 import { Toaster } from "areia";
 import ilha from "ilha";

@@ -48,7 +48,7 @@ Built artifacts live under **`dist/`** with subpaths (`dist/core/runtime.mjs`, `
 
 - Wires: `@mdx-js/rollup`, `@ilha/router/vite` **`pages()`** — **`mode: "spa"` in `vite dev`**, **`mode: "static"` on build** (override via `pages.mode` in `imprensa()`), `interceptLinks: false`, Tailwind, `vite-prerender-plugin`, sitemap, optional dead-link rehype.
 - **Dev client entry:** `createImprensa().init()` must use **`pageRouter.mount("#app")`** (SPA), not `hydrateStatic` — static-mode router warns and no-ops on `.mount()`.
-- **Prerender:** `vite-prerender-plugin` uses **`src/main.ts`** (`prerenderScript`); export `prerender` from `createImprensa().prerender` (loads **`ilha:pages/server`** inside imprensa — no app `ilha-pages-server.ts`). **`main.ts`** also runs `void init()` for the client.
+- **Prerender:** `vite-prerender-plugin` uses **`src/prerender.ts`** (`prerenderScript`) — export only `prerender` from `createImprensa().prerender` (no `init()`). **`src/main.ts`** is client-only: `void createImprensa().init()`.
 - **Virtual / resolved IDs:** `imprensa`, `imprensa/mdx`, `imprensa/config`, `imprensa/shiki`, `imprensa/components`, `imprensa/doc` — paths in `docs/vite-plugin.ts` use **`../src/...` from bundled `dist/index.mjs`**, not relative to `src/docs/` alone.
 - **`imprensa/mdx.ts`** contains a literal `MDX_CONFIG_MARKER` block replaced at build time (`contentDir`, repo, raw sources, `headDefaults`). Keep marker and `docs/mdx-config.ts` in sync if you change inject shape.
 - Injects **sidebar layout boot** script/style into HTML (`SIDEBAR_LAYOUT_BOOT_SCRIPT` in `components/sidebar-layout.ts`) so saved split applies before paint.
@@ -56,7 +56,7 @@ Built artifacts live under **`dist/`** with subpaths (`dist/core/runtime.mjs`, `
 ## Starter app conventions
 
 - Pages: `templates/starter/src/pages/` — Ilha file routes; MDX under `(content)/`.
-- `src/main.ts`: `createImprensa().init()` + `export const prerender = …` (hostname only in `imprensa({ hostname })` in vite.config)
+- `src/main.ts`: client `void createImprensa().init()`; `src/prerender.ts`: `export const prerender = createImprensa().prerender` (hostname in `imprensa({ hostname })` in vite.config)
 - Content layout: `imprensa/components` → `ContentLayout` (resizable sidebar + search).
 - Theme flash: inline script in `index.html` for `imprensa:theme`; sidebar split uses `imprensa:sidebar-layout` + boot CSS vars.
 

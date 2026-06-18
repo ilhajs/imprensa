@@ -120,16 +120,3 @@ Disable AI exports if you do not want them published:
 ```ts
 imprensa({ llms: false });
 ```
-
-## Preview sandbox
-
-Code fences marked `preview` render in an iframe. Add import map entries or extra iframe head HTML when your examples need them.
-
-```ts
-imprensa({
-  preview: {
-    importmap: JSON.stringify({ imports: { "my-lib": "https://esm.sh/my-lib" } }),
-    head: `<script src="https://cdn.tailwindcss.com"></script>`,
-  },
-});
-```

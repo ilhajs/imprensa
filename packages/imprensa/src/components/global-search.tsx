@@ -1,4 +1,3 @@
-/** @jsxImportSource ilha */
 import { Dialog, Icon } from "areia";
 import ilha from "ilha";
 import { Search, X } from "lucide";

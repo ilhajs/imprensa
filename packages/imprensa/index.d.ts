@@ -20,16 +20,29 @@ declare module "imprensa/landing-shiki" {
   export const buildHtml: string;
 }
 
+declare module "imprensa/mdx-islands" {
+  export const mdxIslandLoaders: Record<
+    string,
+    Record<string, () => Promise<{ mount?: unknown; default?: { mount?: unknown } }>>
+  >;
+  export const mdxIslandSequences: Record<string, string[]>;
+}
+
+declare module "imprensa/content-tree" {
+  import type { ContentTreeNode } from "imprensa/mdx";
+  export const contentTree: ContentTreeNode[];
+}
+
 declare module "imprensa/config" {
   import type { ImprensaShikiOptions, ImprensaSocialLink } from "imprensa";
   export type { ImprensaSocialLink, ImprensaSocialService } from "imprensa";
   export const socials: ImprensaSocialLink[];
-  export const preview: { importmap?: string; head?: string };
   export const shiki: ImprensaShikiOptions;
   export const hostname: string;
   export const shikiThemes: { light: string; dark: string };
   export const siteName: string;
   export const logoSrc: string;
+  export const topLevelSplit: boolean;
 }
 
 declare module "ilha:pages/server" {

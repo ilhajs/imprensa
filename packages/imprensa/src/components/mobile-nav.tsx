@@ -1,7 +1,7 @@
-/** @jsxImportSource ilha */
 import { Button, Icon, LinkButton, Popover } from "areia";
 import { ExternalLink } from "lucide";
-import { contentTree, type ContentTreeNode } from "imprensa/mdx";
+import type { ContentTreeNode } from "imprensa/mdx";
+import { sidebarTreeForPath } from "./sidebar-tree";
 import { NavFooterBar } from "./nav-footer-bar";
 import { LogoButton } from "./search";
 import type { ImprensaUiTree } from "./ilha-ui";
@@ -92,7 +92,7 @@ export function MobileNavigationPopover(props: { currentPath: string }) {
             <LogoButton />
           </div>
           <nav class="min-h-0 flex-1 overflow-y-auto flex flex-col gap-1">
-            {renderMobileTree(contentTree, currentPath)}
+            {renderMobileTree(sidebarTreeForPath(currentPath), currentPath)}
           </nav>
           <NavFooterBar />
         </div>

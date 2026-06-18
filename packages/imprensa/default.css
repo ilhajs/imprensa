@@ -3,9 +3,9 @@
 @plugin "@tailwindcss/typography";
 @plugin "areia";
 
-/* Class names live in prebuilt dist chunks and optional source components (npm tarball). */
 @source "./dist/**/*.{mjs,js}";
-@source "./src/components/**/*.{ts,tsx}";
+@source "./src/components/**/*.{tsx}";
+@source "./src/pages/**/*.{tsx,mdx}";
 
 @layer base {
   * {
@@ -218,6 +218,10 @@
   .twoslash-popup-code,
   .twoslash-popup-code span {
     @apply !bg-transparent;
+  }
+
+  .twoslash-popup-code .shiki {
+    @apply m-0!;
   }
 
   html.dark .shiki,

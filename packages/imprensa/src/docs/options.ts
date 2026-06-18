@@ -9,6 +9,9 @@ export type { ImprensaLlmsOptions } from "./llms";
 export type { ImprensaSocialLink, ImprensaSocialService } from "./socials";
 export type { ImprensaShikiOptions } from "../core/shiki";
 
+/** Sidebar sort keys: top-level segment or nested `parent.child` (URL path segments). */
+export type ImprensaOrderConfig = Record<string, number>;
+
 export type ImprensaOptions = {
   /** Configure Shiki syntax highlighting. Pass false to disable the default Shiki plugin. */
   shiki?: ImprensaShikiOptions;
@@ -24,13 +27,6 @@ export type ImprensaOptions = {
   llms?: boolean | ImprensaLlmsOptions;
   /** Social links shown in the navbar */
   socials?: ImprensaSocialLink[];
-  /** Preview sandbox configuration */
-  preview?: {
-    /** JSON string of additional importmap imports to merge */
-    importmap?: string;
-    /** HTML string appended to the preview iframe <head> after esm.sh/tsx */
-    head?: string;
-  };
   /** GitHub repository URL for source links, e.g. https://github.com/org/repo */
   repo?: string;
   /** Git branch for GitHub source links. Defaults to "main". */
@@ -45,4 +41,15 @@ export type ImprensaOptions = {
   siteName?: string;
   /** Logo image URL for the sidebar brand. Defaults to "/logo.svg". */
   logoSrc?: string;
+  /**
+   * When true, sidebar shows only the current top-level section’s children
+   * (e.g. on `/guide/helpers/mount`, hide other roots and the `guide` folder row).
+   * Defaults to false.
+   */
+  topLevelSplit?: boolean;
+  /**
+   * Sidebar order for folders and pages by path key (`libraries`, `libraries.core`, …).
+   * Lower numbers sort first. MDX frontmatter `order` on a page overrides the matching key.
+   */
+  order?: ImprensaOrderConfig;
 };

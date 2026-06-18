@@ -7,8 +7,7 @@ import type {
   ImprensaPageRouter,
 } from "./ilha-types";
 import { appendCanonicalTags, headLinkEntries, headMetaEntries } from "./prerender-head";
-import type { PreviewSandboxConfig } from "./preview-iframe";
-import { paintFilledPreviewWrappersInHtml, paintPreviewSlotsInHtml } from "./preview-paint";
+import { sanitizeMdxHtmlString } from "./sanitize-mdx-html";
 import { paintSnippetSlotsInHtml } from "./snippet-shiki";
 import type { ImprensaShikiOptions } from "./shiki";
 
@@ -42,33 +41,12 @@ export type ImprensaPrerenderOptions = {
   headDefaults?: Head | null;
   hostname?: string;
   shiki?: ImprensaShikiOptions;
-  preview?: PreviewSandboxConfig;
 };
 
 export function createPrerender(options: ImprensaPrerenderOptions) {
   return async function prerender(data?: PrerenderArguments) {
     const url = data?.url ?? "/";
-    let mdxPage = await options.renderMdx?.(url);
-    if (mdxPage?.html) {
-      const previewOpts = {
-        shiki: options.shiki,
-        preview: options.preview,
-      };
-      try {
-        const painted = await paintPreviewSlotsInHtml(mdxPage.html, {
-          shiki: false,
-          preview: previewOpts.preview,
-        });
-        let html = painted;
-        if (!html.includes("<iframe") && mdxPage.html.includes("preview-wrapper")) {
-          html = await paintPreviewSlotsInHtml(mdxPage.html, previewOpts);
-        }
-        html = await paintFilledPreviewWrappersInHtml(html, previewOpts);
-        mdxPage = { ...mdxPage, html };
-      } catch (err) {
-        console.error("[imprensa] preview paint failed for", url, err);
-      }
-    }
+    const mdxPage = await options.renderMdx?.(url);
     options.setPrerenderedMdxHtml?.(mdxPage?.html);
 
     let renderedHtml = await options.pageRouter.renderHydratable(url, options.registry, {
@@ -77,9 +55,7 @@ export function createPrerender(options: ImprensaPrerenderOptions) {
     if (options.shiki !== false) {
       renderedHtml = await paintSnippetSlotsInHtml(renderedHtml, options.shiki);
     }
-    const html = renderedHtml
-      .replace(/<script/gi, "&lt;script")
-      .replace(/<\/script>/gi, "&lt;/script&gt;");
+    const html = sanitizeMdxHtmlString(renderedHtml);
 
     const canonicalUrl = options.hostname ? new URL(url, options.hostname).href : undefined;
     const mergedHead: Head = {
