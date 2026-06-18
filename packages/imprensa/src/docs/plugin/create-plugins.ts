@@ -50,15 +50,17 @@ const IMPRENSA_PRERENDER_ENTRY = path.resolve(
 const IMPRENSA_CLIENT_RUNTIME = path.resolve(
   fileURLToPath(new URL("./core/client-runtime.mjs", import.meta.url)),
 );
+/** npm ships `src/docs/mdx/` but not `src/core/` — never resolve `imprensa/mdx` to source when dist exists. */
 function imprensaMdxResolveId(): string {
+  if (fs.existsSync(MDX_DIST_BUNDLE)) return MDX_DIST_BUNDLE;
   if (fs.existsSync(MDX_SOURCE)) return MDX_SOURCE;
   return MDX_DIST_BUNDLE;
 }
 
 function imprensaMdxIslandsResolveId(): string {
-  if (fs.existsSync(MDX_ISLANDS_SOURCE)) return MDX_ISLANDS_SOURCE;
   if (fs.existsSync(MDX_ISLANDS_DIST)) return MDX_ISLANDS_DIST;
-  return MDX_ISLANDS_SOURCE;
+  if (fs.existsSync(MDX_ISLANDS_SOURCE)) return MDX_ISLANDS_SOURCE;
+  return MDX_ISLANDS_DIST;
 }
 
 function isMdxConfigTarget(id: string) {
@@ -81,7 +83,8 @@ function isMdxIslandsTarget(id: string) {
     normalized === MDX_ISLANDS_SOURCE ||
     normalized.endsWith("/imprensa/src/docs/mdx/islands.ts") ||
     normalized === MDX_ISLANDS_DIST ||
-    normalized.endsWith("/imprensa/dist/docs/mdx-islands.mjs")
+    normalized.endsWith("/imprensa/dist/docs/mdx-islands.mjs") ||
+    (normalized.includes(`${path.sep}dist${path.sep}`) && /\/islands-[^/]+\.mjs$/.test(normalized))
   );
 }
 
