@@ -251,13 +251,14 @@ function injectedMdxRuntimeConfig(options: {
   order: ImprensaOptions["order"];
 }) {
   const { contentDir, repo, repoBranch, repoPath, headDefaults, order } = options;
-  return `export const contentDir = ${JSON.stringify(normalizeContentDir(contentDir))};
-export const imprensaRepo = ${JSON.stringify(repo)};
-export const imprensaRepoBranch = ${JSON.stringify(repoBranch)};
-export const imprensaRepoPath = ${JSON.stringify(repoPath)};
-export const mdxRawSources = ${JSON.stringify(collectRawMdxSources(process.cwd(), contentDir))};
-export const headDefaults = ${JSON.stringify(headDefaults ?? null)};
-export const order = ${JSON.stringify(order ?? {})};`;
+  // `const` only — dist/docs/mdx.mjs already ends with a single `export { … }` barrel.
+  return `const contentDir = ${JSON.stringify(normalizeContentDir(contentDir))};
+const imprensaRepo = ${JSON.stringify(repo)};
+const imprensaRepoBranch = ${JSON.stringify(repoBranch)};
+const imprensaRepoPath = ${JSON.stringify(repoPath)};
+const mdxRawSources = ${JSON.stringify(collectRawMdxSources(process.cwd(), contentDir))};
+const headDefaults = ${JSON.stringify(headDefaults ?? null)};
+const order = ${JSON.stringify(order ?? {})};`;
 }
 
 function isAppPageFile(file: string, root: string) {
