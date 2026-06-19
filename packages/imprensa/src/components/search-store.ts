@@ -1,14 +1,11 @@
-import { createStore } from "@ilha/store";
+import { store } from "@ilha/store";
 
 export type ImprensaSearchState = {
   open: boolean;
   query: string;
 };
 
-export const searchStore = createStore<ImprensaSearchState>({
-  open: false,
-  query: "",
-});
+export const searchStore = store<ImprensaSearchState>({ open: false, query: "" }).build();
 
 /** Hoisted for `bind:open` / portaled bridge — same alien-signals graph as islands. */
 export const searchOpen = searchStore.bind((s) => s.open);
