@@ -13,8 +13,8 @@
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",
     "@fontsource-variable/geist-mono": "^5.2.8",
-    "@ilha/router": "^0.6.3",
-    "@ilha/store": "^0.4.0",
+    "@ilha/router": "^0.6.4",
+    "@ilha/store": "^0.4.1",
     "areia": "^0.1.29",
     "ilha": "^0.8.1",
     "imprensa": "^0.1.10",
