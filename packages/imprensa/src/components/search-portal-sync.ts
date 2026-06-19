@@ -171,7 +171,7 @@ export function attachPortaledSearchBridge(options: PortaledSearchBridgeOptions)
     handleQueryFromInput(target);
   };
 
-  const onClick = (event: MouseEvent) => {
+  const onMouseDown = (event: MouseEvent) => {
     if (!active()) return;
     const item = (event.target as Element | null)?.closest<HTMLElement>(
       '[data-slot="command-item"]',
@@ -179,13 +179,14 @@ export function attachPortaledSearchBridge(options: PortaledSearchBridgeOptions)
     if (!item?.closest("[data-imprensa-search-dialog]")) return;
     const path = item.getAttribute("data-value");
     if (!path) return;
+    // Navigate on mousedown so we act before any blur/close handling
     event.preventDefault();
     onClose();
     onNavigate(path);
   };
 
   document.addEventListener("input", onInput, true);
-  document.addEventListener("click", onClick, true);
+  document.addEventListener("mousedown", onMouseDown, true);
 
   const tick = () => {
     if (!active()) {
@@ -198,10 +199,9 @@ export function attachPortaledSearchBridge(options: PortaledSearchBridgeOptions)
     }
     const root = findOpenSearchCommandRoot();
     if (!root) return;
-    const saved = getQuery();
-    syncInputFromSaved(root, saved);
+    syncInputFromSaved(root, getQuery());
     ensureCommand(root);
-    repaint(saved, root);
+    // repaint is driven by ensureCommand (on mount) and onInput (on change) only
   };
 
   const interval = window.setInterval(tick, 50);
@@ -210,7 +210,7 @@ export function attachPortaledSearchBridge(options: PortaledSearchBridgeOptions)
   return () => {
     window.clearInterval(interval);
     document.removeEventListener("input", onInput, true);
-    document.removeEventListener("click", onClick, true);
+    document.removeEventListener("mousedown", onMouseDown, true);
     commandDestroy();
     commandRoot = null;
   };
