@@ -1,6 +1,6 @@
 {
   "name": "imprensa",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Vite plugin and runtime for Ilha + Areia documentation sites (MDX, prerender, search)",
   "keywords": [
     "areia",
@@ -136,8 +136,8 @@
   "peerDependencies": {
     "@ilha/router": "^0.6.3",
     "@ilha/store": "^0.4.0",
-    "areia": "^0.1.28",
-    "ilha": "^0.8.0",
+    "areia": "^0.1.29",
+    "ilha": "^0.8.1",
     "lucide": "^1.17.0",
     "vite": "^8"
   }
