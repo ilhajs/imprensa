@@ -1,5 +1,6 @@
 import { defineLayout, routeHash } from "@ilha/router";
-import { Resizable, Toaster } from "areia";
+import { Resizable } from "areia";
+import { Toaster } from "areia/sonner";
 import ilha from "ilha";
 
 import { Sidebar } from "./sidebar";
@@ -63,7 +64,7 @@ function mountDocsViewportLock() {
 export const RootLayout = defineLayout((children) =>
   ilha.render(() => (
     <div class="imprensa-root bg-areia-background text-areia-default">
-      <Toaster richColors closeButton />
+      <Toaster position="bottom-right" theme="system" richColors closeButton />
       <main class="imprensa-root-main">{children}</main>
     </div>
   )),

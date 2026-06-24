@@ -1,12 +1,12 @@
 import { defineLayout } from "@ilha/router";
-import { Toaster } from "areia";
+import { Toaster } from "areia/sonner";
 import ilha from "ilha";
 
 /** Landing has no `imprensa-root` wrapper — its `bg-areia-background` was the strip under the footer. */
 export default defineLayout((children) =>
   ilha.render(() => (
     <>
-      <Toaster richColors closeButton />
+      <Toaster position="bottom-right" theme="system" richColors closeButton />
       {children}
     </>
   )),

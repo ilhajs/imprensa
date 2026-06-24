@@ -5,7 +5,7 @@ import ilha from "ilha";
 import { MobileNavigationPopover } from "./mobile-nav";
 import { SearchMobileTriggerButton } from "./search";
 import { ChevronDown, Copy, ExternalLink, FileText, GitBranch, MessageSquare } from "lucide";
-import { toast } from "sonner";
+import { toast } from "areia/sonner";
 import { articleClass, contentMeta, getDocLinks } from "imprensa/mdx";
 import { DocPager } from "./doc-pager";
 import { mountMdxIslandsInRoot } from "./mdx-islands";
