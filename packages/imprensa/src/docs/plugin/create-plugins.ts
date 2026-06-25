@@ -52,6 +52,12 @@ const IMPRENSA_PRERENDER_ENTRY = path.resolve(
 const IMPRENSA_CLIENT_RUNTIME = path.resolve(
   fileURLToPath(new URL("./core/client-runtime.mjs", import.meta.url)),
 );
+
+function asyncLocalStoragePrerenderEntry() {
+  const dist = path.join(IMPRENSA_PKG_ROOT, "dist/core/async-local-storage-prerender.mjs");
+  if (fs.existsSync(dist)) return dist;
+  return path.join(IMPRENSA_PKG_ROOT, "src/core/async-local-storage-prerender.ts");
+}
 /** npm ships `src/docs/mdx/` but not `src/core/` — never resolve `imprensa/mdx` to source when dist exists. */
 function imprensaMdxResolveId(): string {
   if (fs.existsSync(MDX_DIST_BUNDLE)) return MDX_DIST_BUNDLE;
@@ -430,6 +436,8 @@ export const topLevelSplit = ${JSON.stringify(topLevelSplit)};`;
             sonner,
             "imprensa/prerender": IMPRENSA_PRERENDER_ENTRY,
             "imprensa/runtime": IMPRENSA_CLIENT_RUNTIME,
+            // Ilha router SSR head uses AsyncLocalStorage; client prerender bundle must not use Vite's browser stub.
+            "node:async_hooks": asyncLocalStoragePrerenderEntry(),
           },
           dedupe: [
             "@areia/slots",

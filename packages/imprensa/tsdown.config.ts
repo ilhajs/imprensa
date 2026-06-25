@@ -7,6 +7,7 @@ export default defineConfig({
     "src/core/client-runtime.ts",
     "src/core/prerender-core.ts",
     "src/core/shiki-build.ts",
+    "src/core/async-local-storage-prerender.ts",
     "src/docs/rehype.ts",
     "src/docs/mdx.ts",
     "src/docs/mdx-islands.ts",
