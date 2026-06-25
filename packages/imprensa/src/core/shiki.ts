@@ -11,7 +11,7 @@ import {
   resolveShikiThemeModuleHref,
 } from "./shiki-build";
 import { escapeTwoslashHoverTypeText } from "./rehype-sanitize-twoslash";
-import { resolveShikiLangs, resolveShikiThemeIds } from "./shiki-client-langs";
+import { resolveShikiLangs, resolveShikiThemeIds } from "./shiki-client";
 
 type TwoslashCompilerOptions = Record<string, unknown>;
 
@@ -250,6 +250,24 @@ function transformerNotationDiff(): ShikiTransformer {
   };
 }
 
+/**
+ * Shiki throws an opaque "language not loaded" error when a fence uses a grammar
+ * outside `shiki.langs`. Rethrow with the imprensa fix so the build fails clearly
+ * instead of with an internal Shiki message.
+ */
+function reportShikiLangError(error: unknown): never {
+  const message = error instanceof Error ? error.message : String(error);
+  const langMatch = /language[`'" ]*([\w./+-]+)/i.exec(message);
+  if (langMatch) {
+    throw new Error(
+      `imprensa: code fence language "${langMatch[1]}" is not registered. ` +
+        `Add it under imprensa({ shiki: { langs: [..., ${JSON.stringify(langMatch[1])}] } }) ` +
+        `in vite.config. (shiki: ${message})`,
+    );
+  }
+  throw error instanceof Error ? error : new Error(message);
+}
+
 export function shikiPlugin(options: ImprensaShikiOptions | undefined): PluggableList {
   if (options === false) return [];
 
@@ -265,36 +283,46 @@ export function shikiPlugin(options: ImprensaShikiOptions | undefined): Pluggabl
   const themeIds = resolveShikiThemeIds(options);
   const langIds = resolveShikiLangs(options);
   const themeRecord = themes ?? { light: "night-owl-light", dark: "houston" };
+  const mode = twoslashMode(twoslash);
+
+  // Notation/meta transformers are stateless config — build once for the whole run.
+  const baseTransformers = [
+    transformerNotationHighlight(),
+    transformerMetaHighlight(),
+    transformerNotationDiff(),
+  ];
+
+  // The Twoslash transformer is identical across every MDX file (same compiler
+  // options + on-disk type cache). Recreating it (and re-importing the package)
+  // per file is pure waste, so build it lazily, once.
+  let twoslashTransformer: Promise<unknown> | undefined;
+  const getTwoslashTransformer = () => {
+    twoslashTransformer ??= import("@shikijs/twoslash").then(({ transformerTwoslash }) =>
+      transformerTwoslash({
+        explicitTrigger: true,
+        langs: ["ts", "tsx", "typescript"],
+        typesCache: createTwoslashTypesCache(),
+        twoslashOptions: {
+          compilerOptions: twoslashCompilerOptions(twoslash),
+        },
+        processHoverInfo: escapeTwoslashHoverTypeText,
+      }),
+    );
+    return twoslashTransformer;
+  };
 
   return [
     function rehypeShikiConfigured() {
       return async (tree: unknown) => {
         const highlighter = await createConfiguredHighlighterCore(themeIds, langIds);
-        const mode = twoslashMode(twoslash);
         const shouldUseTwoslash = mode === true || (mode === "auto" && hasTwoslashMarker(tree));
-        const baseTransformers = [
-          transformerNotationHighlight(),
-          transformerMetaHighlight(),
-          transformerNotationDiff(),
-        ];
         const resolvedTransformers = shouldUseTwoslash
-          ? [
-              ...baseTransformers,
-              (await import("@shikijs/twoslash")).transformerTwoslash({
-                explicitTrigger: true,
-                langs: ["ts", "tsx", "typescript"],
-                typesCache: createTwoslashTypesCache(),
-                twoslashOptions: {
-                  compilerOptions: twoslashCompilerOptions(twoslash),
-                },
-                processHoverInfo: escapeTwoslashHoverTypeText,
-              }),
-              ...transformers,
-            ]
+          ? [...baseTransformers, await getTwoslashTransformer(), ...transformers]
           : [...baseTransformers, ...transformers];
         const run = rehypeShikiFromHighlighter(highlighter, {
           themes: themeRecord,
           langs: langIds,
+          onError: reportShikiLangError,
           ...rest,
           transformers: resolvedTransformers,
         });

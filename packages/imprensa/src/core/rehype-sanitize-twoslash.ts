@@ -17,7 +17,8 @@ type HastNode = HastElement | HastText | { type: string; children?: HastNode[] }
 const POPUP_CLASS_PREFIX = "twoslash-popup";
 
 function classList(properties: Record<string, unknown> | undefined): string[] {
-  const raw = properties?.className;
+  // @shikijs/twoslash sets `properties.class`; rehype/hast-util-* often use `className`.
+  const raw = properties?.className ?? properties?.class;
   if (Array.isArray(raw)) return raw.filter((c): c is string => typeof c === "string");
   if (typeof raw === "string") return raw.split(/\s+/).filter(Boolean);
   return [];
@@ -53,8 +54,44 @@ function sanitizeTextNodesDeep(children: HastNode[] | undefined): void {
   }
 }
 
+/**
+ * `@shikijs/twoslash` wraps each hover popup in `<code class="twoslash-popup-code">`,
+ * which can contain a full block-level `<pre class="shiki">`. `<code>` is an HTML
+ * *formatting element*, so when popups nest deeply the parser's adoption-agency
+ * algorithm clones the still-open `<code>` onto later siblings — leaking
+ * `<code class="twoslash-popup-code">` tags past `</article>` and swallowing the
+ * page tail into a hidden popup (the page looks "cut"). Retagging to `<div>`
+ * (non-formatting, legal `<pre>` parent) removes the cause; styling is class-based.
+ */
+function retagPopupCode(el: HastElement): void {
+  if (el.tagName === "code" && hasClass(el.properties, "twoslash-popup-code")) {
+    el.tagName = "div";
+  }
+}
+
 function sanitizePopupSubtree(children: HastNode[] | undefined): void {
-  sanitizeTextNodesDeep(children);
+  if (!children) return;
+  for (const child of children) {
+    if (child.type === "text") {
+      (child as HastText).value = escapeRawLessThan((child as HastText).value);
+      continue;
+    }
+    if (child.type === "element") {
+      retagPopupCode(child as HastElement);
+      sanitizePopupSubtree((child as HastElement).children);
+    }
+  }
+}
+
+/** Retag popup wrappers inside a twoslash fence without re-walking the whole document. */
+function retagPopupCodesInsideTwoslashPre(children: HastNode[] | undefined): void {
+  if (!children) return;
+  for (const child of children) {
+    if (child.type !== "element") continue;
+    const el = child as HastElement;
+    retagPopupCode(el);
+    retagPopupCodesInsideTwoslashPre(el.children);
+  }
 }
 
 function walk(node: HastNode): void {
@@ -62,9 +99,11 @@ function walk(node: HastNode): void {
     const el = node as HastElement;
     if (isTwoslashPre(el)) {
       sanitizeTextNodesDeep(el.children);
+      retagPopupCodesInsideTwoslashPre(el.children);
       return;
     }
     if (isTwoslashPopupElement(el)) {
+      retagPopupCode(el);
       sanitizePopupSubtree(el.children);
       return;
     }
