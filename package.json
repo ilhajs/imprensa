@@ -9,7 +9,8 @@
   "scripts": {
     "build": "bun run --filter './packages/*' build",
     "lint": "oxlint",
-    "fmt": "oxfmt"
+    "fmt": "oxfmt",
+    "test": "bun run --filter './packages/*' test"
   },
   "devDependencies": {
     "@types/bun": "^1.3.14",

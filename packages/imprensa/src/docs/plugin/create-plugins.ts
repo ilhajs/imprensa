@@ -11,8 +11,9 @@ import remarkGfm from "remark-gfm";
 import type { PluginOption } from "vite";
 import { vitePrerenderPlugin } from "vite-prerender-plugin";
 import sitemap from "vite-plugin-sitemap";
-import { collectMdxRoutes, collectRawMdxSources, normalizeContentDir } from "../../core/routes";
+import { collectMdxRoutes, normalizeContentDir } from "../../core/routes";
 import { getShikiHighlighterOptions, shikiFineGrainedRuntime, shikiPlugin } from "../../core/shiki";
+import { createConfiguredHighlighterCore } from "../../core/shiki-build";
 import { generateLlmsArtifacts } from "../llms";
 import { MDX_CONFIG_MARKER } from "../mdx-config";
 import type { ImprensaOptions } from "../options";
@@ -22,6 +23,7 @@ import { rehypeDeadLinks } from "../rehype";
 import { buildLandingShikiModule } from "./landing-shiki";
 import { viteMdxStripFrontmatter } from "./mdx-frontmatter";
 import { isContentTreeSourceFile, loadContentTreeModuleSource } from "./content-tree-module";
+import { getMdxManifest, invalidateMdxManifest, type MdxManifest } from "./mdx-manifest";
 import { IMPRENSA_VIRTUAL_RUNTIME } from "./virtual-runtime";
 
 function imprensaPackageRoot() {
@@ -88,158 +90,12 @@ function isMdxIslandsTarget(id: string) {
   );
 }
 
-function injectMdxIslandMaps(
-  code: string,
-  mdxIslandMaps: ReturnType<typeof generatedMdxIslandMaps>,
-) {
+function injectMdxIslandMaps(code: string, manifest: MdxManifest) {
   return code
     .replace(/declare const __IMPRENSA_MDX_ISLANDS__:[^;]+;\n?/, "")
     .replace(/declare const __IMPRENSA_MDX_ISLAND_SEQUENCES__:[^;]+;\n?/, "")
-    .replace(/__IMPRENSA_MDX_ISLANDS__/g, mdxIslandMaps.islands)
-    .replace(/__IMPRENSA_MDX_ISLAND_SEQUENCES__/g, mdxIslandMaps.sequences);
-}
-
-function collectMdxFiles(root: string, contentDirOption: string) {
-  const contentDirPhysical = path.join(root, contentDirOption.replace(/^\/+|\/+$/g, ""));
-  const files: string[] = [];
-
-  function walk(dir: string) {
-    if (!fs.existsSync(dir)) return;
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const entryPath = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        walk(entryPath);
-        continue;
-      }
-      if (/\.mdx?$/.test(entry.name)) files.push(entryPath);
-    }
-  }
-
-  walk(contentDirPhysical);
-  return files.sort();
-}
-
-function mdxImportSpec(root: string, file: string) {
-  return `/${path.relative(root, file).replace(/\\/g, "/")}`;
-}
-
-function generatedMdxModuleMap(root: string, contentDirOption: string) {
-  const entries = collectMdxFiles(root, contentDirOption)
-    .map((file) => {
-      const spec = mdxImportSpec(root, file);
-      return `${JSON.stringify(spec)}: () => import(${JSON.stringify(spec)})`;
-    })
-    .join(",\n");
-
-  return `({\n${entries}\n})`;
-}
-
-const BUILTIN_MDX_ISLANDS: Record<string, string> = {
-  MultiCopy: "imprensa:MultiCopy",
-  Snippet: "imprensa:Snippet",
-};
-
-type ImportedMdxComponent = { local: string; imported: string; spec: string };
-
-function normalizeMdxImportSpec(root: string, file: string, spec: string) {
-  if (!spec.startsWith(".")) return spec;
-  return `/${path.relative(root, path.resolve(path.dirname(file), spec)).replace(/\\/g, "/")}`;
-}
-
-function parseMdxComponentImports(
-  root: string,
-  file: string,
-  source: string,
-): ImportedMdxComponent[] {
-  const imports: ImportedMdxComponent[] = [];
-  const importRe = /(?:^|\n)\s*import\s+([\s\S]*?)\s+from\s+['"]([^'"]+)['"]\s*;?/g;
-  let match: RegExpExecArray | null;
-  while ((match = importRe.exec(source))) {
-    const clause = match[1].trim();
-    const spec = normalizeMdxImportSpec(root, file, match[2]);
-
-    const namespaceMatch = clause.match(/^\*\s+as\s+([A-Z][\w$]*)$/);
-    if (namespaceMatch) {
-      imports.push({ local: namespaceMatch[1], imported: "*", spec });
-      continue;
-    }
-
-    const defaultMatch = clause.match(/^([A-Z][\w$]*)(?:\s*,|$)/);
-    if (defaultMatch) imports.push({ local: defaultMatch[1], imported: "default", spec });
-
-    const named = clause.match(/\{([\s\S]*?)\}/)?.[1];
-    if (!named) continue;
-    for (const part of named.split(",")) {
-      const cleaned = part.trim();
-      if (!cleaned) continue;
-      const [imported, local = imported] = cleaned.split(/\s+as\s+/).map((p) => p.trim());
-      if (/^[A-Z]/.test(local)) imports.push({ local, imported, spec });
-    }
-  }
-  return imports;
-}
-
-function mdxJsxOnlySource(source: string) {
-  return source
-    .replace(/^---[\s\S]*?---\s*/m, "")
-    .replace(/```[\s\S]*?```/g, "")
-    .replace(/^\s*import\s+[^\n]+$/gm, "")
-    .replace(/^\s*export\s+const\s+\w+\s*=\s*`[\s\S]*?`\s*;?\s*$/gm, "")
-    .replace(/^\s*export\s+[^\n]+$/gm, "");
-}
-
-function parseMdxIslandSequence(source: string, imports: ImportedMdxComponent[]) {
-  const scanSource = mdxJsxOnlySource(source);
-  const importedByLocal = new Map(imports.map((item) => [item.local, item]));
-  const sequence: string[] = [];
-  const tagRe = /<([A-Z][\w$]*)(?=[\s>/])/g;
-  let match: RegExpExecArray | null;
-  while ((match = tagRe.exec(scanSource))) {
-    const local = match[1];
-    const builtin = BUILTIN_MDX_ISLANDS[local];
-    if (builtin) {
-      sequence.push(builtin);
-      continue;
-    }
-    if (importedByLocal.has(local)) sequence.push(local);
-  }
-  return sequence;
-}
-
-function generatedMdxIslandMaps(root: string, contentDirOption: string) {
-  const islandEntries: string[] = [];
-  const sequenceEntries: string[] = [];
-
-  for (const file of collectMdxFiles(root, contentDirOption)) {
-    const spec = mdxImportSpec(root, file);
-    const source = fs.readFileSync(file, "utf8");
-    const imports = parseMdxComponentImports(root, file, source);
-    const localSequence = parseMdxIslandSequence(source, imports);
-    const usedLocals = new Set(localSequence.filter((key) => !key.startsWith("imprensa:")));
-    const sequence = localSequence.map((key) =>
-      key.startsWith("imprensa:") ? key : `${spec}#${key}`,
-    );
-    if (sequence.length)
-      sequenceEntries.push(`${JSON.stringify(spec)}: ${JSON.stringify(sequence)}`);
-
-    const loaders = imports
-      .filter((item) => usedLocals.has(item.local))
-      .map((item) => {
-        const selector =
-          item.imported === "default"
-            ? "mod.default"
-            : item.imported === "*"
-              ? "mod"
-              : `mod[${JSON.stringify(item.imported)}]`;
-        return `${JSON.stringify(`${spec}#${item.local}`)}: () => import(${JSON.stringify(item.spec)}).then((mod) => ${selector})`;
-      });
-    if (loaders.length) islandEntries.push(`${JSON.stringify(spec)}: { ${loaders.join(", ")} }`);
-  }
-
-  return {
-    islands: `({\n${islandEntries.join(",\n")}\n})`,
-    sequences: `({\n${sequenceEntries.join(",\n")}\n})`,
-  };
+    .replace(/__IMPRENSA_MDX_ISLANDS__/g, manifest.islands)
+    .replace(/__IMPRENSA_MDX_ISLAND_SEQUENCES__/g, manifest.sequences);
 }
 
 function injectedMdxRuntimeConfig(options: {
@@ -249,14 +105,15 @@ function injectedMdxRuntimeConfig(options: {
   repoPath: string;
   headDefaults: ImprensaOptions["head"];
   order: ImprensaOptions["order"];
+  rawSources: MdxManifest["rawSources"];
 }) {
-  const { contentDir, repo, repoBranch, repoPath, headDefaults, order } = options;
+  const { contentDir, repo, repoBranch, repoPath, headDefaults, order, rawSources } = options;
   // `const` only — dist/docs/mdx.mjs already ends with a single `export { … }` barrel.
   return `const contentDir = ${JSON.stringify(normalizeContentDir(contentDir))};
 const imprensaRepo = ${JSON.stringify(repo)};
 const imprensaRepoBranch = ${JSON.stringify(repoBranch)};
 const imprensaRepoPath = ${JSON.stringify(repoPath)};
-const mdxRawSources = ${JSON.stringify(collectRawMdxSources(process.cwd(), contentDir))};
+const mdxRawSources = ${JSON.stringify(rawSources)};
 const headDefaults = ${JSON.stringify(headDefaults ?? null)};
 const order = ${JSON.stringify(order ?? {})};`;
 }
@@ -448,14 +305,18 @@ export const topLevelSplit = ${JSON.stringify(topLevelSplit)};`;
       const cssPatch = patchImprensaDefaultCss(code, id);
       if (cssPatch) return cssPatch;
 
-      const mdxIslandMaps = generatedMdxIslandMaps(process.cwd(), contentDir);
+      // Only the island/config injection targets need the (memoized) MDX scan;
+      // most modules in the build hit neither branch and skip it entirely.
+      const islandsTarget = isMdxIslandsTarget(id);
+      const configTarget = isMdxConfigTarget(id);
+      if (!islandsTarget && !configTarget) return;
 
-      if (isMdxIslandsTarget(id)) {
-        const next = injectMdxIslandMaps(code, mdxIslandMaps);
+      const manifest = getMdxManifest(process.cwd(), contentDir);
+
+      if (islandsTarget) {
+        const next = injectMdxIslandMaps(code, manifest);
         return next === code ? undefined : next;
       }
-
-      if (!isMdxConfigTarget(id)) return;
 
       const injected = injectedMdxRuntimeConfig({
         contentDir,
@@ -464,12 +325,12 @@ export const topLevelSplit = ${JSON.stringify(topLevelSplit)};`;
         repoPath,
         headDefaults,
         order: orderConfig,
+        rawSources: manifest.rawSources,
       });
-      const mdxModules = generatedMdxModuleMap(process.cwd(), contentDir);
       let next = code
         .replace(/declare const __IMPRENSA_MDX_MODULES__:[^;]+;\n?/, "")
-        .replace(/__IMPRENSA_MDX_MODULES__/g, mdxModules);
-      next = injectMdxIslandMaps(next, mdxIslandMaps);
+        .replace(/__IMPRENSA_MDX_MODULES__/g, manifest.moduleMap);
+      next = injectMdxIslandMaps(next, manifest);
 
       if (next.includes(MDX_CONFIG_MARKER)) {
         next = next.replace(MDX_CONFIG_MARKER, injected);
@@ -499,6 +360,7 @@ export const topLevelSplit = ${JSON.stringify(topLevelSplit)};`;
       };
 
       if (contentChanged) {
+        invalidateMdxManifest();
         invalidateByVirtualId("\0imprensa:content-tree");
       }
 
@@ -584,6 +446,13 @@ export const topLevelSplit = ${JSON.stringify(topLevelSplit)};`;
     },
     configResolved(config) {
       isBuild = config.command === "build";
+    },
+    async buildStart() {
+      // Warm the shared Shiki highlighter (theme + grammar modules) up front so the
+      // first MDX transform doesn't pay the cold-start latency. Cache lives in
+      // shiki-build.ts and is reused by every rehype run for this config.
+      if (shiki === false) return;
+      await createConfiguredHighlighterCore(highlighterOptions.themes, highlighterOptions.langs);
     },
     closeBundle() {
       if (!isBuild) return;

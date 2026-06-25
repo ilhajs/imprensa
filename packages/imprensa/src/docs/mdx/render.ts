@@ -61,18 +61,22 @@ async function loadMdxModule(url: string) {
   return { pathname, filePath, mod: await loader() };
 }
 
+const ISLAND_SLOT_RE =
+  /<div\b(?=[^>]*\bdata-ilha-slot=)(?=[^>]*\bdata-ilha-props=)(?![^>]*\bdata-imprensa-mdx-island=)/g;
+
 function tagMdxIslandSlots(html: string, filePath: string | undefined) {
   if (!filePath) return html;
   const sequence = mdxIslandSequences[filePath];
   if (!sequence?.length) return html;
+
+  // The sequence is matched positionally against island slots in source order;
+  // when it runs out (extra slots from live island demos or static components)
+  // the remaining slots are left untouched rather than mis-tagged.
   let index = 0;
-  return html.replace(
-    /<div\b(?=[^>]*\bdata-ilha-slot=)(?=[^>]*\bdata-ilha-props=)(?![^>]*\bdata-imprensa-mdx-island=)/g,
-    (match) => {
-      const key = sequence[index++];
-      return key ? `${match} data-imprensa-mdx-island=${JSON.stringify(key)}` : match;
-    },
-  );
+  return html.replace(ISLAND_SLOT_RE, (match) => {
+    const key = sequence[index++];
+    return key ? `${match} data-imprensa-mdx-island=${JSON.stringify(key)}` : match;
+  });
 }
 
 export async function renderMdxContent(url: string) {

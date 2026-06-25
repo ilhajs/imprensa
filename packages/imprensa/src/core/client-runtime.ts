@@ -2,7 +2,7 @@ import { router } from "@ilha/router";
 import type { ResolvableHead as Head } from "unhead/types";
 import type { PrerenderArguments } from "vite-prerender-plugin";
 import type { ImprensaIslandRegistry } from "./ilha-types";
-import type { ImprensaShikiHighlighter } from "./shiki-types";
+import type { ImprensaShikiHighlighter } from "./shiki-client";
 import type { ImprensaShikiOptions } from "./shiki";
 import type { RouterLike } from "./prerender-core";
 

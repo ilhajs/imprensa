@@ -1,4 +1,18 @@
+/**
+ * Browser-safe Shiki helpers: language/theme id resolution and the runtime
+ * highlighter type. No Node imports — safe to pull into the client bundle
+ * (unlike `./shiki`, which is build/prerender only).
+ */
 import type { ImprensaShikiOptions } from "./shiki";
+
+/** Browser Shiki instance from the `imprensa/shiki` virtual module. */
+export type ImprensaShikiHighlighter = {
+  loadLanguage: (lang: string) => Promise<void>;
+  codeToHtml: (
+    code: string,
+    options: { lang: string; themes: { light: string; dark: string } },
+  ) => string;
+};
 
 export function normalizeShikiLangId(lang: string) {
   return lang === "ts" ? "typescript" : lang;

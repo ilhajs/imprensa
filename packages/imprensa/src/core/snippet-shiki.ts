@@ -1,5 +1,6 @@
 import type { ImprensaShikiOptions } from "./shiki";
-import { resolveShikiLangs, resolveShikiThemeIds } from "./shiki-client-langs";
+import { normalizeShikiLangId, resolveShikiLangs, resolveShikiThemeIds } from "./shiki-client";
+import { parseIlhaPropsPayload, readIlhaPropsFromHtmlFragment } from "./snippet-props";
 
 const WRAPPER_CLASS =
   "max-w-full overflow-x-auto rounded-xl border border-areia-border text-xs leading-relaxed [&_pre]:min-w-max [&_pre]:p-4 [&_pre]:text-xs [&_pre]:leading-relaxed [&_pre]:!m-0";
@@ -23,6 +24,13 @@ export async function codeToSnippetHtml(
   lang: string,
   shiki: ImprensaShikiOptions | undefined,
 ) {
+  const allowed = resolveShikiLangs(shiki);
+  if (!allowed.includes(normalizeShikiLangId(lang))) {
+    throw new Error(
+      `imprensa: <Snippet> uses language "${lang}" which is not registered. ` +
+        `Add it under imprensa({ shiki: { langs: [..., ${JSON.stringify(lang)}] } }) in vite.config.`,
+    );
+  }
   const h = await getHighlighter(shiki);
   const themes = themePair(shiki);
   const inner = h.codeToHtml(code, { lang, themes });
@@ -30,28 +38,37 @@ export async function codeToSnippetHtml(
 }
 
 const SNIPPET_SLOT_RE =
-  /(<div data-ilha-slot="[^"]*" data-ilha-props='[^']*'>)(<div class="[^"]*" data-imprensa-snippet>[\s\S]*?<\/div>)(<\/div>)/g;
+  /(<div\b[^>]*\bdata-ilha-slot="[^"]*"[^>]*\bdata-ilha-props=(?:"[^"]*"|'[^']*')[^>]*>)(<div\b[^>]*\bdata-imprensa-snippet\b[^>]*>[\s\S]*?<\/div>)(<\/div>)/gi;
 
-/** Paint Snippet islands in prerendered HTML (same Shiki themes as MDX). */
+/**
+ * Paint Snippet islands in prerendered HTML (same Shiki themes as MDX).
+ * Rebuilds the string from match offsets in a single pass so identical snippets
+ * paint independently and `$`-sequences in highlighted output are never re-interpreted.
+ */
 export async function paintSnippetSlotsInHtml(
   html: string,
   shiki: ImprensaShikiOptions | undefined,
 ) {
   if (shiki === false) return html;
 
-  let out = html;
   const matches = [...html.matchAll(SNIPPET_SLOT_RE)];
+  if (matches.length === 0) return html;
+
+  const segments: string[] = [];
+  let cursor = 0;
+
   for (const match of matches) {
-    const propsMatch = match[1].match(/data-ilha-props='([^']*)'/);
-    if (!propsMatch) continue;
-    try {
-      const props = JSON.parse(propsMatch[1]!) as { code?: string; lang?: string };
-      if (typeof props.code !== "string" || typeof props.lang !== "string") continue;
-      const painted = await codeToSnippetHtml(props.code, props.lang, shiki);
-      out = out.replace(match[0], `${match[1]}${painted}${match[3]}`);
-    } catch {
-      // keep slot
-    }
+    const start = match.index ?? 0;
+    const openTag = match[1]!;
+    const rawProps = readIlhaPropsFromHtmlFragment(openTag);
+    const props = rawProps ? parseIlhaPropsPayload(rawProps) : undefined;
+    if (!props) continue;
+
+    const painted = await codeToSnippetHtml(props.code, props.lang, shiki);
+    segments.push(html.slice(cursor, start), openTag, painted, match[3]!);
+    cursor = start + match[0].length;
   }
-  return out;
+
+  segments.push(html.slice(cursor));
+  return segments.join("");
 }

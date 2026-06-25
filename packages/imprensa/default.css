@@ -220,7 +220,9 @@
     @apply !bg-transparent;
   }
 
-  .twoslash-popup-code .shiki {
+  .twoslash-popup-code .shiki,
+  .twoslash-popup-code pre.shiki,
+  .twoslash-popup-code div.shiki {
     @apply m-0!;
   }
 

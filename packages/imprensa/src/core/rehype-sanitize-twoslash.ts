@@ -17,7 +17,8 @@ type HastNode = HastElement | HastText | { type: string; children?: HastNode[] }
 const POPUP_CLASS_PREFIX = "twoslash-popup";
 
 function classList(properties: Record<string, unknown> | undefined): string[] {
-  const raw = properties?.className;
+  // @shikijs/twoslash sets `properties.class`; rehype/hast-util-* often use `className`.
+  const raw = properties?.className ?? properties?.class;
   if (Array.isArray(raw)) return raw.filter((c): c is string => typeof c === "string");
   if (typeof raw === "string") return raw.split(/\s+/).filter(Boolean);
   return [];
@@ -29,6 +30,14 @@ function hasClass(properties: Record<string, unknown> | undefined, needle: strin
 
 function isTwoslashPre(el: HastElement): boolean {
   return el.tagName === "pre" && hasClass(el.properties, "twoslash");
+}
+
+function isShikiPre(el: HastElement): boolean {
+  return el.tagName === "pre" && hasClass(el.properties, "shiki");
+}
+
+function isTwoslashPopupCode(el: HastElement): boolean {
+  return el.tagName === "div" && hasClass(el.properties, "twoslash-popup-code");
 }
 
 function isTwoslashPopupElement(node: HastNode): node is HastElement {
@@ -53,8 +62,54 @@ function sanitizeTextNodesDeep(children: HastNode[] | undefined): void {
   }
 }
 
+/**
+ * `@shikijs/twoslash` wraps each hover popup in `<code class="twoslash-popup-code">`,
+ * which can contain a full block-level `<pre class="shiki">`. `<code>` is an HTML
+ * *formatting element*, so when popups nest deeply the parser's adoption-agency
+ * algorithm clones the still-open `<code>` onto later siblings — leaking
+ * `<code class="twoslash-popup-code">` tags past `</article>` and swallowing the
+ * page tail into a hidden popup (the page looks "cut"). Retagging to `<div>`
+ * (non-formatting, legal `<pre>` parent) removes the cause; styling is class-based.
+ */
+function retagPopupCode(el: HastElement): void {
+  if (el.tagName === "code" && hasClass(el.properties, "twoslash-popup-code")) {
+    el.tagName = "div";
+  }
+}
+
+/**
+ * Twoslash hover types are re-highlighted as `<pre class="shiki">` inside
+ * `div.twoslash-popup-code`, which itself lives under the fence `<pre><code>`.
+ * Nested `<pre>` inside `<pre>` is invalid HTML and closes the outer fence early
+ * (same symptom as un-retagged popup `<code>`). Use `<div class="shiki">` instead.
+ */
+function fixPopupAndNestedShiki(
+  children: HastNode[] | undefined,
+  insidePopupCode: boolean,
+  sanitizeText: boolean,
+): void {
+  if (!children) return;
+  for (const child of children) {
+    if (child.type === "text") {
+      if (sanitizeText) (child as HastText).value = escapeRawLessThan((child as HastText).value);
+      continue;
+    }
+    if (child.type !== "element") continue;
+    const el = child as HastElement;
+    retagPopupCode(el);
+    const inPopup = insidePopupCode || isTwoslashPopupCode(el);
+    if (inPopup && isShikiPre(el)) el.tagName = "div";
+    fixPopupAndNestedShiki(el.children, inPopup, sanitizeText);
+  }
+}
+
 function sanitizePopupSubtree(children: HastNode[] | undefined): void {
-  sanitizeTextNodesDeep(children);
+  fixPopupAndNestedShiki(children, false, true);
+}
+
+/** Retag popup wrappers and nested shiki blocks inside a twoslash fence. */
+function retagPopupCodesInsideTwoslashPre(children: HastNode[] | undefined): void {
+  fixPopupAndNestedShiki(children, false, false);
 }
 
 function walk(node: HastNode): void {
@@ -62,9 +117,11 @@ function walk(node: HastNode): void {
     const el = node as HastElement;
     if (isTwoslashPre(el)) {
       sanitizeTextNodesDeep(el.children);
+      retagPopupCodesInsideTwoslashPre(el.children);
       return;
     }
     if (isTwoslashPopupElement(el)) {
+      retagPopupCode(el);
       sanitizePopupSubtree(el.children);
       return;
     }
