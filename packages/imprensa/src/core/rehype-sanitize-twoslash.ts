@@ -32,6 +32,14 @@ function isTwoslashPre(el: HastElement): boolean {
   return el.tagName === "pre" && hasClass(el.properties, "twoslash");
 }
 
+function isShikiPre(el: HastElement): boolean {
+  return el.tagName === "pre" && hasClass(el.properties, "shiki");
+}
+
+function isTwoslashPopupCode(el: HastElement): boolean {
+  return el.tagName === "div" && hasClass(el.properties, "twoslash-popup-code");
+}
+
 function isTwoslashPopupElement(node: HastNode): node is HastElement {
   return (
     node.type === "element" &&
@@ -69,29 +77,39 @@ function retagPopupCode(el: HastElement): void {
   }
 }
 
-function sanitizePopupSubtree(children: HastNode[] | undefined): void {
+/**
+ * Twoslash hover types are re-highlighted as `<pre class="shiki">` inside
+ * `div.twoslash-popup-code`, which itself lives under the fence `<pre><code>`.
+ * Nested `<pre>` inside `<pre>` is invalid HTML and closes the outer fence early
+ * (same symptom as un-retagged popup `<code>`). Use `<div class="shiki">` instead.
+ */
+function fixPopupAndNestedShiki(
+  children: HastNode[] | undefined,
+  insidePopupCode: boolean,
+  sanitizeText: boolean,
+): void {
   if (!children) return;
   for (const child of children) {
     if (child.type === "text") {
-      (child as HastText).value = escapeRawLessThan((child as HastText).value);
+      if (sanitizeText) (child as HastText).value = escapeRawLessThan((child as HastText).value);
       continue;
     }
-    if (child.type === "element") {
-      retagPopupCode(child as HastElement);
-      sanitizePopupSubtree((child as HastElement).children);
-    }
-  }
-}
-
-/** Retag popup wrappers inside a twoslash fence without re-walking the whole document. */
-function retagPopupCodesInsideTwoslashPre(children: HastNode[] | undefined): void {
-  if (!children) return;
-  for (const child of children) {
     if (child.type !== "element") continue;
     const el = child as HastElement;
     retagPopupCode(el);
-    retagPopupCodesInsideTwoslashPre(el.children);
+    const inPopup = insidePopupCode || isTwoslashPopupCode(el);
+    if (inPopup && isShikiPre(el)) el.tagName = "div";
+    fixPopupAndNestedShiki(el.children, inPopup, sanitizeText);
   }
+}
+
+function sanitizePopupSubtree(children: HastNode[] | undefined): void {
+  fixPopupAndNestedShiki(children, false, true);
+}
+
+/** Retag popup wrappers and nested shiki blocks inside a twoslash fence. */
+function retagPopupCodesInsideTwoslashPre(children: HastNode[] | undefined): void {
+  fixPopupAndNestedShiki(children, false, false);
 }
 
 function walk(node: HastNode): void {

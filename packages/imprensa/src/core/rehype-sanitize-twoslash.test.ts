@@ -91,8 +91,9 @@ describe("rehypeSanitizeTwoslash", () => {
     const container = tree.children[0] as HastTestElement;
     const popupCode = container.children![0] as HastTestElement;
     expect(popupCode.tagName).toBe("div");
-    const pre = popupCode.children![0] as HastTestElement;
-    const nestedPopupCode = pre.children![0] as HastTestElement;
+    const nestedShiki = popupCode.children![0] as HastTestElement;
+    expect(nestedShiki.tagName).toBe("div");
+    const nestedPopupCode = nestedShiki.children![0] as HastTestElement;
     expect(nestedPopupCode.tagName).toBe("div");
   });
 
@@ -167,6 +168,55 @@ describe("rehypeSanitizeTwoslash", () => {
     const container = hover.children![0] as HastTestElement;
     const popupCode = container.children![0] as HastTestElement;
     expect(popupCode.tagName).toBe("div");
+  });
+
+  it("retags pre.shiki inside twoslash-popup-code to div (nested pre in fence)", () => {
+    const tree = {
+      type: "root",
+      children: [
+        {
+          type: "element",
+          tagName: "pre",
+          properties: { class: "shiki twoslash" },
+          children: [
+            {
+              type: "element",
+              tagName: "code",
+              properties: {},
+              children: [
+                {
+                  type: "element",
+                  tagName: "div",
+                  properties: { class: "twoslash-popup-code" },
+                  children: [
+                    {
+                      type: "element",
+                      tagName: "pre",
+                      properties: { class: "shiki shiki-themes" },
+                      children: [
+                        {
+                          type: "element",
+                          tagName: "code",
+                          properties: {},
+                          children: [{ type: "text", value: "type" }],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    rehypeSanitizeTwoslash()(tree);
+    const fence = tree.children[0] as HastTestElement;
+    const fenceCode = fence.children![0] as HastTestElement;
+    const popupCode = fenceCode.children![0] as HastTestElement;
+    const inner = popupCode.children![0] as HastTestElement;
+    expect(inner.tagName).toBe("div");
+    expect(inner.children![0]!.tagName).toBe("code");
   });
 });
 

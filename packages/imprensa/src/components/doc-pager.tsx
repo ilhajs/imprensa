@@ -62,8 +62,8 @@ function DocNavCard(props: { item: DocNavItem; direction: "prev" | "next" }) {
   const isPrev = props.direction === "prev";
 
   return (
-    <a href={props.item.path} class="group block h-full no-underline">
-      <LayerCard class="h-full transition-colors group-hover:bg-areia-control-hover">
+    <a href={props.item.path} class="group block no-underline">
+      <LayerCard class="transition-colors group-hover:bg-areia-control-hover">
         <LayerCard.Content class="flex flex-col gap-2 p-4">
           <div
             class={cx(
@@ -89,7 +89,10 @@ export function DocPager(props: { path: string }) {
   if (!prev && !next) return null;
 
   return (
-    <nav class="not-prose grid gap-4 py-12 sm:grid-cols-2" aria-label="Documentation pagination">
+    <nav
+      class="not-prose grid items-start gap-4 py-12 sm:grid-cols-2"
+      aria-label="Documentation pagination"
+    >
       {prev ? <DocNavCard item={prev} direction="prev" /> : <div aria-hidden="true" />}
       {next ? <DocNavCard item={next} direction="next" /> : <div aria-hidden="true" />}
     </nav>
