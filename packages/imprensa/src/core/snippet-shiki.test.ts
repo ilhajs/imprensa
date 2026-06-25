@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { encodeIlhaProps } from "./snippet-props";
 import { codeToSnippetHtml, paintSnippetSlotsInHtml } from "./snippet-shiki";
 
 const shiki = {
@@ -6,10 +7,12 @@ const shiki = {
   langs: ["typescript"],
 } as const;
 
-function slot(code: string, lang: string) {
-  const props = JSON.stringify({ code, lang });
-  // Mirrors the pre-paint Snippet island shell the runtime emits.
-  return `<div data-ilha-slot="imprensa:Snippet" data-ilha-props='${props}'><div class="x" data-imprensa-snippet></div></div>`;
+function slot(code: string, lang: string, opts?: { quoted?: "single" | "base64" }) {
+  const props =
+    opts?.quoted === "base64" ? encodeIlhaProps({ code, lang }) : JSON.stringify({ code, lang });
+  const attr =
+    opts?.quoted === "base64" ? `data-ilha-props="${props}"` : `data-ilha-props='${props}'`;
+  return `<div data-ilha-slot="imprensa:Snippet" ${attr}><div class="x" data-imprensa-snippet></div></div>`;
 }
 
 describe("paintSnippetSlotsInHtml", () => {
@@ -26,6 +29,13 @@ describe("paintSnippetSlotsInHtml", () => {
     const out = await paintSnippetSlotsInHtml(html, shiki);
     expect(out).toContain("{not json}");
     expect((out.match(/class="shiki/g) ?? []).length).toBe(1);
+  });
+
+  it("paints slots with base64-encoded props (apostrophes in source)", async () => {
+    const html = slot(`const s = "it's ok";`, "typescript", { quoted: "base64" });
+    const out = await paintSnippetSlotsInHtml(html, shiki);
+    expect(out).toContain('class="shiki');
+    expect(out).toContain("it");
   });
 
   it("rejects a language outside shiki.langs with an actionable error", async () => {

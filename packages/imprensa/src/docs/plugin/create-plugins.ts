@@ -447,12 +447,12 @@ export const topLevelSplit = ${JSON.stringify(topLevelSplit)};`;
     configResolved(config) {
       isBuild = config.command === "build";
     },
-    buildStart() {
+    async buildStart() {
       // Warm the shared Shiki highlighter (theme + grammar modules) up front so the
       // first MDX transform doesn't pay the cold-start latency. Cache lives in
       // shiki-build.ts and is reused by every rehype run for this config.
       if (shiki === false) return;
-      void createConfiguredHighlighterCore(highlighterOptions.themes, highlighterOptions.langs);
+      await createConfiguredHighlighterCore(highlighterOptions.themes, highlighterOptions.langs);
     },
     closeBundle() {
       if (!isBuild) return;

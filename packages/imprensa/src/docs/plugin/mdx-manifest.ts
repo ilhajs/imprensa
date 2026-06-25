@@ -94,6 +94,8 @@ function mdxJsxOnlySource(source: string) {
   return source
     .replace(/^---[\s\S]*?---\s*/m, "")
     .replace(/```[\s\S]*?```/g, "")
+    .replace(/`[^`\n]*`/g, "")
+    .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/^\s*import\s+[^\n]+$/gm, "")
     .replace(/^\s*export\s+const\s+\w+\s*=\s*`[\s\S]*?`\s*;?\s*$/gm, "")
     .replace(/^\s*export\s+[^\n]+$/gm, "");

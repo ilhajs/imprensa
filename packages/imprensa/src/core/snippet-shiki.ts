@@ -1,5 +1,6 @@
 import type { ImprensaShikiOptions } from "./shiki";
 import { normalizeShikiLangId, resolveShikiLangs, resolveShikiThemeIds } from "./shiki-client";
+import { parseIlhaPropsPayload, readIlhaPropsFromHtmlFragment } from "./snippet-props";
 
 const WRAPPER_CLASS =
   "max-w-full overflow-x-auto rounded-xl border border-areia-border text-xs leading-relaxed [&_pre]:min-w-max [&_pre]:p-4 [&_pre]:text-xs [&_pre]:leading-relaxed [&_pre]:!m-0";
@@ -37,7 +38,7 @@ export async function codeToSnippetHtml(
 }
 
 const SNIPPET_SLOT_RE =
-  /(<div data-ilha-slot="[^"]*" data-ilha-props='[^']*'>)(<div class="[^"]*" data-imprensa-snippet>[\s\S]*?<\/div>)(<\/div>)/g;
+  /(<div\b[^>]*\bdata-ilha-slot="[^"]*"[^>]*\bdata-ilha-props=(?:"[^"]*"|'[^']*')[^>]*>)(<div\b[^>]*\bdata-imprensa-snippet\b[^>]*>[\s\S]*?<\/div>)(<\/div>)/gi;
 
 /**
  * Paint Snippet islands in prerendered HTML (same Shiki themes as MDX).
@@ -55,28 +56,19 @@ export async function paintSnippetSlotsInHtml(
 
   const segments: string[] = [];
   let cursor = 0;
+
   for (const match of matches) {
     const start = match.index ?? 0;
-    const propsMatch = match[1].match(/data-ilha-props='([^']*)'/);
-    const props = propsMatch ? safeParseProps(propsMatch[1]!) : undefined;
+    const openTag = match[1]!;
+    const rawProps = readIlhaPropsFromHtmlFragment(openTag);
+    const props = rawProps ? parseIlhaPropsPayload(rawProps) : undefined;
     if (!props) continue;
 
     const painted = await codeToSnippetHtml(props.code, props.lang, shiki);
-    segments.push(html.slice(cursor, start), match[1], painted, match[3]);
+    segments.push(html.slice(cursor, start), openTag, painted, match[3]!);
     cursor = start + match[0].length;
   }
+
   segments.push(html.slice(cursor));
   return segments.join("");
-}
-
-function safeParseProps(raw: string): { code: string; lang: string } | undefined {
-  try {
-    const props = JSON.parse(raw) as { code?: unknown; lang?: unknown };
-    if (typeof props.code === "string" && typeof props.lang === "string") {
-      return { code: props.code, lang: props.lang };
-    }
-  } catch {
-    // keep slot unpainted
-  }
-  return undefined;
 }
