@@ -6,7 +6,7 @@ import type {
   ImprensaIslandRegistry,
   ImprensaPageRouter,
 } from "./ilha-types";
-import { appendCanonicalTags, headLinkEntries, headMetaEntries } from "./prerender-head";
+import { appendCanonicalTags, headLinkEntries, headMetaEntries, mergeHead } from "./prerender-head";
 import { sanitizeMdxHtmlString } from "./sanitize-mdx-html";
 import { paintSnippetSlotsInHtml } from "./snippet-shiki";
 import type { ImprensaShikiOptions } from "./shiki";
@@ -40,28 +40,35 @@ export type ImprensaPrerenderOptions = {
   getMdxHead?: (url: string) => Head | undefined | Promise<Head | undefined>;
   headDefaults?: Head | null;
   hostname?: string;
+  siteName?: string;
   shiki?: ImprensaShikiOptions;
 };
 
 export function createPrerender(options: ImprensaPrerenderOptions) {
   return async function prerender(data?: PrerenderArguments) {
     const url = data?.url ?? "/";
-    const mdxPage = await options.renderMdx?.(url);
-    options.setPrerenderedMdxHtml?.(mdxPage?.html);
+    let mdxPage: RenderedMdx;
+    let html: string;
+    try {
+      mdxPage = await options.renderMdx?.(url);
+      options.setPrerenderedMdxHtml?.(mdxPage?.html);
 
-    let renderedHtml = await options.pageRouter.renderHydratable(url, options.registry, {
-      snapshot: true,
-    } satisfies HydratableRenderOptions);
-    if (options.shiki !== false) {
-      renderedHtml = await paintSnippetSlotsInHtml(renderedHtml, options.shiki);
+      let renderedHtml = await options.pageRouter.renderHydratable(url, options.registry, {
+        snapshot: true,
+      } satisfies HydratableRenderOptions);
+      if (options.shiki !== false) {
+        renderedHtml = await paintSnippetSlotsInHtml(renderedHtml, options.shiki);
+      }
+      html = sanitizeMdxHtmlString(renderedHtml);
+    } catch (error) {
+      // Name the failing route so a single broken page is findable in build output.
+      throw new Error(`[imprensa] Failed prerendering ${url}: ${String(error)}`, {
+        cause: error,
+      });
     }
-    const html = sanitizeMdxHtmlString(renderedHtml);
 
     const canonicalUrl = options.hostname ? new URL(url, options.hostname).href : undefined;
-    const mergedHead: Head = {
-      ...options.headDefaults,
-      ...(await options.getMdxHead?.(url)),
-    };
+    const mergedHead: Head = mergeHead(options.headDefaults, await options.getMdxHead?.(url));
 
     let linkTags = headLinkEntries(mergedHead);
     let metaTags = headMetaEntries(mergedHead);
@@ -101,7 +108,11 @@ export function createPrerender(options: ImprensaPrerenderOptions) {
         url: pageUrl,
         mainEntityOfPage: pageUrl,
         ...(description ? { description } : {}),
-        publisher: { "@type": "Organization", name: "Imprensa", url: options.hostname },
+        publisher: {
+          "@type": "Organization",
+          name: options.siteName || "Imprensa",
+          url: options.hostname,
+        },
       };
       elements.add({
         type: "script",

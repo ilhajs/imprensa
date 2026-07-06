@@ -3,7 +3,13 @@
  * Syncs command-list + keyboard nav until Areia supports portal={false} on body hosts.
  */
 import { Command as CommandPrimitive } from "@areia/slots";
-import { getMatchedExcerpt, getSearchResults, type SearchResult } from "./search-core";
+import {
+  getMatchedExcerpt,
+  getSearchResults,
+  isSearchIndexReady,
+  warmSearchIndex,
+  type SearchResult,
+} from "./search-core";
 
 function escapeHtml(text: string) {
   return text
@@ -126,10 +132,17 @@ export function attachPortaledSearchBridge(options: PortaledSearchBridgeOptions)
 
   const repaint = (query: string, root?: HTMLElement | null) => {
     syncPortaledSearchList(query, getSearchResults(query), root ?? findOpenSearchCommandRoot());
+    // Index loads lazily; repaint the current query once it is ready.
+    if (!isSearchIndexReady() && query.trim()) {
+      void warmSearchIndex().then(() => {
+        if (active()) repaint(getQuery());
+      });
+    }
   };
 
   const ensureCommand = (root: HTMLElement) => {
     if (root === commandRoot) return;
+    void warmSearchIndex();
     commandDestroy();
     commandRoot = root;
     const saved = getQuery();
@@ -225,6 +238,14 @@ export function onSearchPortalMounted(container: HTMLElement, getSavedQuery: () 
   const query = getSavedQuery();
   if (input) input.value = query;
   syncPortaledSearchList(query, getSearchResults(query), root);
+  if (!isSearchIndexReady()) {
+    void warmSearchIndex().then(() => {
+      const savedQuery = getSavedQuery();
+      if (root.isConnected && savedQuery.trim()) {
+        syncPortaledSearchList(savedQuery, getSearchResults(savedQuery), root);
+      }
+    });
+  }
   input?.focus();
   if (query.length > 0) {
     requestAnimationFrame(() => {

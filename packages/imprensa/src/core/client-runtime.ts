@@ -5,6 +5,7 @@ import type { ImprensaIslandRegistry } from "./ilha-types";
 import type { ImprensaShikiHighlighter } from "./shiki-client";
 import type { ImprensaShikiOptions } from "./shiki";
 import type { RouterLike } from "./prerender-core";
+import { mergeHead } from "./prerender-head";
 
 export const shiki = new Promise<ImprensaShikiHighlighter>(() => {});
 
@@ -68,11 +69,16 @@ export function mountOrHydrate(options: {
   return pageRouter.hydrate(registry);
 }
 
+let clientHeadCleanup: (() => void) | undefined;
+
 async function applyClientHead(
   getMdxHead: ((url: string) => Head | undefined | Promise<Head | undefined>) | undefined,
   headDefaults: Head | null | undefined,
 ) {
   if (typeof window === "undefined") return;
+  // Idempotent: a second init (HMR, tests) replaces the previous head sync
+  // instead of stacking pushState wrappers and popstate listeners.
+  clientHeadCleanup?.();
   const { createHead } = await import("unhead/client");
   const globalWindow = window as Window & { __UNHEAD__?: ReturnType<typeof createHead> };
   const head = globalWindow.__UNHEAD__ ?? (globalWindow.__UNHEAD__ = createHead());
@@ -81,7 +87,7 @@ async function applyClientHead(
   async function apply() {
     dispose?.();
     const url = location.pathname.replace(/\/$/, "") || "/";
-    const merged: Head = { ...headDefaults, ...(await getMdxHead?.(url)) };
+    const merged: Head = mergeHead(headDefaults, await getMdxHead?.(url));
     if (Object.keys(merged).length > 0) dispose = head.push(merged).dispose;
   }
 
@@ -89,9 +95,18 @@ async function applyClientHead(
   window.addEventListener("popstate", apply);
 
   const orig = history.pushState.bind(history);
-  history.pushState = (...args) => {
+  const wrapped: typeof history.pushState = (...args) => {
     orig(...args);
     apply();
+  };
+  history.pushState = wrapped;
+
+  clientHeadCleanup = () => {
+    window.removeEventListener("popstate", apply);
+    if (history.pushState === wrapped) history.pushState = orig;
+    dispose?.();
+    dispose = undefined;
+    clientHeadCleanup = undefined;
   };
 }
 
@@ -156,6 +171,7 @@ export function createImprensa(options: { dev?: boolean; target?: string; static
       }
 
       return () => {
+        clientHeadCleanup?.();
         if (typeof unmountApp === "function") unmountApp();
       };
     },
@@ -167,6 +183,7 @@ export function createImprensa(options: { dev?: boolean; target?: string; static
         import("imprensa/config") as Promise<{
           shiki?: ImprensaShikiOptions;
           hostname?: string;
+          siteName?: string;
         }>,
       ]);
 
@@ -181,6 +198,7 @@ export function createImprensa(options: { dev?: boolean; target?: string; static
         getMdxHead: mdx.getMdxHead,
         headDefaults: mdx.headDefaults,
         hostname,
+        siteName: config.siteName,
         shiki: config.shiki,
       })(data);
     },

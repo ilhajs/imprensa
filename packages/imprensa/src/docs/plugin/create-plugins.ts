@@ -71,7 +71,7 @@ function imprensaMdxIslandsResolveId(): string {
   return MDX_ISLANDS_DIST;
 }
 
-function isMdxConfigTarget(id: string) {
+export function isMdxConfigTarget(id: string) {
   const normalized = id.split("?")[0] ?? id;
   return (
     normalized === MDX_RUNTIME_CONFIG ||
@@ -85,7 +85,7 @@ function isMdxConfigTarget(id: string) {
   );
 }
 
-function isMdxIslandsTarget(id: string) {
+export function isMdxIslandsTarget(id: string) {
   const normalized = id.split("?")[0] ?? id;
   return (
     normalized === MDX_ISLANDS_SOURCE ||
@@ -96,7 +96,7 @@ function isMdxIslandsTarget(id: string) {
   );
 }
 
-function injectMdxIslandMaps(code: string, manifest: MdxManifest) {
+export function injectMdxIslandMaps(code: string, manifest: MdxManifest) {
   return code
     .replace(/declare const __IMPRENSA_MDX_ISLANDS__:[^;]+;\n?/, "")
     .replace(/declare const __IMPRENSA_MDX_ISLAND_SEQUENCES__:[^;]+;\n?/, "")
@@ -104,7 +104,7 @@ function injectMdxIslandMaps(code: string, manifest: MdxManifest) {
     .replace(/__IMPRENSA_MDX_ISLAND_SEQUENCES__/g, manifest.sequences);
 }
 
-function injectedMdxRuntimeConfig(options: {
+export function injectedMdxRuntimeConfig(options: {
   contentDir: string;
   repo: string;
   repoBranch: string;
@@ -122,6 +122,28 @@ const imprensaRepoPath = ${JSON.stringify(repoPath)};
 const mdxRawSources = ${JSON.stringify(rawSources)};
 const headDefaults = ${JSON.stringify(headDefaults ?? null)};
 const order = ${JSON.stringify(order ?? {})};`;
+}
+
+/** Replace module-map placeholder and runtime-config marker/region in mdx entry code. */
+export function applyMdxConfigInjection(code: string, injected: string, manifest: MdxManifest) {
+  let next = code
+    .replace(/declare const __IMPRENSA_MDX_MODULES__:[^;]+;\n?/, "")
+    .replace(/__IMPRENSA_MDX_MODULES__/g, manifest.moduleMap);
+  next = injectMdxIslandMaps(next, manifest);
+
+  if (next.includes(MDX_CONFIG_MARKER)) {
+    next = next.replace(MDX_CONFIG_MARKER, injected);
+  }
+
+  const runtimeRegion = /\/\/#region src\/docs\/mdx\/runtime-config\.ts[\s\S]*?\/\/#endregion/;
+  if (runtimeRegion.test(next)) {
+    next = next.replace(
+      runtimeRegion,
+      `//#region src/docs/mdx/runtime-config.ts\n${injected}\n//#endregion`,
+    );
+  }
+
+  return next;
 }
 
 function isAppPageFile(file: string, root: string) {
@@ -153,6 +175,7 @@ export function createImprensaVitePlugins(options: ImprensaOptions = {}): Plugin
     pages: pagesOptions = {},
     contentDir = "src/pages/(content)",
     detectDeadLink = true,
+    watchPolling = false,
     llms = true,
     repo = "",
     repoBranch = "main",
@@ -187,6 +210,8 @@ export function createImprensaVitePlugins(options: ImprensaOptions = {}): Plugin
       ? { light: "night-owl-light", dark: "houston" }
       : shiki.themes;
   let isBuild = false;
+  // Fallback for hooks that can run before configResolved; updated once Vite resolves.
+  let resolvedRoot = process.cwd();
 
   const ilhaPagesOptions = {
     interceptLinks: false as const,
@@ -277,10 +302,10 @@ export function createImprensaVitePlugins(options: ImprensaOptions = {}): Plugin
     },
     async load(id) {
       if (id === "\0imprensa:content-tree") {
-        return loadContentTreeModuleSource(process.cwd(), contentDir, orderConfig);
+        return loadContentTreeModuleSource(resolvedRoot, contentDir, orderConfig);
       }
       if (id === "\0imprensa:landing-shiki") {
-        return buildLandingShikiModule(process.cwd(), shiki);
+        return buildLandingShikiModule(resolvedRoot, shiki);
       }
       if (id === "\0imprensa:config") {
         return `export const socials = ${JSON.stringify(socials)};
@@ -317,7 +342,7 @@ export const topLevelSplit = ${JSON.stringify(topLevelSplit)};`;
       const configTarget = isMdxConfigTarget(id);
       if (!islandsTarget && !configTarget) return;
 
-      const manifest = getMdxManifest(process.cwd(), contentDir);
+      const manifest = getMdxManifest(resolvedRoot, contentDir);
 
       if (islandsTarget) {
         const next = injectMdxIslandMaps(code, manifest);
@@ -333,23 +358,7 @@ export const topLevelSplit = ${JSON.stringify(topLevelSplit)};`;
         order: orderConfig,
         rawSources: manifest.rawSources,
       });
-      let next = code
-        .replace(/declare const __IMPRENSA_MDX_MODULES__:[^;]+;\n?/, "")
-        .replace(/__IMPRENSA_MDX_MODULES__/g, manifest.moduleMap);
-      next = injectMdxIslandMaps(next, manifest);
-
-      if (next.includes(MDX_CONFIG_MARKER)) {
-        next = next.replace(MDX_CONFIG_MARKER, injected);
-      }
-
-      const runtimeRegion = /\/\/#region src\/docs\/mdx\/runtime-config\.ts[\s\S]*?\/\/#endregion/;
-      if (runtimeRegion.test(next)) {
-        next = next.replace(
-          runtimeRegion,
-          `//#region src/docs/mdx/runtime-config.ts\n${injected}\n//#endregion`,
-        );
-      }
-
+      const next = applyMdxConfigInjection(code, injected, manifest);
       return next === code ? undefined : next;
     },
     handleHotUpdate(ctx) {
@@ -385,8 +394,9 @@ export const topLevelSplit = ${JSON.stringify(topLevelSplit)};`;
 
       return [];
     },
-    config() {
-      const root = process.cwd();
+    config(userConfig) {
+      const root = userConfig.root ? path.resolve(userConfig.root) : process.cwd();
+      resolvedRoot = root;
       let sonner = "sonner";
 
       try {
@@ -411,11 +421,7 @@ export const topLevelSplit = ${JSON.stringify(topLevelSplit)};`;
             "imprensa/shiki",
           ],
         },
-        server: {
-          watch: {
-            usePolling: true,
-          },
-        },
+        ...(watchPolling ? { server: { watch: { usePolling: true } } } : {}),
         build: {
           rolldownOptions: {
             output: {
@@ -454,6 +460,7 @@ export const topLevelSplit = ${JSON.stringify(topLevelSplit)};`;
     },
     configResolved(config) {
       isBuild = config.command === "build";
+      resolvedRoot = config.root;
     },
     async buildStart() {
       // Warm the shared Shiki highlighter (theme + grammar modules) up front so the
@@ -466,8 +473,8 @@ export const topLevelSplit = ${JSON.stringify(topLevelSplit)};`;
       if (!isBuild) return;
 
       generateLlmsArtifacts({
-        root: process.cwd(),
-        outDir: path.resolve(process.cwd(), "dist"),
+        root: resolvedRoot,
+        outDir: path.resolve(resolvedRoot, "dist"),
         contentDir,
         llms,
       });

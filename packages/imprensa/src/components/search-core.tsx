@@ -1,15 +1,31 @@
-import MiniSearch from "minisearch";
-import { searchDocuments } from "imprensa/mdx";
+import type MiniSearch from "minisearch";
+import type { SearchDocument } from "imprensa/mdx";
 
-type SearchDocument = (typeof searchDocuments)[number];
 export type SearchResult = Pick<SearchDocument, "id" | "title" | "path" | "text">;
 
-const searchIndex = new MiniSearch<SearchDocument>({
-  fields: ["title", "text"],
-  storeFields: ["title", "path", "text"],
-  searchOptions: { boost: { title: 3 }, fuzzy: 0.2, prefix: true },
-});
-searchIndex.addAll(searchDocuments);
+// minisearch and the indexed document text load on first search interaction,
+// not at startup — keeps the initial bundle/CPU cost off the critical path.
+let searchIndex: MiniSearch<SearchDocument> | null = null;
+let warmPromise: Promise<void> | null = null;
+
+export function isSearchIndexReady() {
+  return searchIndex !== null;
+}
+
+export function warmSearchIndex(): Promise<void> {
+  warmPromise ??= Promise.all([import("minisearch"), import("imprensa/mdx")]).then(
+    ([{ default: MiniSearchCtor }, { searchDocuments }]) => {
+      const index = new MiniSearchCtor<SearchDocument>({
+        fields: ["title", "text"],
+        storeFields: ["title", "path", "text"],
+        searchOptions: { boost: { title: 3 }, fuzzy: 0.2, prefix: true },
+      });
+      index.addAll(searchDocuments);
+      searchIndex = index;
+    },
+  );
+  return warmPromise;
+}
 
 function getQueryTerms(query: string) {
   return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -32,12 +48,17 @@ export function getMatchedExcerpt(text: string, query: string) {
   return `${start > 0 ? "…" : ""}${excerpt}${end < text.length ? "…" : ""}`;
 }
 
-export function getSearchResults(query: string): SearchResult[] {
+/** Returns [] while the index is still warming; callers repaint via warmSearchIndex(). */
+export function getSearchResults(query: string, limit = 8): SearchResult[] {
   const trimmedQuery = query.trim();
   if (!trimmedQuery) return [];
+  if (!searchIndex) {
+    void warmSearchIndex();
+    return [];
+  }
   return searchIndex
     .search(trimmedQuery)
-    .slice(0, 8)
+    .slice(0, limit)
     .map((result) => ({
       id: result.id,
       title: result.title,

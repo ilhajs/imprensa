@@ -23,6 +23,11 @@ export type ImprensaOptions = {
   contentDir?: string;
   /** Enable MDX route, heading, duplicate id, and anchor checks. Defaults to true. */
   detectDeadLink?: boolean;
+  /**
+   * Force polling file watching in `vite dev` (for network volumes / containers
+   * where native FS events do not fire). Defaults to false.
+   */
+  watchPolling?: boolean;
   /** Export MD/MDX sources to dist and generate llms.txt / llms-full.txt. Defaults to true. */
   llms?: boolean | ImprensaLlmsOptions;
   /** Social links shown in the navbar */

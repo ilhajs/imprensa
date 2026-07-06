@@ -40,6 +40,7 @@ function renderTree(nodes: ContentTreeNode[], currentPath: string, depth = 0): I
       <LinkButton
         href={href}
         external={node.external}
+        aria-current={active ? "page" : undefined}
         variant={active ? "outline" : "ghost"}
         class={cx(
           "w-full justify-start",
@@ -96,6 +97,7 @@ export const Sidebar = ilha
         </div>
         <SearchSidebarTrigger />
         <nav
+          aria-label="Documentation"
           data-imprensa-sidebar-nav=""
           class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-y-contain px-0.5 py-2"
         >

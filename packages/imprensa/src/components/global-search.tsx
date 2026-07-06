@@ -6,6 +6,13 @@ import { attachPortaledSearchBridge, onSearchPortalMounted } from "./search-port
 
 const HOST_ID = "imprensa-global-search-host";
 
+// Element focused before the dialog opened; restored on close (a11y focus return).
+let restoreFocusTo: HTMLElement | null = null;
+
+function rememberFocus() {
+  restoreFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+}
+
 function syncSearchHostVisibility(open = searchOpen()) {
   document.getElementById(HOST_ID)?.toggleAttribute("hidden", !open);
 }
@@ -16,12 +23,14 @@ function mountSearchShortcuts() {
     if (!(target instanceof Element) || !target.closest("[data-search-trigger]")) return;
     event.preventDefault();
     event.stopPropagation();
+    rememberFocus();
     openSearch();
   };
 
   const onKeydown = (event: KeyboardEvent) => {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
+      if (!searchOpen()) rememberFocus();
       toggleSearch();
       return;
     }
@@ -43,7 +52,11 @@ export const GlobalSearch = ilha
   .effect(() => {
     const open = searchOpen();
     syncSearchHostVisibility(open);
-    if (!open) return;
+    if (!open) {
+      if (restoreFocusTo?.isConnected) restoreFocusTo.focus();
+      restoreFocusTo = null;
+      return;
+    }
     let tries = 0;
     const restore = () => {
       const portal = document.querySelector<HTMLElement>(

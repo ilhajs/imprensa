@@ -87,6 +87,12 @@ export const ContentLayout = defineLayout((children) => {
     })
     .render(() => (
       <div class="imprensa-docs-shell flex h-dvh w-full overflow-hidden bg-areia-background text-areia-default">
+        <a
+          href="#imprensa-content"
+          class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-areia-background focus:px-3 focus:py-2 focus:ring-1 focus:ring-areia-primary"
+        >
+          Skip to content
+        </a>
         <Resizable direction="horizontal" class="h-full min-h-0 w-full">
           <Resizable.Panel
             defaultSize={initialSidebarLayout[0]}
@@ -102,7 +108,13 @@ export const ContentLayout = defineLayout((children) => {
             minSize={50}
             class="imprensa-docs-main-panel"
           >
-            <div class="imprensa-docs-main-scroll flex w-full flex-col p-4">{children}</div>
+            <div
+              id="imprensa-content"
+              tabindex={-1}
+              class="imprensa-docs-main-scroll flex w-full flex-col p-4 outline-none"
+            >
+              {children}
+            </div>
           </Resizable.Panel>
         </Resizable>
       </div>
