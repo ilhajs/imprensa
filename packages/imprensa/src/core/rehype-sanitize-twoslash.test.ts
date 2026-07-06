@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { escapeTwoslashHoverTypeText, rehypeSanitizeTwoslash } from "./rehype-sanitize-twoslash";
 
 describe("rehypeSanitizeTwoslash", () => {
-  it("escapes raw < in twoslash pre source text nodes", () => {
+  it("leaves twoslash pre source text nodes untouched (serializer escapes)", () => {
     const tree = {
       type: "root",
       children: [
@@ -32,11 +32,12 @@ describe("rehypeSanitizeTwoslash", () => {
     const text = (
       tree.children[0] as { children: { children: { children: { value: string }[] }[] }[] }
     ).children[0]!.children[0]!.children[0]!.value;
-    expect(text).not.toContain("<script");
-    expect(text).toContain("&lt;script");
+    // Pre-escaping here would double-escape once the HAST is serialized
+    // (ilha JSX SSR / rehype-stringify escape text nodes themselves).
+    expect(text).toBe('"<script>alert(1)</script>"');
   });
 
-  it("escapes raw < in twoslash-popup-code text nodes", () => {
+  it("leaves twoslash-popup-code text nodes untouched (serializer escapes)", () => {
     const tree = {
       type: "root",
       children: [
@@ -50,7 +51,7 @@ describe("rehypeSanitizeTwoslash", () => {
     };
     rehypeSanitizeTwoslash()(tree);
     const text = (tree.children[0] as { children: { value: string }[] }).children[0]!.value;
-    expect(text).toContain("&lt;img");
+    expect(text).toBe('"<img onerror=alert(1)>"');
   });
 
   it("retags code.twoslash-popup-code to div (avoids adoption-agency leak)", () => {

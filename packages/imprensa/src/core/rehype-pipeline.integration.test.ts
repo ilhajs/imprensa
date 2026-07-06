@@ -63,7 +63,7 @@ describe("rehype pipeline (remark → shiki → sanitize twoslash)", () => {
     expect(countMatches(html, /<pre\b[^>]*class="[^"]*twoslash/gi)).toBeGreaterThan(0);
   }, 60_000);
 
-  it("escapes raw < in twoslash fence text", async () => {
+  it("escapes < in twoslash fence text exactly once", async () => {
     const md = `# XSS demo
 
 \`\`\`ts twoslash
@@ -72,6 +72,9 @@ const s = "<script>alert(1)</script>";
 `;
     const html = sanitizeMdxHtmlString(await markdownToHtml(md));
     expect(html).not.toMatch(/<script>alert/i);
-    expect(html).toMatch(/&#x26;lt;script|&lt;script/i);
+    // Single-escaped by the serializer; a double escape (&#x26;lt; / &amp;lt;)
+    // would display a literal "&lt;" in rendered code blocks.
+    expect(html).toMatch(/&#x3C;script|&lt;script/i);
+    expect(html).not.toMatch(/&#x26;lt;|&amp;lt;/i);
   }, 60_000);
 });
