@@ -13,11 +13,24 @@ export class AsyncLocalStorage<T = unknown> {
   run<R>(store: T, fn: (...args: never[]) => R): R {
     const prev = this.#current;
     this.#current = store;
+    let result: R;
     try {
-      return fn();
-    } finally {
+      result = fn();
+    } catch (error) {
       this.#current = prev;
+      throw error;
     }
+    // An async callback (router 0.8 wraps the whole SSR render in
+    // als.run(store, async () => …)) must keep its store active across awaits,
+    // not just until the first suspension — prerender renders pages one at a
+    // time, so deferring the restore to settlement is safe here.
+    if (result instanceof Promise) {
+      return result.finally(() => {
+        this.#current = prev;
+      }) as R;
+    }
+    this.#current = prev;
+    return result;
   }
 
   enterWith(store: T): void {
