@@ -7,7 +7,6 @@ import type {
   ImprensaPageRouter,
 } from "./ilha-types";
 import { appendCanonicalTags, headLinkEntries, headMetaEntries, mergeHead } from "./prerender-head";
-import { sanitizeMdxHtmlString } from "./sanitize-mdx-html";
 import { paintSnippetSlotsInHtml } from "./snippet-shiki";
 import type { ImprensaShikiOptions } from "./shiki";
 
@@ -59,7 +58,10 @@ export function createPrerender(options: ImprensaPrerenderOptions) {
       if (options.shiki !== false) {
         renderedHtml = await paintSnippetSlotsInHtml(renderedHtml, options.shiki);
       }
-      html = sanitizeMdxHtmlString(renderedHtml);
+      // MDX HTML is sanitized at its own boundary (docs/mdx/render.ts); do not
+      // re-sanitize the whole page — that strips legit inline handlers on
+      // Areia components (e.g. ClipboardText's onclick) from static pages.
+      html = renderedHtml;
     } catch (error) {
       // Name the failing route so a single broken page is findable in build output.
       throw new Error(`[imprensa] Failed prerendering ${url}: ${String(error)}`, {

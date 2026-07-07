@@ -20,10 +20,13 @@ function mockRouter(html: string): ImprensaPageRouter {
 const emptyRegistry = {} as ImprensaIslandRegistry;
 
 describe("createPrerender", () => {
-  it("sanitizes shell HTML and embeds base64 MDX payload", async () => {
+  it("passes shell HTML through and embeds base64 MDX payload", async () => {
+    // Shell HTML is NOT re-sanitized: MDX is sanitized at its own boundary
+    // (docs/mdx/render.ts), and stripping on* here would break inline handlers
+    // on Areia components (e.g. ClipboardText's onclick) in static pages.
     let cached: string | undefined;
     const prerender = createPrerender({
-      pageRouter: mockRouter(`<main><img src="x" onerror="alert(1)"><script>x</script></main>`),
+      pageRouter: mockRouter(`<main><button onclick="copy()">Copy</button></main>`),
       registry: emptyRegistry,
       hostname: "https://docs.example",
       shiki,
@@ -41,8 +44,7 @@ describe("createPrerender", () => {
     const result = await prerender({ url: "/guide/writing" });
 
     expect(cached).toContain("MDX body");
-    expect(result.html).not.toContain("<script");
-    expect(result.html).not.toContain("onerror");
+    expect(result.html).toContain('onclick="copy()"');
     expect(result.head?.title).toBe("Writing");
     expect(result.data?.mdxPath).toBe("/guide/writing");
 
