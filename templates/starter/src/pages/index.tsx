@@ -38,7 +38,7 @@ export default ilha
                 Writing Guide
               </LinkButton>
             </div>
-            <ClipboardText.Static
+            <ClipboardText
               text="npx giget@latest gh:ilhajs/imprensa/templates/starter my-docs"
               tooltip
               class="w-full max-w-md text-left px-0.5 sm:px-0"
