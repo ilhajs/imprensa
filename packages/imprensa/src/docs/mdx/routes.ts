@@ -4,9 +4,10 @@ import { metaFromDocument, textFromRawDocument } from "./document-text";
 import type { ContentMeta, SearchDocument } from "./types";
 import { contentDir, mdxRawSources, order as configOrder } from "./runtime-config";
 
+import { filePathToRoutePath } from "../../core/route-path";
 import { mdxIslandLoaders, mdxIslandSequences } from "./islands";
 
-export { mdxIslandLoaders, mdxIslandSequences };
+export { filePathToRoutePath, mdxIslandLoaders, mdxIslandSequences };
 
 declare const __IMPRENSA_MDX_MODULES__: Record<string, () => Promise<MdxModule>>;
 
@@ -15,18 +16,6 @@ const allMdxModules = __IMPRENSA_MDX_MODULES__;
 export const mdxModules = Object.fromEntries(
   Object.entries(allMdxModules).filter(([filePath]) => filePath.startsWith(contentDir)),
 );
-
-export function filePathToRoutePath(filePath: string) {
-  const routePath = filePath
-    .replace(/^\/src\/pages/, "")
-    .replace(/\.mdx?$/, "")
-    .replace(/\/index$/, "")
-    .split("/")
-    .filter((segment) => !/^\(.+\)$/.test(segment))
-    .join("/");
-
-  return routePath || "/";
-}
 
 export const contentMeta = Object.fromEntries(
   Object.entries(mdxModules).map(([filePath]) => {

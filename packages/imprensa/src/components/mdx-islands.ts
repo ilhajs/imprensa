@@ -1,4 +1,5 @@
 import { mdxIslandLoaders } from "imprensa/mdx-islands";
+import { autobindMdxComponentsForRoute } from "./mdx-autobind";
 import { MultiCopy } from "./multi-copy";
 import { Snippet } from "./snippet";
 
@@ -85,6 +86,7 @@ export function mountMdxIslandsInRoot(root: ParentNode = document) {
   if (typeof document === "undefined") return;
 
   cleanupDisconnectedHosts();
+  void autobindMdxComponentsForRoute(location.pathname);
   const slots = root.querySelectorAll<HTMLElement>(
     "[data-ilha-slot][data-ilha-props][data-imprensa-mdx-island]",
   );

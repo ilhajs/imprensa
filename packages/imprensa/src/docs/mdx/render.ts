@@ -3,7 +3,7 @@ import type { ResolvableHead as Head } from "unhead/types";
 
 import { sanitizeMdxHtmlString } from "../../core/sanitize-mdx-html";
 import type { MdxContent } from "./types";
-import { filePathToRoutePath, mdxIslandSequences, mdxPages } from "./routes";
+import { filePathToRoutePath, mdxIslandLoaders, mdxIslandSequences, mdxPages } from "./routes";
 
 let prerenderedMdxHtml: string | undefined;
 
@@ -64,10 +64,49 @@ async function loadMdxModule(url: string) {
 const ISLAND_SLOT_RE =
   /<div\b(?=[^>]*\bdata-ilha-slot=)(?=[^>]*\bdata-ilha-props=)(?![^>]*\bdata-imprensa-mdx-island=)/g;
 
-function tagMdxIslandSlots(html: string, filePath: string | undefined) {
+function isMountable(value: unknown): boolean {
+  return (
+    !!value &&
+    (typeof value === "object" || typeof value === "function") &&
+    typeof (value as { mount?: unknown }).mount === "function"
+  );
+}
+
+const islandKeyCache = new Map<string, boolean>();
+
+/**
+ * The scanned sequence lists every capitalized component tag, but only islands
+ * emit `data-ilha-slot` divs — auto-bind components (e.g. areia's) render plain
+ * markup. Tagging is positional against slots, so non-island entries must be
+ * dropped or every slot after one would get the wrong key.
+ */
+async function islandOnlySequence(filePath: string, sequence: string[]) {
+  const loaders = mdxIslandLoaders[filePath] ?? {};
+  const flags = await Promise.all(
+    sequence.map(async (key) => {
+      if (key.startsWith("imprensa:")) return true;
+      const cached = islandKeyCache.get(key);
+      if (cached !== undefined) return cached;
+      const loader = loaders[key];
+      let island = false;
+      if (loader) {
+        try {
+          island = isMountable(await loader());
+        } catch {
+          island = false;
+        }
+      }
+      islandKeyCache.set(key, island);
+      return island;
+    }),
+  );
+  return sequence.filter((_, index) => flags[index]);
+}
+
+async function tagMdxIslandSlots(html: string, filePath: string | undefined) {
   if (!filePath) return html;
-  const sequence = mdxIslandSequences[filePath];
-  if (!sequence?.length) return html;
+  const sequence = await islandOnlySequence(filePath, mdxIslandSequences[filePath] ?? []);
+  if (!sequence.length) return html;
 
   // The sequence is matched positionally against island slots in source order;
   // when it runs out (extra slots from live island demos or static components)
@@ -82,7 +121,9 @@ function tagMdxIslandSlots(html: string, filePath: string | undefined) {
 export async function renderMdxContent(url: string) {
   const loaded = await loadMdxModule(url);
   if (!loaded) return undefined;
-  return sanitizeMdxHtmlString(tagMdxIslandSlots(toHtml(loaded.mod.default({})), loaded.filePath));
+  return sanitizeMdxHtmlString(
+    await tagMdxIslandSlots(toHtml(loaded.mod.default({})), loaded.filePath),
+  );
 }
 
 export async function getMdxHead(url: string): Promise<Head | undefined> {
@@ -94,7 +135,9 @@ export async function renderMdx(url: string) {
   if (!loaded) return undefined;
 
   return {
-    html: sanitizeMdxHtmlString(tagMdxIslandSlots(toHtml(loaded.mod.default({})), loaded.filePath)),
+    html: sanitizeMdxHtmlString(
+      await tagMdxIslandSlots(toHtml(loaded.mod.default({})), loaded.filePath),
+    ),
     path: loaded.pathname,
   };
 }

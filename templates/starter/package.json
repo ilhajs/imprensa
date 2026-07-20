@@ -15,7 +15,7 @@
     "@fontsource-variable/geist-mono": "^5.2.8",
     "@ilha/router": "^0.8.5",
     "@ilha/store": "^0.7.2",
-    "areia": "^0.1.36",
+    "areia": "^0.1.39",
     "ilha": "^0.9.2",
     "imprensa": "^0.1.21",
     "lucide": "^1.23.0",
