@@ -472,12 +472,20 @@ export const topLevelSplit = ${JSON.stringify(topLevelSplit)};`;
     closeBundle() {
       if (!isBuild) return;
 
+      const outDir = path.resolve(resolvedRoot, "dist");
+
       generateLlmsArtifacts({
         root: resolvedRoot,
-        outDir: path.resolve(resolvedRoot, "dist"),
+        outDir,
         contentDir,
         llms,
       });
+
+      // GitHub Pages runs Jekyll by default, which drops any file/folder starting
+      // with "_" or "." (e.g. dist/_headers, dist/assets/__vite-browser-external-*.js)
+      // and may otherwise reprocess output. This opts the build out unconditionally,
+      // which is a no-op on every other static host.
+      fs.writeFileSync(path.join(outDir, ".nojekyll"), "");
     },
   });
 

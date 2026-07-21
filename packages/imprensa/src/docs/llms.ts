@@ -234,7 +234,7 @@ export function generateLlmsArtifacts(options: {
   for (const file of files) {
     const distPath = path.join(options.outDir, file.distRelative);
     fs.mkdirSync(path.dirname(distPath), { recursive: true });
-    fs.copyFileSync(file.sourcePath, distPath);
+    fs.writeFileSync(distPath, file.content);
   }
 
   fs.writeFileSync(path.join(options.outDir, "llms.txt"), renderLlmsOutline(files, resolved));

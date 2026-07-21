@@ -29,6 +29,7 @@ function mountSidebarLayoutPersistence(host: Element) {
   };
 
   const connect = () => {
+    if (typeof document === "undefined") return;
     resizable = host.querySelector<HTMLElement>('[data-slot="resizable"]');
     if (!resizable) return;
 
@@ -55,6 +56,7 @@ function mountSidebarLayoutPersistence(host: Element) {
 const DOCS_LAYOUT_CLASS = "imprensa-docs-layout";
 
 function mountDocsViewportLock() {
+  if (typeof document === "undefined") return () => {};
   document.documentElement.classList.add(DOCS_LAYOUT_CLASS);
   return () => {
     document.documentElement.classList.remove(DOCS_LAYOUT_CLASS);
